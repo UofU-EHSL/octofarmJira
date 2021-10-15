@@ -1,18 +1,19 @@
-# This code sample uses the 'requests' library:
-# http://docs.python-requests.org
 import requests
 import schedule
 import time
 from requests.auth import HTTPBasicAuth
 import json
+import yaml
+
+with open("config.yml", "r") as yamlfile:
+    config = yaml.load(yamlfile, Loader=yaml.FullLoader)
+    print("Read successful")
+
+auth = HTTPBasicAuth(config['jira_user'], config['jira_password'])
 
 def issueList():
     print("Checking for new submissions...")
-    """
-    curl -D- -u ehsl_client:asdqwe123 -X GET -H "Content-Type: application/json" "https://projects.lib.utah.edu:8443/rest/api/2/search?jql=project=EHSL3DPR"
-    """
-    url = "https://projects.lib.utah.edu:8443/rest/api/2/search?jql=project%20%3D%20EHSL3DPR%20AND%20status%20%3D%20Open"
-    auth = HTTPBasicAuth("ehsl_client", "asdqwe123")
+    url = config['base_url'] + "/rest/api/2/" + config['search_url']
     
     headers = {
        "Accept": "application/json"
@@ -37,7 +38,6 @@ def getGcode():
         id = issue.split("/")
         singleID = id[-1]
         url = issue
-        auth = HTTPBasicAuth("ehsl_client", "asdqwe123")
         
         headers = {
            "Accept": "application/json"
@@ -59,10 +59,13 @@ def getGcode():
             matching = [s for s in attachments if "https://projects.lib.utah.edu:8443/secure/attachment" in s]
             attachment = str(matching[0]).split("'")
             download(attachment[3], singleID)
+        else:
+            commentStatus(singleID, "Please try again and make sure to upload a file, not post a link or instructions")
+            changeStatus(singleID, "11")
+            changeStatus(singleID, "111")
             
 def download(gcode, singleID):
     url = gcode
-    auth = HTTPBasicAuth("ehsl_client", "asdqwe123")
     
     headers = {
        "Accept": "application/json"
@@ -74,21 +77,32 @@ def download(gcode, singleID):
        headers=headers,
        auth=auth
     )
-
-    text_file = open("jiradownloads/" + singleID + ".gcode", "w")
-    n = text_file.write(response.text)
-    text_file.close()
-    changeStatus(singleID, "11")
-    commentStatus(singleID, "Your print file has been downloaded and is now in the print queue.")
+    if config['gcode_check_text'] not in response.text:
+        commentStatus(singleID, "Please follow the slicing instructions and re-submit. Our automated check suggests you did not use our slicer configs")
+        changeStatus(singleID, "11")
+        changeStatus(singleID, "21")
+        changeStatus(singleID, "131")
+    else:
+        text_file = open("jiradownloads/" + singleID + ".gcode", "w")
+        n = text_file.write(response.text)
+        text_file.close()
+        changeStatus(singleID, "11")
+        commentStatus(singleID, "Your print file has been downloaded and is now in the print queue.")
 
 def changeStatus(singleID, id):
     """
-    
-    11 = in progress
-    21 = submit for review
-    32 = accept as done
-    
-    curl -u ehsl_client:asdqwe123 -X POST --data '{"transition":{"id":"11"}}' -H "Content-Type: application/json" "https://projects.lib.utah.edu:8443/rest/api/2/issue/55598/transitions"
+    Start Progress: 11 (From Open to In Progress)
+
+    Ready for review: 21 (From In Progress to UNDER REVIEW)
+    Stop Progress: 111 (From In Progress to CANCELLED)
+
+    Approve : 31 (From Under Review to APPROVED)
+    Reject: 131 (From Under Review to REJECTED)
+
+    Done: 41  (From APPROVED to DONE)
+
+    Reopen: 121  (From Cancelled to OPEN)
+    Start progress : 141  (From REJECTEDto IN PROGRESS)
     """
     print("updating ticket " + singleID + "...")
     auth = HTTPBasicAuth("ehsl_client", "asdqwe123")
@@ -117,15 +131,11 @@ def changeStatus(singleID, id):
         json = data,
         auth=auth
     )
-    print("ticket" + singleID + " status updated to: " + id)
+    print("ticket" + str(singleID) + " status updated to: " + str(id))
     
 def commentStatus(singleID, comment):
-    """
-    curl -D- -u fred:fred -X POST --data {see below} -H "Content-Type: application/json" http://kelpie9:8081/rest/api/2/issue/QA-31/comment"
-    """
     print("commenting on ticker " + singleID + ": " + comment)
-    auth = HTTPBasicAuth("ehsl_client", "asdqwe123")
-    url = "https://projects.lib.utah.edu:8443/rest/api/2/issue/" + singleID + "/comment"
+    url = config['base_url'] + "/rest/api/2/issue/" + singleID + "/comment"
     headers = {
         "Accept": "application/json",
         "Content-Type": "application/json"

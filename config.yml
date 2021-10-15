@@ -1,0 +1,5 @@
+base_url: "https://projects.lib.utah.edu:8443"
+search_url: "search?jql=project%20%3D%20EHSL3DPR%20AND%20status%20%3D%20Open"
+gcode_check_text: "M0"
+jira_user: "ehsl_client"
+jira_password: "asdqwe123"

@@ -1,0 +1,3 @@
+def getPrinterStatuses():
+
+def uploadFileToPrinter:
