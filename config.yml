@@ -3,3 +3,9 @@ search_url: "search?jql=project%20%3D%20EHSL3DPR%20AND%20status%20%3D%20Open"
 gcode_check_text: "M0"
 jira_user: "ehsl_client"
 jira_password: "asdqwe123"
+
+
+PRINTERS:
+    printer0:
+        ip: "192.168.1.129"
+        api: "1C420D5E8BCB45FCAB20F1EC19039029"

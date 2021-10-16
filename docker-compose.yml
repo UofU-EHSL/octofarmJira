@@ -1,0 +1,15 @@
+version: "3"
+
+services:
+    octofarm-monolithic:
+        image: octofarm/octofarm:monolithic-latest
+        volumes:
+        # Local volumes, can be made named
+            - ./OctoFarm/logs:/app/logs
+            - ./OctoFarm/scripts:/app/scripts
+            - ./OctoFarm/images:/app/images
+            - ./mongodb-data:/data/db
+        ports:
+        # SYSTEM:CONTAINER
+            - 4000:4000
+
