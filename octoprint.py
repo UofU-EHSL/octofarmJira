@@ -5,6 +5,7 @@ from requests.auth import HTTPBasicAuth
 import json
 import yaml
 import jira
+import os
 
 with open("config.yml", "r") as yamlfile:
     config = yaml.load(yamlfile, Loader=yaml.FullLoader)
@@ -33,14 +34,25 @@ def TryPrintingFile(file):
             headers=headers
         )
         status = json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
-        if "Operational" in status:
-            uploadFileToPrinter(printer, file)
+        print(apikey + " " + printerIP)
+        if "Operational" in str(status):
+            uploadFileToPrinter(apikey, printerIP, file)
             return
-        print(status)
-
+        
+def uploadFileToPrinter(apikey, printerIP, file):
+    fle={'file': open('jiradownloads/' + file + '.gcode', 'rb'), 'filename': file}
+    url="http://" + printerIP + "/api/files/{}".format("local")
+    payload={'select': 'true','print': 'true' }
+    header={'X-Api-Key': apikey}
+    response = requests.post(url, files=fle,data=payload,headers=header)
+    if os.path.exists("jiradownloads/" + file + ".gcode"):
+        os.remove("jiradownloads/" + file + ".gcode")
+        jira.commentStatus(file, "Your file is now printing and we will update you when it is finished and ready for pickup")
+        print("Now printing: " + file )
+    
 def PrintIsFinished():
     """
-    need to make a notification send but not double send
+    Make it so when a print starts it opens a new thread, that thread does checks on the stats of the print often. If the print gets to 100% done it sends a notification and kills the thread. that makes it so every print get's only one notification and we can store the jira ID in that thread
     """
     for printer in config['PRINTERS']:
         apikey = config['PRINTERS'][printer]['api']
@@ -62,17 +74,14 @@ def PrintIsFinished():
         if "Operational" in status:
                 print("Notifying about a print completion")
                 jira.commentStatus(file, "Your print has been completed and should now be available for pickup")
-                
-def uploadFileToPrinter(printer, file):
-    print("Found an open printer")
-    jira.commentStatus(file, "Your print is on a printer and starting now")
-    """
-    1) upload file
-    2) start print
-    
-    """
-TryPrintingFile("")
 
+def eachNewFile():
+    directory = r'jiradownloads'
+    for filename in os.listdir(directory):
+        if filename.endswith(".gcode") or filename.endswith(".stl"):
+            TryPrintingFile(os.path.splitext(filename)[0])
+        else:
+            continue
 
 """
 NOT PRINTING STATUS DUMP
