@@ -34,11 +34,12 @@ def TryPrintingFile(file):
             headers=headers
         )
         status = json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
+        print(status)
         print(apikey + " " + printerIP)
-        if "Operational" in str(status):
+        if str(status['state']) == "Operational":
             uploadFileToPrinter(apikey, printerIP, file)
             return
-        
+
 def uploadFileToPrinter(apikey, printerIP, file):
     fle={'file': open('jiradownloads/' + file + '.gcode', 'rb'), 'filename': file}
     url="http://" + printerIP + "/api/files/{}".format("local")
@@ -49,7 +50,16 @@ def uploadFileToPrinter(apikey, printerIP, file):
         os.remove("jiradownloads/" + file + ".gcode")
         jira.commentStatus(file, "Your file is now printing and we will update you when it is finished and ready for pickup")
         print("Now printing: " + file )
-    
+        
+def resetConnection(apikey, printerIP):
+    url="http://" + printerIP + "/api/connection"
+    disconnect={'command': 'disconnect'}
+    connect={'command': 'connect'}
+    header={'X-Api-Key': apikey}
+    response = requests.post(url,json=disconnect,headers=header)
+    response = requests.post(url,json=connect,headers=header)
+    print(response)
+
 def PrintIsFinished():
     """
     Make it so when a print starts it opens a new thread, that thread does checks on the stats of the print often. If the print gets to 100% done it sends a notification and kills the thread. that makes it so every print get's only one notification and we can store the jira ID in that thread
@@ -58,7 +68,6 @@ def PrintIsFinished():
         apikey = config['PRINTERS'][printer]['api']
         printerIP = config['PRINTERS'][printer]['ip']
         url = "http://" + printerIP + "/api/job"
-
         headers = {
             "Accept": "application/json",
             "Host": printerIP,
@@ -71,9 +80,14 @@ def PrintIsFinished():
             headers=headers
         )
         status = json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
-        if "Operational" in status:
+        
+        file = os.path.splitext(status['job']['file']['display'])[0]
+        if str(status['progress']['completion']) == "100.0":
                 print("Notifying about a print completion")
+                resetConnection()
                 jira.commentStatus(file, "Your print has been completed and should now be available for pickup")
+
+PrintIsFinished()
 
 def eachNewFile():
     directory = r'jiradownloads'
