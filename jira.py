@@ -92,15 +92,11 @@ def download(gcode, singleID):
 def changeStatus(singleID, id):
     """
     Start Progress: 11 (From Open to In Progress)
-
     Ready for review: 21 (From In Progress to UNDER REVIEW)
     Stop Progress: 111 (From In Progress to CANCELLED)
-
     Approve : 31 (From Under Review to APPROVED)
     Reject: 131 (From Under Review to REJECTED)
-
     Done: 41  (From APPROVED to DONE)
-
     Reopen: 121  (From Cancelled to OPEN)
     Start progress : 141  (From REJECTEDto IN PROGRESS)
     """
