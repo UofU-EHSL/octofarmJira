@@ -71,14 +71,16 @@ def PrintIsFinished():
             headers=headers
         )
         status = json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
-        
-        file = os.path.splitext(status['job']['file']['display'])[0]
-        if str(status['progress']['completion']) == "100.0":
-                print("Notifying about a print completion")
-                resetConnection(apikey, printerIP)
-                jira.commentStatus(file, "Your print has been completed and should now be available for pickup")
-
-PrintIsFinished()
+        try:
+            file = os.path.splitext(status['job']['file']['display'])[0]
+            if str(status['progress']['completion']) == "100.0":
+                    print("Notifying about a print completion")
+                    resetConnection(apikey, printerIP)
+                    jira.commentStatus(file, "Your print has been completed and should now be available for pickup")
+            else:
+                continue
+        except ValueError:
+            print("Something wrong with printer " + printerIP)
 
 def eachNewFile():
     directory = r'jiradownloads'
