@@ -4,6 +4,8 @@ import time
 from requests.auth import HTTPBasicAuth
 import json
 import yaml
+from google_drive_downloader import GoogleDriveDownloader as gdd
+import find
 
 with open("config.yml", "r") as yamlfile:
     config = yaml.load(yamlfile, Loader=yaml.FullLoader)
@@ -59,11 +61,33 @@ def getGcode():
             matching = [s for s in attachments if "https://projects.lib.utah.edu:8443/secure/attachment" in s]
             attachment = str(matching[0]).split("'")
             download(attachment[3], singleID)
+        elif any("https://drive.google.com/file/d/" in s for s in attachments):
+            matching = [s for s in attachments if "https://drive.google.com/file/d/" in s]
+            attachment = str(str(matching[0]).split("'"))
+            start = "https://drive.google.com/file/d/"
+            end = "/view?usp=sharing"
+            downloadGoogleDrive(attachment[attachment.find(start)+len(start):attachment.rfind(end)], singleID)
         else:
-            commentStatus(singleID, "Please try again and make sure to upload a file, not post a link or instructions")
+            commentStatus(
+                singleID,
+                "Please try again and make sure to upload a file, if your file is larger than 25mb then paste a google drive share link in the description of the print"
+            )
             changeStatus(singleID, "11")
             changeStatus(singleID, "111")
-            
+
+def downloadGoogleDrive(file_ID, singleID):
+    gdd.download_file_from_google_drive(file_id=file_ID, dest_path="jiradownloads/" + singleID + ".gcode")
+    if config['gcode_check_text'] not in text_file = open("jiradownloads/" + singleID + ".gcode", "w"):
+        commentStatus(singleID, "Please follow the slicing instructions and re-submit. Our automated check suggests you did not use our slicer configs")
+        changeStatus(singleID, "11")
+        changeStatus(singleID, "21")
+        changeStatus(singleID, "131")
+        if os.path.exists("jiradownloads/" + singleID + ".gcode"):
+            os.remove("jiradownloads/" + singleID + ".gcode")
+    else:
+        changeStatus(singleID, "11")
+        commentStatus(singleID, "Your print file has been downloaded and is now in the print queue.")
+
 def download(gcode, singleID):
     url = gcode
     
@@ -148,3 +172,5 @@ def commentStatus(singleID, comment):
        headers=headers,
        auth=auth
     )
+
+getGcode()
