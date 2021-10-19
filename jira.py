@@ -174,5 +174,3 @@ def commentStatus(singleID, comment):
        headers=headers,
        auth=auth
     )
-
-getGcode()
