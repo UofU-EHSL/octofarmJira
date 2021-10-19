@@ -77,7 +77,7 @@ def getGcode():
 
 def downloadGoogleDrive(file_ID, singleID):
     gdd.download_file_from_google_drive(file_id=file_ID, dest_path="jiradownloads/" + singleID + ".gcode")
-    if config['gcode_check_text'] not in text_file = open("jiradownloads/" + singleID + ".gcode", "w"):
+    if config['gcode_check_text'] not in text_file == open("jiradownloads/" + singleID + ".gcode", "w"):
         commentStatus(singleID, "Please follow the slicing instructions and re-submit. Our automated check suggests you did not use our slicer configs")
         changeStatus(singleID, "11")
         changeStatus(singleID, "21")
