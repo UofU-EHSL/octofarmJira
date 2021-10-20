@@ -50,7 +50,7 @@ def resetConnection(apikey, printerIP):
     connect={'command': 'connect'}
     header={'X-Api-Key': apikey}
     response = requests.post(url,json=disconnect,headers=header)
-    time.sleep(3)
+    time.sleep(30)
     response = requests.post(url,json=connect,headers=header)
 
 def PrintIsFinished():
