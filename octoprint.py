@@ -80,9 +80,9 @@ def PrintIsFinished():
                 print(printerIP + " Notifying about a print completion")
                 resetConnection(apikey, printerIP)
                 jira.commentStatus(file, "Your print has been completed and should now be available for pickup")
-                jira.changeStatus(singleID, "21")
-                jira.changeStatus(singleID, "31")
-                jira.changeStatus(singleID, "41")
+                jira.changeStatus(file, "21")
+                jira.changeStatus(file, "31")
+                jira.changeStatus(file, "41")
             else:
                 print(printerIP + " is ready")
                 continue
