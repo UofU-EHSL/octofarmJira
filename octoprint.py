@@ -28,8 +28,6 @@ def TryPrintingFile(file):
             headers=headers
         )
         status = json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
-        print(status)
-        print(apikey + " " + printerIP)
         if str(status['state']) == "Operational" and str(status['progress']['completion']) != "100.0":
             uploadFileToPrinter(apikey, printerIP, file)
             return
@@ -43,7 +41,7 @@ def uploadFileToPrinter(apikey, printerIP, file):
     if os.path.exists("jiradownloads/" + file + ".gcode"):
         os.remove("jiradownloads/" + file + ".gcode")
         jira.commentStatus(file, "Your file is now printing and we will update you when it is finished and ready for pickup")
-        print("Now printing: " + file )
+        print("Now printing: " + file + " on " + printerIP)
         
 def resetConnection(apikey, printerIP):
     url="http://" + printerIP + "/api/connection"
@@ -52,7 +50,6 @@ def resetConnection(apikey, printerIP):
     header={'X-Api-Key': apikey}
     response = requests.post(url,json=disconnect,headers=header)
     response = requests.post(url,json=connect,headers=header)
-    print(response)
 
 def PrintIsFinished():
     for printer in config['PRINTERS']:
@@ -71,7 +68,11 @@ def PrintIsFinished():
             headers=headers
         )
         status = json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
-        try:
+        
+        """
+        I might want to change some of this code when I am in front of the printers to make it so each printers status get's printed out
+        """
+        if status['state'] != "Offline after error":
             file = os.path.splitext(status['job']['file']['display'])[0]
             if str(status['progress']['completion']) == "100.0":
                     print("Notifying about a print completion")
@@ -79,8 +80,8 @@ def PrintIsFinished():
                     jira.commentStatus(file, "Your print has been completed and should now be available for pickup")
             else:
                 continue
-        except ValueError:
-            print("Something wrong with printer " + printerIP)
+        else:
+            print(printerIP + " is offline")
 
 def eachNewFile():
     directory = r'jiradownloads'

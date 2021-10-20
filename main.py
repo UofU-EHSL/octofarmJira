@@ -2,7 +2,9 @@ import jira
 import schedule
 import time
 import octoprint
+import os
 
+os.system('cls' if os.name == 'nt' else 'clear')
 print("PRINT MONITORING SYSTEM STARTED")
 schedule.every(1).minutes.do(jira.getGcode)
 schedule.every(1).minutes.do(octoprint.eachNewFile)

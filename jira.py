@@ -10,11 +10,12 @@ import os
 
 with open("config.yml", "r") as yamlfile:
     config = yaml.load(yamlfile, Loader=yaml.FullLoader)
-    print("Read successful")
+    print("Read config successful")
 
 auth = HTTPBasicAuth(config['jira_user'], config['jira_password'])
 
 def issueList():
+    os.system('cls' if os.name == 'nt' else 'clear')
     print("Checking for new submissions...")
     url = config['base_url'] + "/rest/api/2/" + config['search_url']
     
@@ -63,6 +64,7 @@ def getGcode():
             attachment = str(matching[0]).split("'")
             download(attachment[3], singleID)
         elif any("https://drive.google.com/file/d/" in s for s in attachments):
+            print("Downloading " + singleID + " from google drive")
             matching = [s for s in attachments if "https://drive.google.com/file/d/" in s]
             attachment = str(str(matching[0]).split("'"))
             start = "https://drive.google.com/file/d/"
@@ -78,8 +80,9 @@ def getGcode():
 
 def downloadGoogleDrive(file_ID, singleID):
     gdd.download_file_from_google_drive(file_id=file_ID, dest_path="jiradownloads/" + singleID + ".gcode")
-    text_file = open("jiradownloads/" + singleID + ".gcode", "r")
-    if config['gcode_check_text'] not in text_file:
+    file = open("jiradownloads/" + singleID + ".gcode", "r")
+    
+    if config['gcode_check_text'] not in file.read():
         commentStatus(singleID, "Please follow the slicing instructions and re-submit. Our automated check suggests you did not use our slicer configs")
         changeStatus(singleID, "11")
         changeStatus(singleID, "21")
