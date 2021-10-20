@@ -77,9 +77,12 @@ def PrintIsFinished():
         if status['state'] == "Operational":
             if str(status['progress']['completion']) == "100.0":
                 file = os.path.splitext(status['job']['file']['display'])[0]
-                print(printerIP + "Notifying about a print completion")
+                print(printerIP + " Notifying about a print completion")
                 resetConnection(apikey, printerIP)
                 jira.commentStatus(file, "Your print has been completed and should now be available for pickup")
+                jira.changeStatus(singleID, "21")
+                jira.changeStatus(singleID, "31")
+                jira.changeStatus(singleID, "41")
             else:
                 print(printerIP + " is ready")
                 continue
