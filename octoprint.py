@@ -72,12 +72,12 @@ def PrintIsFinished():
         """
         I might want to change some of this code when I am in front of the printers to make it so each printers status get's printed out
         """
-        if status['state'] != "Offline after error":
-            file = os.path.splitext(status['job']['file']['display'])[0]
+        if status['state'] == "Operational":
             if str(status['progress']['completion']) == "100.0":
-                    print("Notifying about a print completion")
-                    resetConnection(apikey, printerIP)
-                    jira.commentStatus(file, "Your print has been completed and should now be available for pickup")
+                file = os.path.splitext(status['job']['file']['display'])[0]
+                print("Notifying about a print completion")
+                resetConnection(apikey, printerIP)
+                jira.commentStatus(file, "Your print has been completed and should now be available for pickup")
             else:
                 continue
         else:
