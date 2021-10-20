@@ -6,6 +6,7 @@ import json
 import yaml
 import jira
 import os
+import time
 
 with open("config.yml", "r") as yamlfile:
     config = yaml.load(yamlfile, Loader=yaml.FullLoader)
@@ -49,6 +50,7 @@ def resetConnection(apikey, printerIP):
     connect={'command': 'connect'}
     header={'X-Api-Key': apikey}
     response = requests.post(url,json=disconnect,headers=header)
+    time.sleep(3)
     response = requests.post(url,json=connect,headers=header)
 
 def PrintIsFinished():
@@ -75,11 +77,14 @@ def PrintIsFinished():
         if status['state'] == "Operational":
             if str(status['progress']['completion']) == "100.0":
                 file = os.path.splitext(status['job']['file']['display'])[0]
-                print("Notifying about a print completion")
+                print(printerIP + "Notifying about a print completion")
                 resetConnection(apikey, printerIP)
                 jira.commentStatus(file, "Your print has been completed and should now be available for pickup")
             else:
+                print(printerIP + " is ready")
                 continue
+        elif status['state'] == "Printing":
+            print(printerIP + " is printing")
         else:
             print(printerIP + " is offline")
 
