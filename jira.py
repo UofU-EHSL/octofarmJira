@@ -10,7 +10,6 @@ import os
 
 with open("config.yml", "r") as yamlfile:
     config = yaml.load(yamlfile, Loader=yaml.FullLoader)
-    print("Read config successful")
 
 auth = HTTPBasicAuth(config['jira_user'], config['jira_password'])
 
@@ -129,7 +128,6 @@ def changeStatus(singleID, id):
     Reopen: 121  (From Cancelled to OPEN)
     Start progress : 141  (From REJECTEDto IN PROGRESS)
     """
-    print("updating ticket " + singleID + "...")
     auth = HTTPBasicAuth("ehsl_client", "asdqwe123")
     url = "https://projects.lib.utah.edu:8443/rest/api/2/issue/" + singleID + "/transitions"
     headers = {
@@ -156,10 +154,8 @@ def changeStatus(singleID, id):
         json = data,
         auth=auth
     )
-    print("ticket" + str(singleID) + " status updated to: " + str(id))
     
 def commentStatus(singleID, comment):
-    print("commenting on ticker " + singleID + ": " + comment)
     url = config['base_url'] + "/rest/api/2/issue/" + singleID + "/comment"
     headers = {
         "Accept": "application/json",
