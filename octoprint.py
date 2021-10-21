@@ -90,8 +90,6 @@ def PrintIsFinished():
             print(printer + " is printing")
         else:
             print(printer + " is offline")
-            
-PrintIsFinished()
 
 def eachNewFile():
     directory = r'jiradownloads'
