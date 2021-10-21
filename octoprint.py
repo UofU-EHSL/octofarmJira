@@ -76,7 +76,7 @@ def PrintIsFinished():
         """
         if status['state'] == "Operational":
             if str(status['progress']['completion']) == "100.0":
-                print(printerIP + " is finishing up")
+                print(printer + " is finishing up")
                 file = os.path.splitext(status['job']['file']['display'])[0]
                 resetConnection(apikey, printerIP)
                 jira.commentStatus(file, "Your print has been completed and should now be available for pickup")
@@ -84,12 +84,14 @@ def PrintIsFinished():
                 jira.changeStatus(file, "31")
                 jira.changeStatus(file, "41")
             else:
-                print(printerIP + " is ready")
+                print(printer + " is ready")
                 continue
         elif status['state'] == "Printing":
-            print(printerIP + " is printing")
+            print(printer + " is printing")
         else:
-            print(printerIP + " is offline")
+            print(printer + " is offline")
+            
+PrintIsFinished()
 
 def eachNewFile():
     directory = r'jiradownloads'

@@ -6,12 +6,12 @@ jira_password: "asdqwe123"
 
 
 PRINTERS:
-    printer0:
+    printer 0:
         ip: "192.168.1.129"
         api: "1C420D5E8BCB45FCAB20F1EC19039029"
-    printer1:
+    printer 1:
         ip: "192.168.1.129"
         api: "1C420D5E8BCB45FCAB20F1EC19039029"
-    printer2:
+    printer 2:
         ip: "192.168.1.129"
         api: "1C420D5E8BCB45FCAB20F1EC19039029"
