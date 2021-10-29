@@ -1,0 +1,130 @@
+
+<!doctype html>
+<style>
+    body {
+        background-color: black !important;
+    }
+    .stats {
+        width: 33%;
+        float: left;
+        text-align: center;
+    }
+    .panel-title {
+        height: 20px;
+    }
+</style>
+<html>
+    <head>
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}">
+        <!--<link rel="stylesheet" href="{{ url_for('static', filename='bootstrap/css/bootstrap-theme.min.css') }}">-->
+        <script src="{{ url_for('static', filename='jquery.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='socket.io.js') }}"></script>
+        <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.min.js') }}"></script>
+        
+        <script type="text/javascript" charset="utf-8">
+            function secondsTimeSpanToHMS(s) {
+              var h = Math.floor(s / 3600); //Get whole hours
+              s -= h * 3600;
+              var m = Math.floor(s / 60); //Get remaining minutes
+              s -= m * 60;
+              return h + ":" + (m < 10 ? '0' + m : m) + ":" + (s < 10 ? '0' + s : s); //zero padding on minutes and seconds
+            }
+            
+            $(document).ready(function() {
+                // Connect to the Socket.IO server.
+                // The connection URL has the following format, relative to the current page:
+                //     http[s]://<domain>:<port>[/<namespace>]
+                var socket = io();
+
+                socket.on('connect', function() {
+                    socket.emit('my_event', {data: 'I\'m connected!'});
+                });
+
+                //This is the part that updates everything
+                //This needs to target a single printers section not just the log section
+                socket.on('my_response', function(msg, cb) {
+                    $('#' + msg.api + "_percent").text($('<div/>').text(msg.percent + "%").html());
+                    $('#' + msg.api + "_status").text($('<div/>').text(" Status: " + msg.status).html());
+                    $('#' + msg.api + "_progress").attr('style','width: ' + msg.percent + "%");
+                    $('#' + msg.api + "_eta").text($('<div/>').text(" ETA: " + secondsTimeSpanToHMS(msg.eta) + " ").html());
+                    
+                    
+                    if (msg.status == "Paused") {
+                        $('.' + msg.api + "_block").addClass("panel-success");
+                        $('#' + msg.api + "_progress").addClass("progress-bar-success");
+                    }
+                    else if (msg.status == "Printing") {
+                        $('.' + msg.api + "_block").addClass("panel-warning");
+                        $('#' + msg.api + "_progress").addClass("progress-bar-warning");
+                    }
+                    else if (msg.status == "Operational") {
+                        $('.' + msg.api + "_block").addClass("panel-info");
+                        $('#' + msg.api + "_progress").addClass("progress-bar-info");
+                    }
+                    else {
+                        $('.' + msg.api + "_block").addClass("panel-danger");
+                        $('#' + msg.api + "_progress").addClass("progress-bar-danger");
+                    }
+                    
+                    
+                    if (cb)
+                        cb();
+                });
+            });
+        </script>
+    </head>
+    <body>
+        <title>Jira printer farm</title>
+
+        <nav class="navbar navbar-inverse">
+          <div class="container-fluid">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              <a class="navbar-brand" href="/">3D printing service</a>
+            </div>
+
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+              <ul class="nav navbar-nav">
+                <li><a href="{{ 'http://' + ip + '/queue' }}">Print queue</a></li>
+                <li><a href="{{ 'http://' + ip + '/admin' }}">Admin</a></li>
+              </ul>
+            </div><!-- /.navbar-collapse -->
+          </div><!-- /.container-fluid -->
+        </nav>
+
+        <!--list-->
+            {% for printer in config['PRINTERS'] %}
+            <div class="col-sm-6 col-md-4">
+                  <div class="{{ config['PRINTERS'][printer]['api'] }}_block">
+                      <div class="panel-heading">
+                          <h3 class="panel-title">
+                              <div class="stats"> {{ printer }}</div>
+                              <div class="stats" id="{{ config['PRINTERS'][printer]['api'] }}_status"></div>
+                              <div class="stats" id="{{ config['PRINTERS'][printer]['api'] }}_eta"></div>
+                          </h3>
+                      </div>
+                      <div>
+                          <img src="{{ config['PRINTERS'][printer]['stream'] }}" alt="..." style="width: 100%">
+                              <div style="margin-bottom: 0px" class="progress">
+                                <div id="{{ config['PRINTERS'][printer]['api'] }}_progress" class="progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="45" aria-valuemin="0" aria-valuemax="100" style="width: 100%">
+                                  <span class="sr-only">45% Complete</span>
+                                  <div id="{{ config['PRINTERS'][printer]['api'] }}_percent"></div>
+                                </div>
+                              </div>
+                      </div>
+                  </div>
+            </div>
+            {% endfor %}
+        
+        <!--end of list -->
+        
+    </body>
+</html>

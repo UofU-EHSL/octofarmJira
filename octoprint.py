@@ -33,6 +33,25 @@ def TryPrintingFile(file):
             uploadFileToPrinter(apikey, printerIP, file)
             return
 
+def GetStatus(ip, api):
+    apikey = api
+    printerIP = ip
+    url = "http://" + printerIP + "/api/job"
+
+    headers = {
+        "Accept": "application/json",
+        "Host": printerIP,
+        "X-Api-Key": apikey
+    }
+        
+    response = requests.request(
+        "GET",
+        url,
+        headers=headers
+    )
+    status = json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
+    return status
+            
 def uploadFileToPrinter(apikey, printerIP, file):
     fle={'file': open('jiradownloads/' + file + '.gcode', 'rb'), 'filename': file}
     url="http://" + printerIP + "/api/files/{}".format("local")

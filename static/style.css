@@ -1,0 +1,11 @@
+iframe{
+	width:100%;
+	height:800px;
+}
+.setting-panel{
+	display:none;
+}
+
+#preview{
+	width:100%;
+}

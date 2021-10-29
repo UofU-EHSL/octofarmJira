@@ -1,0 +1,68 @@
+
+<!doctype html>
+<html>
+    <head>
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+        <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap/css/bootstrap.min.css') }}">
+        <!--<link rel="stylesheet" href="{{ url_for('static', filename='bootstrap/css/bootstrap-theme.min.css') }}">-->
+        <script src="{{ url_for('static', filename='jquery.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='socket.io.js') }}"></script>
+        <script src="{{ url_for('static', filename='bootstrap/js/bootstrap.min.js') }}"></script>
+    </head>
+    <body>
+        <title>Jira printer farm</title>
+
+        <nav class="navbar navbar-inverse">
+          <div class="container-fluid">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1" aria-expanded="false">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              <a class="navbar-brand" href="/">3D printing service</a>
+            </div>
+
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+              <ul class="nav navbar-nav">
+                <li class="active"><a href="{{ 'http://' + ip + '/queue' }}">Print queue</a></li>
+                <li><a href="{{ 'http://' + ip + '/admin' }}">Admin</a></li>
+              </ul>
+            </div><!-- /.navbar-collapse -->
+          </div><!-- /.container-fluid -->
+        </nav>
+
+        <!--list-->
+
+        <div class="panel panel-success">
+            <div class="panel-heading">
+                <h3 class="panel-title">Queue</h3>
+            </div>
+            <div class="panel-body">
+                This is a list of everything currently waiting in the queue.
+            </div>
+        </div>
+
+        <div class="list-group">
+            {% for file in files %}
+            <li class="list-group-item">
+                {{ file }}
+                <div class="btn-group" role="group" aria-label="">
+                    <a href="{{ 'http://' + ip + '/download/' + file }}" type="button" class="btn btn-default">
+                        Download
+                    </a>
+                    <a href="{{ 'http://' + ip + '/delete/' + file }}" type="button" class="btn btn-danger">
+                        Delete
+                    </a>
+                </div>
+            </li>
+            {% endfor %}
+        </div>
+        
+        <!--end of list -->
+        
+    </body>
+</html>

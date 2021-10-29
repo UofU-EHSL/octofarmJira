@@ -6,3 +6,17 @@ schedule
 pyyaml
 googledrivedownloader
 find
+Flask
+asyncio
+Jsonify
+Flask_SocketIO
+Flask-Login
+Flask-Session
+itsdangerous
+Jinja2
+MarkupSafe
+python-engineio
+python-socketio
+six
+Werkzeug
+

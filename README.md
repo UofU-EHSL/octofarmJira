@@ -8,4 +8,8 @@ $ docker swarm init
 $ docker-compose up -d
 
 ## Running OctofarmJira
-This will run forever if done right so we want to make sure it keeps going. I have a script that you run that will open the service in a 'screen' so that even if you close the terminal window it will still be running. I also plan on making another script to stop the service.
+
+$ pip install -r requirements.yml
+$ python3 flask/app.py
+
+This will build the UI in a browser so go to 127.0.0.1:5000
