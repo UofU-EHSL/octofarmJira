@@ -34,7 +34,7 @@ CONFIG = './Config.yml'
 def background_thread():
     """How to send server generated events to clients."""
     while True:
-        socketio.sleep(2)
+        socketio.sleep(1)
         
         with open(CONFIG, "r") as yamlfile:
             config = yaml.load(yamlfile, Loader=yaml.FullLoader)
@@ -50,7 +50,7 @@ def background_thread():
                 percent = 0
                 
             if status['job']['estimatedPrintTime'] >= 0:
-                eta = str(round(status['job']['estimatedPrintTime'], 0))
+                eta = str(round(status['progress']['printTimeLeft'], 0))
             else:
                 eta = 0
             

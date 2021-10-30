@@ -51,20 +51,36 @@
                     
                     
                     if (msg.status == "Paused") {
-                        $('.' + msg.api + "_block").addClass("panel-success");
+                        $('#' + msg.api + "_block").removeClass();
+                        $('#' + msg.api + "_progress").removeClass();
+                        $('#' + msg.api + "_block").addClass("panel-success");
                         $('#' + msg.api + "_progress").addClass("progress-bar-success");
+                        $('#' + msg.api + "_progress").addClass("progress-bar-striped");
+                        $('#' + msg.api + "_progress").addClass("active");
                     }
                     else if (msg.status == "Printing") {
-                        $('.' + msg.api + "_block").addClass("panel-warning");
+                        $('#' + msg.api + "_block").removeClass();
+                        $('#' + msg.api + "_progress").removeClass();
+                        $('#' + msg.api + "_block").addClass("panel-warning");
                         $('#' + msg.api + "_progress").addClass("progress-bar-warning");
+                        $('#' + msg.api + "_progress").addClass("progress-bar-striped");
+                        $('#' + msg.api + "_progress").addClass("active");
                     }
                     else if (msg.status == "Operational") {
-                        $('.' + msg.api + "_block").addClass("panel-info");
+                        $('#' + msg.api + "_block").removeClass();
+                        $('#' + msg.api + "_progress").removeClass();
+                        $('#' + msg.api + "_block").addClass("panel-info");
                         $('#' + msg.api + "_progress").addClass("progress-bar-info");
+                        $('#' + msg.api + "_progress").addClass("progress-bar-striped");
+                        $('#' + msg.api + "_progress").addClass("active");
                     }
                     else {
-                        $('.' + msg.api + "_block").addClass("panel-danger");
+                        $('#' + msg.api + "_block").removeClass();
+                        $('#' + msg.api + "_progress").removeClass();
+                        $('#' + msg.api + "_block").addClass("panel-danger");
                         $('#' + msg.api + "_progress").addClass("progress-bar-danger");
+                        $('#' + msg.api + "_progress").addClass("progress-bar-striped");
+                        $('#' + msg.api + "_progress").addClass("active"); 
                     }
                     
                     
@@ -103,7 +119,7 @@
         <!--list-->
             {% for printer in config['PRINTERS'] %}
             <div class="col-sm-6 col-md-4">
-                  <div class="{{ config['PRINTERS'][printer]['api'] }}_block">
+                  <div id="{{ config['PRINTERS'][printer]['api'] }}_block">
                       <div class="panel-heading">
                           <h3 class="panel-title">
                               <div class="stats"> {{ printer }}</div>
