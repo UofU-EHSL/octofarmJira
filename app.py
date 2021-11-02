@@ -17,7 +17,7 @@ from flask import Flask, render_template, session, request, \
     copy_current_request_context
 from flask_socketio import SocketIO, emit
 
-with open("./Config.yml", "r") as yamlfile:
+with open("./config.yml", "r") as yamlfile:
     config = yaml.load(yamlfile, Loader=yaml.FullLoader)
 
 async_mode = None
@@ -29,7 +29,7 @@ thread = None
 thread_lock = Lock()
 
 DOWNLOAD_FOLDER = './jiradownloads'
-CONFIG = './Config.yml'
+CONFIG = './config.yml'
     
 def background_thread():
     """How to send server generated events to clients."""
