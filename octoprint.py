@@ -88,7 +88,10 @@ def PrintIsFinished():
             url,
             headers=headers
         )
-        status = json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
+        if(json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))):
+            status = json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
+        else:
+            status = "offline";
         
         """
         I might want to change some of this code when I am in front of the printers to make it so each printers status get's printed out
