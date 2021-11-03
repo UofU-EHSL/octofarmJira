@@ -44,15 +44,12 @@ def background_thread():
             printerIP = config['PRINTERS'][printer]['ip']
             status = octoprint.GetStatus(printerIP,apikey)
             
-            if status['progress']['completion'] >= 0:
-                percent = str(round(status['progress']['completion'], 2))
-            else:
+            if status['progress']['completion'] is None:
                 percent = 0
-                
-            if status['job']['estimatedPrintTime'] >= 0:
-                eta = str(round(status['progress']['printTimeLeft'], 0))
-            else:
                 eta = 0
+            else:
+                percent = str(round(status['progress']['completion'], 2))
+                eta = str(round(status['progress']['printTimeLeft'], 0))
             
             socketio.emit('my_response', {
                 'api' : apikey,
