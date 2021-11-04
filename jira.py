@@ -128,7 +128,6 @@ def changeStatus(singleID, id):
     Reopen: 121  (From Cancelled to OPEN)
     Start progress : 141  (From REJECTEDto IN PROGRESS)
     """
-    auth = HTTPBasicAuth("ehsl_client", "asdqwe123")
     url = "https://projects.lib.utah.edu:8443/rest/api/2/issue/" + singleID + "/transitions"
     headers = {
        "Content-type": "application/json",
