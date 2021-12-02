@@ -23,7 +23,7 @@ with open("./config.yml", "r") as yamlfile:
 async_mode = None
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'secret!'
+app.config['SECRET_KEY'] = 'secret!' #no looky bots!
 socketio = SocketIO(app, async_mode=async_mode)
 thread = None
 thread_lock = Lock()
