@@ -1,0 +1,7 @@
+CLASSKEYS:
+  class 1:
+    active: true
+    classCost: 0
+    key: key
+    keyBypassesPayment: true
+    printCount: 5

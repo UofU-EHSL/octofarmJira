@@ -6,7 +6,6 @@ import threading
 from markupsafe import escape
 from multiprocessing import Process
 import time
-import UpdateJson
 import pythonFunctions
 from flask import request
 import yaml
@@ -30,6 +29,10 @@ thread_lock = Lock()
 
 DOWNLOAD_FOLDER = './jiradownloads'
 CONFIG = './config.yml'
+PRINTERS = './printers.yml'
+KEYS = "./keys.yml"
+LISTS = "./lists.yml"
+HISTORY = "./history.yml"
     
 def background_thread():
     """How to send server generated events to clients."""
@@ -73,15 +76,36 @@ def connect():
 @app.route('/admin', methods=['GET','POST'])
 def admin():
 
+    #config
     with open(CONFIG) as f:
-        config = f.read()
-            
+        config = f.read()   
+    with open(PRINTERS) as f:
+        printers = f.read()   
+    with open(KEYS) as f:
+        keys = f.read() 
+    with open(LISTS) as f:
+        lists = f.read()       
+
     if request.method == 'POST':
-        config = request.form['config_box']
-        with open(CONFIG, 'w') as f:
-            f.write(str(config))
-                   
-    return flask.render_template('admin.html', config=config, ip=flask.request.host)
+        if "config_box" in request.form:
+            config = request.form['config_box']
+            with open(CONFIG, 'w') as f:
+                f.write(str(config))
+        if "printers_box" in request.form:
+            printers = request.form['printers_box']
+            with open(PRINTERS, 'w') as f:
+                f.write(str(printers))
+        if "keys_box" in request.form:
+            keys = request.form['keys_box']
+            with open(KEYS, 'w') as f:
+                f.write(str(keys))
+        if "lists_box" in request.form:
+            lists = request.form['lists_box']
+            with open(LISTS, 'w') as f:
+                f.write(str(lists))
+
+
+    return flask.render_template('admin.html', config=config, printers=printers, keys=keys, lists=lists, ip=flask.request.host)
    
 @app.route('/delete/<fileName>', methods=['GET','POST'])
 def remove(fileName=None):

@@ -11,6 +11,9 @@ import os
 with open("config.yml", "r") as yamlfile:
     config = yaml.load(yamlfile, Loader=yaml.FullLoader)
 
+with open("lists.yml", "r") as yamlfile:
+    userlist = yaml.load(yamlfile, Loader=yaml.FullLoader)
+
 auth = HTTPBasicAuth(config['jira_user'], config['jira_password'])
 
 def issueList():
@@ -41,7 +44,6 @@ def getGcode():
         id = issue.split("/")
         singleID = id[-1]
         url = issue
-        
         headers = {
            "Accept": "application/json"
         }
@@ -55,33 +57,77 @@ def getGcode():
 
         # parse all open projects:
         singleIssue = json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
-        
-        attachments = str(singleIssue).split(',')
-        if any("https://projects.lib.utah.edu:8443/secure/attachment" in s for s in attachments):
-            print("Downloading " + singleID)
-            matching = [s for s in attachments if "https://projects.lib.utah.edu:8443/secure/attachment" in s]
-            attachment = str(matching[0]).split("'")
-            download(attachment[3], singleID)
-        elif any("https://drive.google.com/file/d/" in s for s in attachments):
-            print("Downloading " + singleID + " from google drive")
-            matching = [s for s in attachments if "https://drive.google.com/file/d/" in s]
-            attachment = str(str(matching[0]).split("'"))
-            start = "https://drive.google.com/file/d/"
-            end = "/view?usp=sharing"
-            downloadGoogleDrive(attachment[attachment.find(start)+len(start):attachment.rfind(end)], singleID)
-        else:
+        user = singleIssue['fields']['reporter']['name']
+        print(user)
+        print(userlist["NICE"])
+        if user in userlist["NICE"]:
+            attachments = str(singleIssue).split(',')
+            if any("https://projects.lib.utah.edu:8443/secure/attachment" in s for s in attachments):
+                print("Downloading " + singleID)
+                matching = [s for s in attachments if "https://projects.lib.utah.edu:8443/secure/attachment" in s]
+                attachment = str(matching[0]).split("'")
+                filename = attachment[3].rsplit('EHSL3DPR-', 1)[-1]
+                download(attachment[3], singleID, filename)
+            elif any("https://drive.google.com/file/d/" in s for s in attachments):
+                print("Downloading " + singleID + " from google drive")
+                matching = [s for s in attachments if "https://drive.google.com/file/d/" in s]
+                attachment = str(str(matching[0]).split("'"))
+                start = "https://drive.google.com/file/d/"
+                end = "/view?usp=sharing"
+                downloadGoogleDrive(attachment[attachment.find(start)+len(start):attachment.rfind(end)], singleID)
+            else:
+                commentStatus(
+                    singleID,
+                    "Please try again and make sure to upload a file, if your file is larger than 25mb then paste a google drive share link in the description of the print"
+                )
+                changeStatus(singleID, "11")
+                changeStatus(singleID, "111")
+        elif user in userlist["NAUGHTY"]:
+            print(user + " is on the naughty list and was rejected")
             commentStatus(
                 singleID,
-                "Please try again and make sure to upload a file, if your file is larger than 25mb then paste a google drive share link in the description of the print"
+                "Your print was not printed, please contact the " + config["contact_info"]
             )
             changeStatus(singleID, "11")
-            changeStatus(singleID, "111")
+            changeStatus(singleID, "21")
+            changeStatus(singleID, "131")
+            if os.path.exists("jiradownloads/" + singleID + ".gcode"):
+                os.remove("jiradownloads/" + singleID + ".gcode")
+        else :
+            print(user + " is a new user and was rejected")
+            commentStatus(
+                singleID,
+                "Your print was rejected becuase you have not completed the canvas cource at " + config["link_to_canvas_class"]
+            )
+            changeStatus(singleID, "11")
+            changeStatus(singleID, "21")
+            changeStatus(singleID, "131")
+            if os.path.exists("jiradownloads/" + singleID + ".gcode"):
+                os.remove("jiradownloads/" + singleID + ".gcode")
+
+def checkGcode(file):
+    status = True
+    for code_check in config['gcode_check_text']:
+        code_to_check = config['gcode_check_text'][code_check]
+        print(code_to_check)
+        if code_to_check not in file:
+            status = False
+        if status == False:
+            print("File is bad at: " + code_check)
+            return "Bad G-code"
+    if status == True:
+        print("File checkedout as good")
+        return "Valid G-code"
 
 def downloadGoogleDrive(file_ID, singleID):
-    gdd.download_file_from_google_drive(file_id=file_ID, dest_path="jiradownloads/" + singleID + ".gcode")
-    file = open("jiradownloads/" + singleID + ".gcode", "r")
+    if config['Make_files_anon'] == True:
+        gdd.download_file_from_google_drive(file_id=file_ID, dest_path="jiradownloads/" + singleID + ".gcode")
+        file = open("jiradownloads/" + singleID + ".gcode", "r")
+    else:
+        gdd.download_file_from_google_drive(file_id=file_ID, dest_path="jiradownloads/" + file_ID + "__" + singleID + ".gcode")
+        file = open("jiradownloads/" + file_ID + "__" + singleID + ".gcode", "r")
     
-    if config['gcode_check_text'] not in file.read():
+    if checkGcode(file.read()) == "Bad G-code":
         commentStatus(singleID, "Please follow the slicing instructions and re-submit. Our automated check suggests you did not use our slicer configs")
         changeStatus(singleID, "11")
         changeStatus(singleID, "21")
@@ -92,7 +138,7 @@ def downloadGoogleDrive(file_ID, singleID):
         changeStatus(singleID, "11")
         commentStatus(singleID, "Your print file has been downloaded and is now in the print queue.")
 
-def download(gcode, singleID):
+def download(gcode, singleID, filename):
     url = gcode
     
     headers = {
@@ -105,17 +151,32 @@ def download(gcode, singleID):
        headers=headers,
        auth=auth
     )
-    if config['gcode_check_text'] not in response.text:
+    if checkGcode(response.text) == "Bad G-code":
         commentStatus(singleID, "Please follow the slicing instructions and re-submit. Our automated check suggests you did not use our slicer configs")
         changeStatus(singleID, "11")
         changeStatus(singleID, "21")
         changeStatus(singleID, "131")
     else:
-        text_file = open("jiradownloads/" + singleID + ".gcode", "w")
+        if config['Make_files_anon'] == True:
+            text_file = open("jiradownloads/" + singleID + ".gcode", "w")
+        else:
+            text_file = open("jiradownloads/" + filename + "__" + singleID + ".gcode", "w")
         n = text_file.write(response.text)
         text_file.close()
         changeStatus(singleID, "11")
         commentStatus(singleID, "Your print file has been downloaded and is now in the print queue.")
+
+
+### BIG TO_DO ###
+def update_yaml_class_key(file, class_name, cost, printCount):
+    file_name = file
+    with open(file_name) as f:
+        keys = yaml.safe_load(f)
+    if printCount > 0:
+        keys['CLASSKEYS'][class_name]['printCount'] = keys['CLASSKEYS'][class_name]['printCount'] + 1
+    with open(file_name, 'w') as f:
+        yaml.safe_dump(keys, f, default_flow_style=False)
+
 
 def changeStatus(singleID, id):
     """
@@ -128,7 +189,8 @@ def changeStatus(singleID, id):
     Reopen: 121  (From Cancelled to OPEN)
     Start progress : 141  (From REJECTEDto IN PROGRESS)
     """
-    url = "https://projects.lib.utah.edu:8443/rest/api/2/issue/" + singleID + "/transitions"
+    simple_singleID = singleID.rsplit('__', 1)[-1]
+    url = config['base_url'] + "/rest/api/2/issue/" + simple_singleID + "/transitions"
     headers = {
        "Content-type": "application/json",
        "Accept" : "application/json"
@@ -155,7 +217,8 @@ def changeStatus(singleID, id):
     )
     
 def commentStatus(singleID, comment):
-    url = config['base_url'] + "/rest/api/2/issue/" + singleID + "/comment"
+    simple_singleID = singleID.rsplit('__', 1)[-1]
+    url = config['base_url'] + "/rest/api/2/issue/" + simple_singleID + "/comment"
     headers = {
         "Accept": "application/json",
         "Content-Type": "application/json"
