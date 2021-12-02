@@ -4,7 +4,7 @@ link_to_canvas_class: ""
 contact_info: ""
 jira_user: "ehsl_client"
 jira_password: "asdqwe123"
-Make_files_anon: False
+Make_files_anon: True
 Save_printed_files: False
 
 payment:
