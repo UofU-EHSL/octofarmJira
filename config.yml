@@ -1,20 +1,18 @@
-base_url: "https://projects.lib.utah.edu:8443"
-search_url: "search?jql=project%20%3D%20EHSL3DPR%20AND%20status%20%3D%20Open"
-gcode_check_text: "M0"
-jira_user: "ehsl_client"
-jira_password: "asdqwe123"
-
-
-PRINTERS:
-    printer 0:
-        ip: "192.168.1.129"
-        api: "1C420D5E8BCB45FCAB20F1EC19039029"
-        stream: "http://192.168.1.129/webcam/?action=stream"
-    printer 1:
-        ip: "192.168.1.129"
-        api: "DD2F0451E01F455D84D505AE1A98B057"
-        stream: "http://192.168.1.129/webcam/?action=stream"
-    printer 2:
-        ip: "192.168.1.129"
-        api: "201095FE8FC14863A54320E9CDD7A110"
-        stream: "http://192.168.1.129/webcam/?action=stream"
+base_url: "https://projects.lib.utah.edu:8443"
+search_url: "search?jql=project%20%3D%20EHSL3DPR%20AND%20status%20%3D%20Open"
+gcode_check_text: "M0"
+jira_user: "ehsl_client"
+jira_password: "asdqwe123"
+PRINTERS:
+    printer 0:
+        ip: "192.168.1.129"
+        api: "1C420D5E8BCB45FCAB20F1EC19039029"
+        stream: "http://192.168.1.129/webcam/?action=stream"
+    printer 1:
+        ip: "192.168.1.115"
+        api: "D4A7013EFA104AF994EA33AAF0E19EE4"
+        stream: "http://192.168.1.115/webcam/?action=stream"
+    printer 2:
+        ip: "192.168.1.147"
+        api: "8CE2ED543A85410D9F27944011AF934D"
+        stream: "http://192.168.1.147/webcam/?action=stream"
