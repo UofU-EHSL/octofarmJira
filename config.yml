@@ -1,5 +1,6 @@
 base_url: "https://projects.lib.utah.edu:8443"
-search_url: "search?jql=project%20%3D%20EHSL3DPR%20AND%20status%20%3D%20Done"
+#search_url: "search?jql=project%20%3D%20EHSL3DPR%20AND%20status%20%3D%20Open"
+search_url: "search?jql=project%20%3D%20EHSL3DPR%20AND%20status%20%3D%20Rejected"
 link_to_canvas_class: ""
 contact_info: ""
 jira_user: "ehsl_client"

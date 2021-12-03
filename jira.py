@@ -8,11 +8,16 @@ from google_drive_downloader import GoogleDriveDownloader as gdd
 import find
 import os
 
+from app import KEYS
+
 with open("config.yml", "r") as yamlfile:
     config = yaml.load(yamlfile, Loader=yaml.FullLoader)
 
 with open("lists.yml", "r") as yamlfile:
     userlist = yaml.load(yamlfile, Loader=yaml.FullLoader)
+
+with open("keys.yml", "r") as yamlfile:
+    keys = yaml.load(yamlfile, Loader=yaml.FullLoader)
 
 auth = HTTPBasicAuth(config['jira_user'], config['jira_password'])
 
@@ -20,7 +25,6 @@ def issueList():
     os.system('cls' if os.name == 'nt' else 'clear')
     print("Checking for new submissions...")
     url = config['base_url'] + "/rest/api/2/" + config['search_url']
-    
     headers = {
        "Accept": "application/json"
     }
@@ -38,6 +42,21 @@ def issueList():
     for issue in openissues['issues']:
         issues.append(issue['self'])
     return issues
+
+def validateClassKey(key, cost, count):
+    for singlekey in keys["CLASSKEYS"]:
+        if keys["CLASSKEYS"][singlekey]["key"] == key:
+            if keys["CLASSKEYS"][singlekey]["active"] == True:
+                if count > 0:
+                    keys['CLASSKEYS'][singlekey]['printCount'] = keys['CLASSKEYS'][singlekey]['printCount'] + count
+                with open("keys.yml", 'w') as f:
+                    yaml.safe_dump(keys, f, default_flow_style=False)
+                if cost > 0:
+                    keys['CLASSKEYS'][singlekey]['classCost'] = keys['CLASSKEYS'][singlekey]['classCost'] + cost
+                with open("keys.yml", 'w') as f:
+                    yaml.safe_dump(keys, f, default_flow_style=False)
+                return "Valid key"
+    return "Bad key"
 
 def getGcode():
     for issue in issueList():
@@ -58,8 +77,16 @@ def getGcode():
         # parse all open projects:
         singleIssue = json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
         user = singleIssue['fields']['reporter']['name']
-        print(user)
-        print(userlist["NICE"])
+        
+        #parsing class key value
+        start = "*Class Key* \\\\"
+        end = "\n\n*Description of print*"
+        s = singleIssue['fields']['description']
+        classKey = s[s.find(start)+len(start):s.rfind(end)]
+        
+        ## keys can be validated and update the key logs but keys do not change if a print is to be printed or not yet.
+        print(validateClassKey(classKey,5,1))
+
         if user in userlist["NICE"]:
             attachments = str(singleIssue).split(',')
             if any("https://projects.lib.utah.edu:8443/secure/attachment" in s for s in attachments):
@@ -86,7 +113,7 @@ def getGcode():
             print(user + " is on the naughty list and was rejected")
             commentStatus(
                 singleID,
-                "Your print was not printed, please contact the " + config["contact_info"]
+                "Your print was not printed, please contact " + config["contact_info"]
             )
             changeStatus(singleID, "11")
             changeStatus(singleID, "21")
@@ -165,17 +192,6 @@ def download(gcode, singleID, filename):
         text_file.close()
         changeStatus(singleID, "11")
         commentStatus(singleID, "Your print file has been downloaded and is now in the print queue.")
-
-
-### BIG TO_DO ###
-def update_yaml_class_key(file, class_name, cost, printCount):
-    file_name = file
-    with open(file_name) as f:
-        keys = yaml.safe_load(f)
-    if printCount > 0:
-        keys['CLASSKEYS'][class_name]['printCount'] = keys['CLASSKEYS'][class_name]['printCount'] + 1
-    with open(file_name, 'w') as f:
-        yaml.safe_dump(keys, f, default_flow_style=False)
 
 
 def changeStatus(singleID, id):

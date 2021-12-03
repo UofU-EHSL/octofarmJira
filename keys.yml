@@ -1,7 +1,7 @@
 CLASSKEYS:
   class 1:
     active: true
-    classCost: 0
-    key: key
+    classCost: 5
+    key: class key test
     keyBypassesPayment: true
-    printCount: 5
+    printCount: 7
