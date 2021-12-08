@@ -32,36 +32,111 @@
              </ul>
              <ul class="nav navbar-nav navbar-right">
 
-               <li>
-                   <a data-toggle="modal" data-target="#exampleModal">
-                   Edit config file
-                   </a>
-               </li>
+                <li>
+                  <a data-toggle="modal" data-target="#configModel">
+                  Config
+                  </a>
+              </li>
+              <li>
+                <a data-toggle="modal" data-target="#printersModal">
+                  Printers
+                </a>
+              </li>
+              <li>
+                <a data-toggle="modal" data-target="#keysModal">
+                  Keys
+                </a>
+              </li>
+              <li>
+                <a data-toggle="modal" data-target="#listsModal">
+                  Lists
+                </a>
+              </li>
+
              </ul>
            </div><!-- /.navbar-collapse -->
          </div><!-- /.container-fluid -->
        </nav>
 
-
-       <!-- Modal -->
-       <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
-         <div class="modal-dialog" role="document">
-           <div class="modal-content">
-             <div class="modal-header">
-               <h3 class="modal-title" id="exampleModalLabel">Config edit</h3>
-               <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                 <span aria-hidden="true">&times;</span>
-               </button>
-             </div>
-             <div class="modal-body">
-                 <form action="admin" method="post">
-                   <textarea class="form-control" name="config_box" rows="20">{{ config }}</textarea>
-                   <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                   <button type="submit" class="btn btn-primary">Save changes</button>
-                 </form>
-             </div>
-           </div>
-         </div>
-       </div>
+              <!-- Modal config -->
+              <div class="modal fade" id="configModel" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h3 class="modal-title" id="exampleModalLabel">Config edit</h3>
+                      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>
+                    <div class="modal-body">
+                        <form action="admin" method="post">
+                          <textarea class="form-control" name="config_box" rows="20">{{ config }}</textarea>
+                          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                          <button type="submit" class="btn btn-primary">Save changes</button>
+                        </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- Modal printers -->
+              <div class="modal fade" id="printersModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h3 class="modal-title" id="exampleModalLabel">Printers edit</h3>
+                      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>
+                    <div class="modal-body">
+                        <form action="admin" method="post">
+                          <textarea class="form-control" name="printers_box" rows="20">{{ printers }}</textarea>
+                          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                          <button type="submit" class="btn btn-primary">Save changes</button>
+                        </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- Modal keys -->
+              <div class="modal fade" id="keysModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h3 class="modal-title" id="exampleModalLabel">Printers edit</h3>
+                      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>
+                    <div class="modal-body">
+                        <form action="admin" method="post">
+                          <textarea class="form-control" name="keys_box" rows="20">{{ keys }}</textarea>
+                          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                          <button type="submit" class="btn btn-primary">Save changes</button>
+                        </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- Modal keys -->
+              <div class="modal fade" id="listsModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h3 class="modal-title" id="exampleModalLabel">Lists edit</h3>
+                      <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                      </button>
+                    </div>
+                    <div class="modal-body">
+                        <form action="admin" method="post">
+                          <textarea class="form-control" name="lists_box" rows="20">{{ lists }}</textarea>
+                          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                          <button type="submit" class="btn btn-primary">Save changes</button>
+                        </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
    </body>
 </html>

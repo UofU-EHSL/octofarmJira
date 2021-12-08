@@ -1,0 +1,9 @@
+PRINTERS:
+    printer 0:
+        ip: "0.0.0.0"
+        api: "api key go here"
+        stream: "http://0.0.0.0/webcam/?action=stream"
+    printer 1:
+        ip: "0.0.0.0"
+        api: "totally legit api key"
+        stream: "http://0.0.0.0/webcam/?action=stream"

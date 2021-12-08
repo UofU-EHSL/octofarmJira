@@ -10,11 +10,13 @@ import time
 
 with open("config.yml", "r") as yamlfile:
     config = yaml.load(yamlfile, Loader=yaml.FullLoader)
+with open("printers.yml", "r") as yamlfile:
+    printers = yaml.load(yamlfile, Loader=yaml.FullLoader)
 
 def TryPrintingFile(file):
-    for printer in config['PRINTERS']:
-        apikey = config['PRINTERS'][printer]['api']
-        printerIP = config['PRINTERS'][printer]['ip']
+    for printer in printers['PRINTERS']:
+        apikey = printers['PRINTERS'][printer]['api']
+        printerIP = printers['PRINTERS'][printer]['ip']
         url = "http://" + printerIP + "/api/job"
 
         headers = {
@@ -22,16 +24,19 @@ def TryPrintingFile(file):
             "Host": printerIP,
             "X-Api-Key": apikey
         }
-        
-        response = requests.request(
-            "GET",
-            url,
-            headers=headers
-        )
-        status = json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
-        if str(status['state']) == "Operational" and str(status['progress']['completion']) != "100.0":
-            uploadFileToPrinter(apikey, printerIP, file)
-            return
+        try:
+            response = requests.request(
+                "GET",
+                url,
+                headers=headers
+            )
+            status = json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
+            if str(status['state']) == "Operational" and str(status['progress']['completion']) != "100.0":
+                uploadFileToPrinter(apikey, printerIP, file)
+                return
+        except requests.exceptions.RequestException as e:  # This is the correct syntax
+            print("Skipping " + printer + " due to network error")
+
 
 def GetStatus(ip, api):
     apikey = api
@@ -43,15 +48,19 @@ def GetStatus(ip, api):
         "Host": printerIP,
         "X-Api-Key": apikey
     }
-        
-    response = requests.request(
-        "GET",
-        url,
-        headers=headers
-    )
-    status = json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
-    return status
-            
+    try:
+        response = requests.request(
+            "GET",
+            url,
+            headers=headers
+        )
+        status = json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
+        return status
+    except requests.exceptions.RequestException as e:  # This is the correct syntax
+            print(printerIP + "'s raspberry pi is offline and can't be contacted over the network")
+            status = "offline"
+            return status
+
 def uploadFileToPrinter(apikey, printerIP, file):
     fle={'file': open('jiradownloads/' + file + '.gcode', 'rb'), 'filename': file}
     url="http://" + printerIP + "/api/files/{}".format("local")
@@ -59,7 +68,10 @@ def uploadFileToPrinter(apikey, printerIP, file):
     header={'X-Api-Key': apikey}
     response = requests.post(url, files=fle,data=payload,headers=header)
     if os.path.exists("jiradownloads/" + file + ".gcode"):
-        os.remove("jiradownloads/" + file + ".gcode")
+        if config['Save_printed_files'] == False:
+            os.remove("jiradownloads/" + file + ".gcode")
+        else:
+            os.replace("jiradownloads/" + file + ".gcode", "archive_files/" + file + ".gcode")
         jira.commentStatus(file, "Your file is now printing and we will update you when it is finished and ready for pickup")
         print("Now printing: " + file + " on " + printerIP)
         
@@ -73,45 +85,50 @@ def resetConnection(apikey, printerIP):
     response = requests.post(url,json=connect,headers=header)
 
 def PrintIsFinished():
-    for printer in config['PRINTERS']:
-        apikey = config['PRINTERS'][printer]['api']
-        printerIP = config['PRINTERS'][printer]['ip']
+    for printer in printers['PRINTERS']:
+        apikey = printers['PRINTERS'][printer]['api']
+        printerIP = printers['PRINTERS'][printer]['ip']
         url = "http://" + printerIP + "/api/job"
         headers = {
             "Accept": "application/json",
             "Host": printerIP,
             "X-Api-Key": apikey
         }
-        
-        response = requests.request(
-            "GET",
-            url,
-            headers=headers
-        )
-        if(json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))):
-            status = json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
-        else:
-            status = "offline";
-        
+        try:
+            response = requests.request(
+                "GET",
+                url,
+                headers=headers
+            )
+            if(json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))):
+                status = json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
+            else:
+                status = "offline"
+        except requests.exceptions.RequestException as e:  # This is the correct syntax
+            print(printer + "'s raspberry pi is offline and can't be contacted over the network")
+            status = "offline"
+            
         """
         I might want to change some of this code when I am in front of the printers to make it so each printers status get's printed out
         """
-        if status['state'] == "Operational":
-            if str(status['progress']['completion']) == "100.0":
-                print(printer + " is finishing up")
-                file = os.path.splitext(status['job']['file']['display'])[0]
-                resetConnection(apikey, printerIP)
-                jira.commentStatus(file, "Your print has been completed and should now be available for pickup")
-                jira.changeStatus(file, "21")
-                jira.changeStatus(file, "31")
-                jira.changeStatus(file, "41")
+        if status != "offline":
+            if status['state'] == "Operational":
+                if str(status['progress']['completion']) == "100.0":
+                    print(printer + " is finishing up")
+                    file = os.path.splitext(status['job']['file']['display'])[0]
+                    resetConnection(apikey, printerIP)
+                    jira.commentStatus(file, "Your print has been completed and should now be available for pickup")
+                    jira.changeStatus(file, "21")
+                    jira.changeStatus(file, "31")
+                    jira.changeStatus(file, "41")
+                else:
+                    print(printer + " is ready")
+                    continue
+            elif status['state'] == "Printing":
+                print(printer + " is printing")
             else:
-                print(printer + " is ready")
-                continue
-        elif status['state'] == "Printing":
-            print(printer + " is printing")
-        else:
-            print(printer + " is offline")
+                print(printer + " is offline")
+
 
 def eachNewFile():
     directory = r'jiradownloads'
