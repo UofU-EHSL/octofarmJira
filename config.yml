@@ -7,7 +7,8 @@ jira_user: "ehsl_client"
 jira_password: "asdqwe123"
 Make_files_anon: True
 Save_printed_files: False
-
+use_nice_list: False
+use_naughty_list: True
 payment:
     url: ""
     username: ""
@@ -22,11 +23,11 @@ reciept_printer:
     Note: "I dont't have one of these so I can't really test it and am not sure what is needed so we will make a new function that will take this into account"
 
 gcode_check_text:
-    startGcode: "G28" 
+    startGcode: "" 
     endGcode: "M0"
-    material: "M1"
-    printer: "Prusa"
-    notes_print_settings: "EHSL"
+    material: ""
+    printer: ""
+    notes_print_settings: ""
     before_layer_change: ""
     after_layer_change: ""
     tool_change: ""
