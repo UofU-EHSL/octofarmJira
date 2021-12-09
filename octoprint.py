@@ -72,8 +72,12 @@ def uploadFileToPrinter(apikey, printerIP, file):
             os.remove("jiradownloads/" + file + ".gcode")
         else:
             os.replace("jiradownloads/" + file + ".gcode", "archive_files/" + file + ".gcode")
-        jira.commentStatus(file, "Your file is now printing and we will update you when it is finished and ready for pickup")
-        print("Now printing: " + file + " on " + printerIP)
+        if config["Make_files_anon"] == True:
+            jira.commentStatus(file, "Your file is now printing and we will update you when it is finished and ready for pickup")
+            print("Now printing: " + file + " on " + printerIP)
+        else:
+            jira.commentStatus(file, "Your file is now printing and we will update you when it is finished and ready for pickup")
+            print("Now printing: " + file + " on " + printerIP)
         
 def resetConnection(apikey, printerIP):
     url="http://" + printerIP + "/api/connection"

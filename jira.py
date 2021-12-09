@@ -8,7 +8,7 @@ from google_drive_downloader import GoogleDriveDownloader as gdd
 import find
 import os
 
-from app import KEYS
+from app import CONFIG, KEYS
 
 with open("config.yml", "r") as yamlfile:
     config = yaml.load(yamlfile, Loader=yaml.FullLoader)
@@ -43,21 +43,6 @@ def issueList():
         issues.append(issue['self'])
     return issues
 
-def validateClassKey(key, cost, count):
-    for singlekey in keys["CLASSKEYS"]:
-        if keys["CLASSKEYS"][singlekey]["key"] == key:
-            if keys["CLASSKEYS"][singlekey]["active"] == True:
-                if count > 0:
-                    keys['CLASSKEYS'][singlekey]['printCount'] = keys['CLASSKEYS'][singlekey]['printCount'] + count
-                with open("keys.yml", 'w') as f:
-                    yaml.safe_dump(keys, f, default_flow_style=False)
-                if cost > 0:
-                    keys['CLASSKEYS'][singlekey]['classCost'] = keys['CLASSKEYS'][singlekey]['classCost'] + cost
-                with open("keys.yml", 'w') as f:
-                    yaml.safe_dump(keys, f, default_flow_style=False)
-                return "Valid key"
-    return "Bad key"
-
 def getGcode():
     for issue in issueList():
         id = issue.split("/")
@@ -85,66 +70,23 @@ def getGcode():
         classKey = s[s.find(start)+len(start):s.rfind(end)]
         
         ## keys can be validated and update the key logs but keys do not change if a print is to be printed or not yet.
-        print(validateClassKey(classKey,5,1))
-
-        if user in userlist["NICE"]:
-            attachments = str(singleIssue).split(',')
-            if any("https://projects.lib.utah.edu:8443/secure/attachment" in s for s in attachments):
-                print("Downloading " + singleID)
-                matching = [s for s in attachments if "https://projects.lib.utah.edu:8443/secure/attachment" in s]
-                attachment = str(matching[0]).split("'")
-                filename = attachment[3].rsplit('EHSL3DPR-', 1)[-1]
-                download(attachment[3], singleID, filename)
-            elif any("https://drive.google.com/file/d/" in s for s in attachments):
-                print("Downloading " + singleID + " from google drive")
-                matching = [s for s in attachments if "https://drive.google.com/file/d/" in s]
-                attachment = str(str(matching[0]).split("'"))
-                start = "https://drive.google.com/file/d/"
-                end = "/view?usp=sharing"
-                downloadGoogleDrive(attachment[attachment.find(start)+len(start):attachment.rfind(end)], singleID)
-            else:
-                commentStatus(
-                    singleID,
-                    "Please try again and make sure to upload a file, if your file is larger than 25mb then paste a google drive share link in the description of the print"
-                )
-                changeStatus(singleID, "11")
-                changeStatus(singleID, "111")
-        elif user in userlist["NAUGHTY"]:
-            print(user + " is on the naughty list and was rejected")
-            commentStatus(
-                singleID,
-                "Your print was not printed, please contact " + config["contact_info"]
-            )
-            changeStatus(singleID, "11")
-            changeStatus(singleID, "21")
-            changeStatus(singleID, "131")
+        
+        
+        ##If someone is nice they go in here
+        if user in userlist["NICE"] and config["use_nice_list"] == True:
+            printIsGoodToGo(singleIssue, singleID, classKey)
+        #if they are naughty they go in here
+        elif user in userlist["NAUGHTY"] and config["use_naughty_list"] == True:
+            printIsNoGo(singleID, singleID)
             if os.path.exists("jiradownloads/" + singleID + ".gcode"):
                 os.remove("jiradownloads/" + singleID + ".gcode")
+        # if they are a new user they go in here
         else :
-            print(user + " is a new user and was rejected")
-            commentStatus(
-                singleID,
-                "Your print was rejected becuase you have not completed the canvas cource at " + config["link_to_canvas_class"]
-            )
-            changeStatus(singleID, "11")
-            changeStatus(singleID, "21")
-            changeStatus(singleID, "131")
-            if os.path.exists("jiradownloads/" + singleID + ".gcode"):
-                os.remove("jiradownloads/" + singleID + ".gcode")
-
-def checkGcode(file):
-    status = True
-    for code_check in config['gcode_check_text']:
-        code_to_check = config['gcode_check_text'][code_check]
-        print(code_to_check)
-        if code_to_check not in file:
-            status = False
-        if status == False:
-            print("File is bad at: " + code_check)
-            return "Bad G-code"
-    if status == True:
-        print("File checkedout as good")
-        return "Valid G-code"
+            if config["use_naughty_list"] == True:
+                printIsGoodToGo(singleIssue, singleID, classKey)
+            elif config["use_nice_list"] == True:
+                printIsNoGo(singleIssue, singleID)
+                
 
 def downloadGoogleDrive(file_ID, singleID):
     if config['Make_files_anon'] == True:
@@ -193,6 +135,89 @@ def download(gcode, singleID, filename):
         changeStatus(singleID, "11")
         commentStatus(singleID, "Your print file has been downloaded and is now in the print queue.")
 
+
+def checkGcode(file):
+    status = True
+    for code_check in config['gcode_check_text']:
+        code_to_check = config['gcode_check_text'][code_check]
+        print(code_to_check)
+        if code_to_check not in file:
+            status = False
+        if status == False:
+            print("File is bad at: " + code_check)
+            return "Bad G-code"
+    if status == True:
+        print("File checkedout as good")
+        return "Valid G-code"
+
+def printIsNoGo(singleIssue, singleID):
+    attachments = str(singleIssue).split(',')
+    if any("https://projects.lib.utah.edu:8443/secure/attachment" in s for s in attachments):
+        print("Downloading " + singleID)
+        matching = [s for s in attachments if "https://projects.lib.utah.edu:8443/secure/attachment" in s]
+        attachment = str(matching[0]).split("'")
+        filename = attachment[3].rsplit('EHSL3DPR-', 1)[-1]
+        download(attachment[3], singleID, filename)
+    elif any("https://drive.google.com/file/d/" in s for s in attachments):
+        print("Downloading " + singleID + " from google drive")
+        matching = [s for s in attachments if "https://drive.google.com/file/d/" in s]
+        attachment = str(str(matching[0]).split("'"))
+        start = "https://drive.google.com/file/d/"
+        end = "/view?usp=sharing"
+        downloadGoogleDrive(attachment[attachment.find(start)+len(start):attachment.rfind(end)], singleID)
+    else:
+        commentStatus(
+            singleID,
+            "Please try again and make sure to upload a file, if your file is larger than 25mb then paste a google drive share link in the description of the print"
+        )
+        changeStatus(singleID, "11")
+        changeStatus(singleID, "111")
+
+def printIsGoodToGo(singleIssue, singleID, classKey):
+    attachments = str(singleIssue).split(',')
+    if any("https://projects.lib.utah.edu:8443/secure/attachment" in s for s in attachments):
+        print("Downloading " + singleID)
+        matching = [s for s in attachments if "https://projects.lib.utah.edu:8443/secure/attachment" in s]
+        attachment = str(matching[0]).split("'")
+        filename = attachment[3].rsplit('EHSL3DPR-', 1)[-1]
+        download(attachment[3], singleID, filename)
+        if validateClassKey(classKey, 5, 1) == "Valid key":
+            print("Skip payment, they had a valid class key")
+        else:
+            print("payment")
+    elif any("https://drive.google.com/file/d/" in s for s in attachments):
+        print("Downloading " + singleID + " from google drive")
+        matching = [s for s in attachments if "https://drive.google.com/file/d/" in s]
+        attachment = str(str(matching[0]).split("'"))
+        start = "https://drive.google.com/file/d/"
+        end = "/view?usp=sharing"
+        downloadGoogleDrive(attachment[attachment.find(start)+len(start):attachment.rfind(end)], singleID)
+        if validateClassKey(classKey, 5, 1) == "Valid key":
+            print("Skip payment, they had a valid class key")
+        else:
+            print("payment")
+    else:
+        commentStatus(
+            singleID,
+            "Please try again and make sure to upload a file, if your file is larger than 25mb then paste a google drive share link in the description of the print"
+        )
+        changeStatus(singleID, "11")
+        changeStatus(singleID, "111")
+
+def validateClassKey(key, cost, count):
+    for singlekey in keys["CLASSKEYS"]:
+        if keys["CLASSKEYS"][singlekey]["key"] == key:
+            if keys["CLASSKEYS"][singlekey]["active"] == True:
+                if count > 0:
+                    keys['CLASSKEYS'][singlekey]['printCount'] = keys['CLASSKEYS'][singlekey]['printCount'] + count
+                with open("keys.yml", 'w') as f:
+                    yaml.safe_dump(keys, f, default_flow_style=False)
+                if cost > 0:
+                    keys['CLASSKEYS'][singlekey]['classCost'] = keys['CLASSKEYS'][singlekey]['classCost'] + cost
+                with open("keys.yml", 'w') as f:
+                    yaml.safe_dump(keys, f, default_flow_style=False)
+                return "Valid key"
+    return "Bad key"
 
 def changeStatus(singleID, id):
     """
