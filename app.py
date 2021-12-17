@@ -39,14 +39,12 @@ def background_thread():
     while True:
         socketio.sleep(1)
         
-        with open(CONFIG, "r") as yamlfile:
-            config = yaml.load(yamlfile, Loader=yaml.FullLoader)
-            
-        for printer in config['PRINTERS']:
-            apikey = config['PRINTERS'][printer]['api']
-            printerIP = config['PRINTERS'][printer]['ip']
+        with open(PRINTERS, "r") as yamlfile:
+            printers = yaml.load(yamlfile, Loader=yaml.FullLoader)
+        for printer in printers['PRINTERS']:
+            apikey = printers['PRINTERS'][printer]['api']
+            printerIP = printers['PRINTERS'][printer]['ip']
             status = octoprint.GetStatus(printerIP,apikey)
-            
             if status['progress']['completion'] is None:
                 percent = 0
                 eta = 0
