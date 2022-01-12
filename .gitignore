@@ -129,3 +129,6 @@ dmypy.json
 .pyre/
 *.gcode
 config.yml
+config.yml
+printers.yml
+lists.yml
