@@ -8,7 +8,7 @@ jira.getGcode()
 octoprint.eachNewFile()
 octoprint.PrintIsFinished()
 
-delay = 2
+delay = 0.5
 
 print("PRINT MONITORING SYSTEM STARTED")
 schedule.every(delay).minutes.do(jira.getGcode)

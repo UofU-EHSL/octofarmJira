@@ -62,9 +62,48 @@ def GetStatus(ip, api):
             status = "offline"
             return status
 
-def receiptPrinter(scrapedprNumber, scrapedPatronName, printer=''):
+def GetName(ip, api):
+    apikey = api
+    printerIP = ip
+    url = "http://" + printerIP + "/api/printerprofiles"
+    name = ip
+    headers = {
+        "Accept": "application/json",
+        "Host": printerIP,
+        "X-Api-Key": apikey
+    }
+    try:
+        response = requests.request(
+            "GET",
+            url,
+            headers=headers
+        )
+        status = json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
+        
+        name = status["profiles"]["_default"]["name"]
+        return name
+    except requests.exceptions.RequestException as e:  # This is the correct syntax
+            print(printerIP + "'s raspberry pi is offline and can't be contacted over the network")
+            status = "offline"
+            return name
+
+def receiptPrinter(scrapedprNumber, ticketNumber, scrapedPatronName, printer=''):
     from PIL import Image, ImageDraw, ImageFont, ImageOps
     from escpos.printer import Usb
+    
+    patronName = scrapedPatronName
+    try:
+        patronName = str(patronName)
+        patronName = patronName.title()
+    except:
+        patronName = ''
+    
+    if len(patronName) > 0:
+        firstName = patronName.split(' ')[0]
+        lastName = patronName.split(' ')[-1]
+        if firstName != lastName:
+            patronName = firstName[0] + ', ' + lastName
+    
     try:
         #try to reconnect to printer
         p = Usb(0x0416, 0x5011, 0, 0x81, 0x03)
@@ -81,13 +120,13 @@ def receiptPrinter(scrapedprNumber, scrapedPatronName, printer=''):
     tiny = ImageFont.truetype(r"recources/arial.ttf", 20, encoding="unic")
     d = ImageDraw.Draw(img)
     d.text((32,0), scrapedprNumber, font=fnt, fill=(255, 255, 255))
-    firstFew = scrapedPatronName[:8]
+    firstFew = patronName[:8]
     if 'y' in firstFew or 'g' in firstFew or 'p' in firstFew or 'q' in firstFew:
-        d.text((32,121), scrapedPatronName, font=fnt, fill=(255, 255, 255))
+        d.text((32,121), patronName, font=fnt, fill=(255, 255, 255))
     else:
-        d.text((32,128), scrapedPatronName, font=fnt, fill=(255, 255, 255))
-
-    d.text((34, 256), printer, font=tiny, fill=(255, 255, 255))
+        d.text((32,128), patronName, font=fnt, fill=(255, 255, 255))
+    d.text((32,256), ticketNumber, font=fnt, fill=(255, 255, 255))
+    d.text((34, 355), printer, font=tiny, fill=(255, 255, 255))
 
     imageBox = img.getbbox()
     cropped=img.crop(imageBox)
@@ -106,7 +145,8 @@ def receiptPrinter(scrapedprNumber, scrapedPatronName, printer=''):
 
 
 def uploadFileToPrinter(apikey, printerIP, file):
-    fle={'file': open('jiradownloads/' + file + '.gcode', 'rb'), 'filename': file}
+    openFile = open('jiradownloads/' + file + '.gcode', 'rb')
+    fle={'file': openFile, 'filename': file}
     url="http://" + printerIP + "/api/files/{}".format("local")
     payload={'select': 'true','print': 'true' }
     header={'X-Api-Key': apikey}
@@ -125,6 +165,18 @@ def uploadFileToPrinter(apikey, printerIP, file):
         taxExempt = first.split('TAXEXEMPT=')[1].split(',')[0]
     except:
         taxExempt = ''
+    try:
+        patronName = first.split('NAME=')[1].split(',')[0]
+    except:
+        patronName = ''
+    try:
+        projectNumber = first.split('PROJECTNUMBER=')[1].split(',')[0]
+    except:
+        projectNumber = ''
+    try:
+        ticketNumber = first.split('ID=')[1].split(',')[0]
+    except:
+        ticketNumber = ''
     startTime = datetime.now().strftime("%I:%M" '%p')
     if startTime[0] == '0':
         startTime = startTime[1:]
@@ -143,24 +195,25 @@ def uploadFileToPrinter(apikey, printerIP, file):
             ticketText += cost
     else:
         ticketText = "Your file is now printing and we will update you when it is finished and ready for pickup"
-    
+    openFile.close()
     if os.path.exists("jiradownloads/" + file + ".gcode"):
         #print(config['Save_printed_files'])
         if config['Save_printed_files'] == False:
             os.remove("jiradownloads/" + file + ".gcode")
         else:
             os.replace("jiradownloads/" + file + ".gcode", "archive_files/" + file + ".gcode")
-<<<<<<< Updated upstream
-        jira.commentStatus(file, "Your file is now printing and we will update you when it is finished and ready for pickup")
-        print("Now printing: " + file + " on " + printerIP)
-=======
         if config["Make_files_anon"] == True:
             jira.commentStatus(file, ticketText)
             print("Now printing: " + file + " on " + printerIP)
         else:
             jira.commentStatus(file, ticketText)
             print("Now printing: " + file + " on " + printerIP)
->>>>>>> Stashed changes
+    if config["reciept_printer"]["print_physical_reciept"] == True:
+        try:
+            printerName = GetName(printerIP, apikey)
+            receiptPrinter(projectNumber, ticketNumber, patronName, printerName)
+        except:
+            print("There was a problem printing the receipt " + projectNumber)
         
 def resetConnection(apikey, printerIP):
     url="http://" + printerIP + "/api/connection"
@@ -205,37 +258,40 @@ def PrintIsFinished():
                     file = os.path.splitext(status['job']['file']['display'])[0]
                     resetConnection(apikey, printerIP)
                     if config['Save_printed_files'] == True:
-                        with open("archive_files/" + file + ".gcode", 'rb') as fh:
-                            first = next(fh).decode()
-                        #print("archive files first line print test")
-                        #print(first)
                         try:
-                            grams = first.split('GRAMS=')[1].split(',')[0]
-                        except:
-                            grams = ''
-                        try:
-                            taxExempt = first.split('TAXEXEMPT=')[1].split(',')[0]
-                        except:
-                            taxExempt = ''
-                        if grams and taxExempt == '':
-                            jira.commentStatus(file, "Your print has been completed and should now be available for pickup")
-                        else:
-                            response = "{color:#00875A}Print completed successfully!{color}\n\nPrint was harvested at "
-                            startTime = datetime.now().strftime("%I:%M" '%p')
-                            if startTime[0] == '0':
-                                startTime = startTime[1:]
-                            response += startTime + "\nFilament Usage ... " + grams + "g\n"
-                            if taxExempt == False:
-                                response += "Actual Cost ... ("+grams+"g * $0.05/g) * 1.0775 state tax = $"
-                                cost = float(grams) * .05 * 1.0775
-                                cost = str(("%.2f" % (cost)))
-                                response += cost + '\n\nYour link to pay online will be generated by my supervisor as soon as they are available. Your print is ready for pickup by the orange pillars in the ProtoSpace on the 2nd floor of the library whenever the library is open. Thanks!'
+                            with open("archive_files/" + file + ".gcode", 'rb') as fh:
+                                first = next(fh).decode()
+                            #print("archive files first line print test")
+                            #print(first)
+                            try:
+                                grams = first.split('GRAMS=')[1].split(',')[0]
+                            except:
+                                grams = ''
+                            try:
+                                taxExempt = first.split('TAXEXEMPT=')[1].split(',')[0]
+                            except:
+                                taxExempt = ''
+                            if grams and taxExempt == '':
+                                jira.commentStatus(file, "Your print has been completed and should now be available for pickup")
                             else:
-                                response += "Actual Cost ... ("+grams+"g * $0.05/g) = $"
-                                cost = float(grams) * .05
-                                cost = str(("%.2f" % (cost)))
-                                response += cost + ' (tax exempt)\n\nYour print is ready for pickup by the orange pillars in the ProtoSpace on the 2nd floor of the library whenever the library is open. Thanks!'
-                                jira.commentStatus(file, response)
+                                response = "{color:#00875A}Print completed successfully!{color}\n\nPrint was harvested at "
+                                startTime = datetime.now().strftime("%I:%M" '%p')
+                                if startTime[0] == '0':
+                                    startTime = startTime[1:]
+                                response += startTime + "\nFilament Usage ... " + grams + "g\n"
+                                if taxExempt == 'False':
+                                    response += "Actual Cost ... ("+grams+"g * $0.05/g) * 1.0775 state tax = $"
+                                    cost = float(grams) * .05 * 1.0775
+                                    cost = str(("%.2f" % (cost)))
+                                    response += cost + '\n\nYour link to pay online will be generated by my supervisor as soon as they are available. Your print is ready for pickup by the orange pillars in the ProtoSpace on the 2nd floor of the library whenever the library is open. Thanks!'
+                                else:
+                                    response += "Actual Cost ... ("+grams+"g * $0.05/g) = $"
+                                    cost = float(grams) * .05
+                                    cost = str(("%.2f" % (cost)))
+                                    response += cost + ' (tax exempt)\n\nYour print is ready for pickup by the orange pillars in the ProtoSpace on the 2nd floor of the library whenever the library is open. Thanks!'
+                                    jira.commentStatus(file, response)
+                        except FileNotFoundError:
+                            print("This print was not started by this script, I am ignoring it: "+ file)
                     else:
                         jira.commentStatus(file, "Your print has been completed and should now be available for pickup")
                     jira.changeStatus(file, "21")

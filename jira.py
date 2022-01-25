@@ -47,21 +47,6 @@ def issueList():
     except:
         print("No new tickets")
 
-def validateClassKey(key, cost, count):
-    for singlekey in keys["CLASSKEYS"]:
-        if keys["CLASSKEYS"][singlekey]["key"] == key:
-            if keys["CLASSKEYS"][singlekey]["active"] == True:
-                if count > 0:
-                    keys['CLASSKEYS'][singlekey]['printCount'] = keys['CLASSKEYS'][singlekey]['printCount'] + count
-                with open("keys.yml", 'w') as f:
-                    yaml.safe_dump(keys, f, default_flow_style=False)
-                if cost > 0:
-                    keys['CLASSKEYS'][singlekey]['classCost'] = keys['CLASSKEYS'][singlekey]['classCost'] + cost
-                with open("keys.yml", 'w') as f:
-                    yaml.safe_dump(keys, f, default_flow_style=False)
-                return "Valid key"
-    return "Bad key"
-
 def getGcode():
     i = 0
     listOfIssues = None
@@ -88,8 +73,11 @@ def getGcode():
 
         # parse all open projects:
         singleIssue = json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
+        projectNumber = singleIssue['key']
         #print(singleIssue['fields']['description'])
         user = singleIssue['fields']['reporter']['name']
+        submitter = singleIssue['fields']['summary']
+        patronName = submitter.split('Submission from ')[-1]
         #print(singleIssue)
         #parsing class key value
         start = "*Class Key* \\\\"
@@ -106,28 +94,27 @@ def getGcode():
         classKey = s[s.find(start)+len(start):s.rfind(end)]
         #print(s)
         ## keys can be validated and update the key logs but keys do not change if a print is to be printed or not yet.
-<<<<<<< Updated upstream
-        print(validateClassKey(classKey,5,1))
+        #print(validateClassKey(classKey,5,1))
 
-        if user in userlist["NICE"]:
+        if user in userlist["NICE"] or config["use_nice_list"] == False:
             attachments = str(singleIssue).split(',')
             if any("https://projects.lib.utah.edu:8443/secure/attachment" in s for s in attachments):
                 print("Downloading " + singleID)
                 matching = [s for s in attachments if "https://projects.lib.utah.edu:8443/secure/attachment" in s]
                 attachment = str(matching[0]).split("'")
                 filename = attachment[3].rsplit('EHSL3DPR-', 1)[-1]
-                download(attachment[3], singleID, filename)
+                download(attachment[3], singleID, filename, taxExempt, patronName)
             elif any("https://drive.google.com/file/d/" in s for s in attachments):
                 print("Downloading " + singleID + " from google drive")
                 matching = [s for s in attachments if "https://drive.google.com/file/d/" in s]
                 attachment = str(str(matching[0]).split("'"))
                 start = "https://drive.google.com/file/d/"
                 end = "/view?usp=sharing"
-                downloadGoogleDrive(attachment[attachment.find(start)+len(start):attachment.rfind(end)], singleID)
+                downloadGoogleDrive(attachment[attachment.find(start)+len(start):attachment.rfind(end)], singleID, taxExempt, patronName, projectNumber)
             else:
                 commentStatus(
                     singleID,
-                    "Please try again and make sure to upload a file, if your file is larger than 25mb then paste a google drive share link in the description of the print"
+                    "We do not see any files attached to this sumbmission. If this was in error, please try again and make sure to upload a file, if your file is larger than 25mb then paste a google drive share link in the description of the submission. Here is how to make a publicly viewable google drive link: https://youtu.be/GkNTohTTIjY"
                 )
                 changeStatus(singleID, "11")
                 changeStatus(singleID, "111")
@@ -140,20 +127,19 @@ def getGcode():
             changeStatus(singleID, "11")
             changeStatus(singleID, "21")
             changeStatus(singleID, "131")
-=======
+        
         
         
         ##If someone is nice they go in here
         if user in userlist["NICE"] and config["use_nice_list"] == True:
-            printIsGoodToGo(singleIssue, singleID, classKey, taxExempt)
+            printIsGoodToGo(singleIssue, singleID, classKey, taxExempt, patronName, projectNumber)
+        
         #if they are naughty they go in here
         elif user in userlist["NAUGHTY"] and config["use_naughty_list"] == True:
             printIsNoGo(singleID, singleID)
->>>>>>> Stashed changes
             if os.path.exists("jiradownloads/" + singleID + ".gcode"):
                 os.remove("jiradownloads/" + singleID + ".gcode")
-        else :
-<<<<<<< Updated upstream
+        elif len(config["link_to_canvas_class"]) > 0:
             print(user + " is a new user and was rejected")
             commentStatus(
                 singleID,
@@ -165,28 +151,8 @@ def getGcode():
             if os.path.exists("jiradownloads/" + singleID + ".gcode"):
                 os.remove("jiradownloads/" + singleID + ".gcode")
 
-def checkGcode(file):
-    status = True
-    for code_check in config['gcode_check_text']:
-        code_to_check = config['gcode_check_text'][code_check]
-        print(code_to_check)
-        if code_to_check not in file:
-            status = False
-        if status == False:
-            print("File is bad at: " + code_check)
-            return "Bad G-code"
-    if status == True:
-        print("File checkedout as good")
-        return "Valid G-code"
-=======
-            if config["use_naughty_list"] == True:
-                printIsGoodToGo(singleIssue, singleID, classKey, taxExempt)
-            elif config["use_nice_list"] == True:
-                printIsNoGo(singleIssue, singleID)
-                
->>>>>>> Stashed changes
 
-def downloadGoogleDrive(file_ID, singleID):
+def downloadGoogleDrive(file_ID, singleID, taxExempt="False", patronName='', projectNumber=''):
     if config['Make_files_anon'] == True:
         gdd.download_file_from_google_drive(file_id=file_ID, dest_path="jiradownloads/" + singleID + ".gcode")
         file = open("jiradownloads/" + singleID + ".gcode", "r")
@@ -194,38 +160,44 @@ def downloadGoogleDrive(file_ID, singleID):
         gdd.download_file_from_google_drive(file_id=file_ID, dest_path="jiradownloads/" + file_ID + "__" + singleID + ".gcode")
         file = open("jiradownloads/" + file_ID + "__" + singleID + ".gcode", "r")
     
-    passFail, editedGcode = checkGcode(response.text, singleID)
+    #passFail, editedGcode = checkGcode(file, singleID)
+    #try updating google drive to include additional info
+    passFail, editedGcode = checkGcode(file, singleID, taxExempt, projectNumber, patronName)
+    file.close()
     if passFail == "Bad G-code":
-        commentStatus(singleID, "Please follow the slicing instructions and re-submit. Our automated check suggests you did not use our slicer configs")
+        commentStatus(singleID, "Please follow the slicing instructions and re-submit. Our automated check suggests you did not use our slicer configs. https://youtu.be/kGpXsIX9E_k")
         changeStatus(singleID, "11")
         changeStatus(singleID, "21")
         changeStatus(singleID, "131")
         if os.path.exists("jiradownloads/" + singleID + ".gcode"):
             os.remove("jiradownloads/" + singleID + ".gcode")
+    
     elif passFail == "Manual G-code":
         if config['Make_files_anon'] == True:
             text_file = open("manual_prints/" + singleID + ".gcode", "w")
         else:
-            text_file = open("manual_prints/" + filename + "__" + singleID + ".gcode", "w")
+            text_file = open("manual_prints/" + file_ID + "__" + singleID + ".gcode", "w")
         n = text_file.write(editedGcode)
         text_file.close()
         changeStatus(singleID, "11")
         commentStatus(singleID, "Your print will need to be started manually by a human (TAZ prints and Gigabot prints cannot be started automatically) A teammember will start it for you as soon as they are available.")
+    
     elif passFail == "Valid G-code":
         if config['Make_files_anon'] == True:
             text_file = open("jiradownloads/" + singleID + ".gcode", "w")
         else:
-            text_file = open("jiradownloads/" + filename + "__" + singleID + ".gcode", "w")
+            text_file = open("jiradownloads/" + file_ID + "__" + singleID + ".gcode", "w")
         n = text_file.write(editedGcode)
         text_file.close()
         changeStatus(singleID, "11")
         #commentStatus(singleID, "Your print file has been downloaded and is now in the print queue.")
-    #this final case may be unneccesary
+    #this final case may be unneccesary (i commented it out -Sebastion)
     else:
         changeStatus(singleID, "11")
-        commentStatus(singleID, "Your print file has been downloaded and is now in the print queue.")
+        #commentStatus(singleID, "Your print file has been downloaded and is now in the print queue.")
 
-def download(gcode, singleID, filename, taxExempt=False):
+
+def download(gcode, singleID, filename, taxExempt=False, patronName=''):
     url = gcode
     
     headers = {
@@ -240,9 +212,9 @@ def download(gcode, singleID, filename, taxExempt=False):
     )
     
     projectNumber = gcode.split('/')[-1].split('_')[0]
-    passFail, editedGcode = checkGcode(response.text, singleID, taxExempt, projectNumber)
+    passFail, editedGcode = checkGcode(response.text, singleID, taxExempt, projectNumber, patronName)
     if passFail == "Bad G-code":
-        commentStatus(singleID, "Please follow the slicing instructions and re-submit. Our automated check suggests you did not use our slicer configs")
+        commentStatus(singleID, "Please follow the slicing instructions and re-submit. Our automated check suggests you did not use our slicer configs. https://youtu.be/kGpXsIX9E_k")
         changeStatus(singleID, "11")
         changeStatus(singleID, "21")
         changeStatus(singleID, "131")
@@ -266,11 +238,15 @@ def download(gcode, singleID, filename, taxExempt=False):
         commentStatus(singleID, "Your print will need to be started manually by a human (TAZ prints and Gigabot prints cannot be started automatically) A teammember will start it for you as soon as they are available.")
 
 
-def customGcodeCheck(file, ticketID='', taxExempt=False, projectNumber=''):
+def customGcodeCheck(file, ticketID='', taxExempt=False, projectNumber='', patronName=''):
     lineCount = 0
     maxtemp = config['custom_gcode_check']['max_hotend']
     maxbed = config['custom_gcode_check']['max_bed']
-    splitFile = file.splitlines()
+    try:
+        splitFile = file.splitlines()
+    except:
+        #the google drive download function gives a different flavor of file
+        splitFile = file.read().splitlines()
     if "generated by PrusaSlicer" not in splitFile[0]:
         return "Bad G-code", file
     m0Included = False
@@ -335,7 +311,7 @@ def customGcodeCheck(file, ticketID='', taxExempt=False, projectNumber=''):
                     #print(profileVersion)
         lineCount = lineCount + 1
     if len(ticketID) > 0:
-        splitFile[0] = splitFile[0] +",GRAMS="+grams+",TIME="+printingTime+",PRINTER="+printerID+",FILAMENT="+filamentSettings+",PRINT="+printerSettings+",ID="+str(ticketID)+",TAXEXEMPT="+str(taxExempt)+",PROJECTNUMBER="+projectNumber+",LINK=https://projects.lib.utah.edu:8443/browse/"+projectNumber
+        splitFile[0] = splitFile[0]+",GRAMS="+grams+",TIME="+printingTime+",PRINTER="+printerID+",NAME="+patronName+",FILAMENT="+filamentSettings+",PRINT="+printerSettings+",ID="+str(ticketID)+",TAXEXEMPT="+str(taxExempt)+",PROJECTNUMBER="+projectNumber+",LINK=https://projects.lib.utah.edu:8443/browse/"+projectNumber
         print(splitFile[0])
     else:
         splitFile[0] = splitFile[0] +",GRAMS="+grams+",TIME="+printingTime+",PRINTER="+printerID+",FILAMENT="+filamentSettings+",PRINT="+printerSettings+",TAXEXEMPT="+str(taxExempt)
@@ -356,6 +332,10 @@ def customGcodeCheck(file, ticketID='', taxExempt=False, projectNumber=''):
     
     if m0Included == False:
         splitFile[m0line] = splitFile[m0line] + "\nM0 Done? " + projectNumber +' ' + grams.split('.')[0] + 'g'
+    try:
+        splitFile.close()
+    except:
+        alreadyClosed = True
     if "MK3S" in printerID and "PLA" in filamentSettings and "Prusa" in printerSettings and float(diameter) == 1.75:
         return "Valid G-code", "\n".join(splitFile)
     elif "TAZ 6" in printerID and "PLA" in filamentSettings and "TAZ 6" in printerSettings and float(diameter) == 2.85:
@@ -365,9 +345,7 @@ def customGcodeCheck(file, ticketID='', taxExempt=False, projectNumber=''):
     else:
         return "Bad G-code", file
 
-<<<<<<< Updated upstream
-=======
-def checkGcode(file, ticketID='', taxExempt=False, projectNumber=''):
+def checkGcode(file, ticketID='', taxExempt=False, projectNumber='', patronName = ''):
     try:
         runCustomChecks = config['gcode_check_text']['customChecks']
     except NameError:
@@ -388,7 +366,7 @@ def checkGcode(file, ticketID='', taxExempt=False, projectNumber=''):
             return "Valid G-code", file
     else:
         if len(ticketID) > 0:
-            status, file = customGcodeCheck(file, ticketID, taxExempt, projectNumber)
+            status, file = customGcodeCheck(file, ticketID, taxExempt, projectNumber, patronName)
         else:
             status, file = customGcodeCheck(file)
         return(status, file)
@@ -411,12 +389,12 @@ def printIsNoGo(singleIssue, singleID):
     else:
         commentStatus(
             singleID,
-            "Please try again and make sure to upload a file, if your file is larger than 25mb then paste a google drive share link in the description of the print"
+            "We do not see any files attached to this sumbmission. If this was in error, please try again and make sure to upload a file, if your file is larger than 25mb then paste a google drive share link in the description of the submission. Here is how to make a publicly viewable google drive link: https://youtu.be/GkNTohTTIjY"
         )
         changeStatus(singleID, "11")
         changeStatus(singleID, "111")
 
-def printIsGoodToGo(singleIssue, singleID, classKey, taxExempt=False):
+def printIsGoodToGo(singleIssue, singleID, classKey, taxExempt=False, patronName='', projectNumber=''):
     attachments = str(singleIssue).split(',')
     if any("https://projects.lib.utah.edu:8443/secure/attachment" in s for s in attachments):
         print("Downloading " + singleID)
@@ -424,7 +402,7 @@ def printIsGoodToGo(singleIssue, singleID, classKey, taxExempt=False):
         attachment = str(matching[0]).split("'")
         
         filename = attachment[3].rsplit('EHSL3DPR-', 1)[-1]
-        download(attachment[3], singleID, filename, taxExempt)
+        download(attachment[3], singleID, filename, taxExempt, patronName)
         if validateClassKey(classKey, 5, 1) == "Valid key":
             print("Skip payment, they had a valid class key")
         else:
@@ -435,7 +413,7 @@ def printIsGoodToGo(singleIssue, singleID, classKey, taxExempt=False):
         attachment = str(str(matching[0]).split("'"))
         start = "https://drive.google.com/file/d/"
         end = "/view?usp=sharing"
-        downloadGoogleDrive(attachment[attachment.find(start)+len(start):attachment.rfind(end)], singleID)
+        downloadGoogleDrive(attachment[attachment.find(start)+len(start):attachment.rfind(end)], singleID, taxExempt, patronName, projectNumber)
         if validateClassKey(classKey, 5, 1) == "Valid key":
             print("Skip payment, they had a valid class key")
         else:
@@ -443,7 +421,7 @@ def printIsGoodToGo(singleIssue, singleID, classKey, taxExempt=False):
     else:
         commentStatus(
             singleID,
-            "Please try again and make sure to upload a file, if your file is larger than 25mb then paste a google drive share link in the description of the print. Here is a video showing how to make a public google drive link: https://youtu.be/GkNTohTTIjY"
+            "We do not see any files attached to this sumbmission. If this was in error, please try again and make sure to upload a file, if your file is larger than 25mb then paste a google drive share link in the description of the submission. Here is how to make a publicly viewable google drive link: https://youtu.be/GkNTohTTIjY"
         )
         changeStatus(singleID, "11")
         changeStatus(singleID, "111")
@@ -463,7 +441,6 @@ def validateClassKey(key, cost, count):
                 return "Valid key"
     return "Bad key"
 
->>>>>>> Stashed changes
 def changeStatus(singleID, id):
     """
     Start Progress: 11 (From Open to In Progress)
