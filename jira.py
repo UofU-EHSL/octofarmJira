@@ -23,7 +23,7 @@ with open("keys.yml", "r") as yamlfile:
 auth = HTTPBasicAuth(config['jira_user'], config['jira_password'])
 
 def issueList():
-    os.system('cls' if os.name == 'nt' else 'clear')
+    #os.system('cls' if os.name == 'nt' else 'clear')
     print("Checking for new submissions...")
     url = config['base_url'] + "/rest/api/2/" + config['search_url']
     headers = {
@@ -324,14 +324,16 @@ def customGcodeCheck(file, ticketID='', taxExempt=False, projectNumber='', patro
             #blankLine = i
             #splitFile[i] = splitFile[i] + '\nM117 ' + str(ticketID) + ' ' + grams[0] + "g" +'\n' #modify second line
             if projectNumber != '' and ticketID != '':
-                splitFile[i] = "M117 "+projectNumber+" "+str(ticketID)+" "+str(grams)+"g"
+                shortGrams = grams.split('.')[0]
+                splitFile[i] = "M117 "+projectNumber+" "+str(ticketID)+" "+str(shortGrams)+"g"
             else:
                 splitFile[i] = "M117 " + str(grams) + "g" 
             break
         i = i + 1
     
     if m0Included == False:
-        splitFile[m0line] = splitFile[m0line] + "\nM0 Done? " + projectNumber +' ' + grams.split('.')[0] + 'g'
+        shortGrams = grams.split('.')[0]
+        splitFile[m0line] = splitFile[m0line] + "\nM0 Done? " + projectNumber +' ' + shortGrams + 'g'
     try:
         splitFile.close()
     except:
