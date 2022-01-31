@@ -114,7 +114,7 @@ def getGcode():
             else:
                 commentStatus(
                     singleID,
-                    "We do not see any files attached to this sumbmission. If this was in error, please try again and make sure to upload a file, if your file is larger than 25mb then paste a google drive share link in the description of the submission. Here is how to make a publicly viewable google drive link: https://youtu.be/GkNTohTTIjY"
+                    "We do not see any files attached to this submission. If this was in error, please try again and make sure to upload a file, if your file is larger than 25mb then paste a google drive share link in the description of the submission. If you have included a google drive link in the description and are still seeing this error, make sure the link is publicly viewable, and give google a second to process your file. You can generate a link before the file is viewable which can cause some hiccups for our system. Here is how to make a publicly viewable google drive link: https://youtu.be/GkNTohTTIjY"
                 )
                 changeStatus(singleID, "11")
                 changeStatus(singleID, "111")
@@ -154,11 +154,11 @@ def getGcode():
 
 def downloadGoogleDrive(file_ID, singleID, taxExempt="False", patronName='', projectNumber=''):
     if config['Make_files_anon'] == True:
-        gdd.download_file_from_google_drive(file_id=file_ID, dest_path="jiradownloads/" + singleID + ".gcode")
-        file = open("jiradownloads/" + singleID + ".gcode", "r")
+        gdd.download_file_from_google_drive(file_id=file_ID, dest_path="drivedownloads/" + singleID + ".gcode")
+        file = open("drivedownloads/" + singleID + ".gcode", "r")
     else:
-        gdd.download_file_from_google_drive(file_id=file_ID, dest_path="jiradownloads/" + file_ID + "__" + singleID + ".gcode")
-        file = open("jiradownloads/" + file_ID + "__" + singleID + ".gcode", "r")
+        gdd.download_file_from_google_drive(file_id=file_ID, dest_path="drivedownloads/" + file_ID + "__" + singleID + ".gcode")
+        file = open("drivedownloads/" + file_ID + "__" + singleID + ".gcode", "r")
     
     #passFail, editedGcode = checkGcode(file, singleID)
     #try updating google drive to include additional info
@@ -466,13 +466,6 @@ def changeStatus(singleID, id):
        "Accept" : "application/json"
     }
     data = {
-        "update": {
-            "comment": [{
-                "add": {
-                    "body": "The ticket is resolved"
-                }
-            }]
-        },
         "transition": {
             "id":id
         }
@@ -485,7 +478,19 @@ def changeStatus(singleID, id):
         json = data,
         auth=auth
     )
-    
+
+'''
+I removed the following from the changeStatus function
+
+        "update": {
+            "comment": [{
+                "add": {
+                    "body": "The ticket is resolved"
+                }
+            }]
+        },
+'''
+
 def commentStatus(singleID, comment):
     simple_singleID = singleID.rsplit('__', 1)[-1]
     url = config['base_url'] + "/rest/api/2/issue/" + simple_singleID + "/comment"

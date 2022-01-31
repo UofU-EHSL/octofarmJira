@@ -284,7 +284,8 @@ def PrintIsFinished():
                                 if startTime[0] == '0':
                                     startTime = startTime[1:]
                                 response += startTime + "\nFilament Usage ... " + grams + "g\n"
-                                if taxExempt == 'True':
+                                print("Tax exempt status = " + taxExempt)
+                                if taxExempt[0] == 'T':
                                     response += "Actual Cost ... ("+grams+"g * $0.05/g) = $"
                                     cost = float(grams) * .05
                                     cost = str(("%.2f" % (cost)))
