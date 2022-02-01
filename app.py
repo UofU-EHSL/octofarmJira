@@ -112,6 +112,8 @@ def remove(fileName=None):
     abs_path = os.path.join(DOWNLOAD_FOLDER, fileName)
     pythonFunctions.delete(abs_path)
     files = os.listdir(DOWNLOAD_FOLDER)
+    if '.DS_Store' in files:
+        files.remove('.DS_Store')
     return flask.render_template('queue.html', files=files, ip=flask.request.host)
 
 @app.route('/download/<path:filename>', methods=['GET', 'POST'])
@@ -121,6 +123,8 @@ def download(filename):
 @app.route('/queue/', methods=['GET', 'POST'])
 def dir_listing():
     files = os.listdir(DOWNLOAD_FOLDER)
+    if '.DS_Store' in files:
+        files.remove('.DS_Store')
     return flask.render_template('queue.html', files=files, ip=flask.request.host)
     
 

@@ -2,7 +2,6 @@ import jira
 import schedule
 import time
 import octoprint
-import os
 
 jira.getGcode()
 octoprint.eachNewFile()
@@ -19,4 +18,3 @@ schedule.every(delay).minutes.do(octoprint.PrintIsFinished)
 while 1:
     schedule.run_pending()
     time.sleep(1)
-

@@ -102,8 +102,8 @@ def getGcode():
                 print("Downloading " + singleID)
                 matching = [s for s in attachments if "https://projects.lib.utah.edu:8443/secure/attachment" in s]
                 attachment = str(matching[0]).split("'")
-                filename = attachment[3].rsplit('EHSL3DPR-', 1)[-1]
-                download(attachment[3], singleID, filename, taxExempt, patronName)
+                filename = attachment[3].rsplit('EHSL3DPR-', 1)[-1] #filenamerefrenced
+                download(attachment[3], singleID, filename, taxExempt, patronName) #filenamerefrenced
             elif any("https://drive.google.com/file/d/" in s for s in attachments):
                 print("Downloading " + singleID + " from google drive")
                 matching = [s for s in attachments if "https://drive.google.com/file/d/" in s]
@@ -154,15 +154,15 @@ def getGcode():
 
 def downloadGoogleDrive(file_ID, singleID, taxExempt="False", patronName='', projectNumber=''):
     if config['Make_files_anon'] == True:
-        gdd.download_file_from_google_drive(file_id=file_ID, dest_path="drivedownloads/" + singleID + ".gcode")
-        file = open("drivedownloads/" + singleID + ".gcode", "r")
+        gdd.download_file_from_google_drive(file_id=file_ID, dest_path="drivedownloads/" + singleID + ".gcode") #filenamerefrenced
+        file = open("drivedownloads/" + projectNumber + "_" + singleID + ".gcode", "r") #filenamerefrenced
     else:
-        gdd.download_file_from_google_drive(file_id=file_ID, dest_path="drivedownloads/" + file_ID + "__" + singleID + ".gcode")
-        file = open("drivedownloads/" + file_ID + "__" + singleID + ".gcode", "r")
+        gdd.download_file_from_google_drive(file_id=file_ID, dest_path="drivedownloads/" + file_ID + "__" + singleID + ".gcode") #filenamerefrenced
+        file = open("drivedownloads/" + projectNumber + "_" + file_ID + "__" + singleID + ".gcode", "r") #filenamerefrenced
     
     #passFail, editedGcode = checkGcode(file, singleID)
     #try updating google drive to include additional info
-    passFail, editedGcode = checkGcode(file, singleID, taxExempt, projectNumber, patronName)
+    passFail, editedGcode = checkGcode(file, singleID, taxExempt, projectNumber, patronName) #filenamerefrenced
     file.close()
     if passFail == "Bad G-code":
         commentStatus(singleID, "Please follow the slicing instructions and re-submit. Our automated check suggests you did not use our slicer configs. https://youtu.be/kGpXsIX9E_k")
@@ -174,9 +174,9 @@ def downloadGoogleDrive(file_ID, singleID, taxExempt="False", patronName='', pro
     
     elif passFail == "Manual G-code":
         if config['Make_files_anon'] == True:
-            text_file = open("manual_prints/" + singleID + ".gcode", "w")
+            text_file = open("manual_prints/" + projectNumber + "_" + singleID + ".gcode", "w") #filenamerefrenced
         else:
-            text_file = open("manual_prints/" + file_ID + "__" + singleID + ".gcode", "w")
+            text_file = open("manual_prints/" + file_ID + "__" + singleID + ".gcode", "w") #filenamerefrenced
         n = text_file.write(editedGcode)
         text_file.close()
         changeStatus(singleID, "11")
@@ -220,7 +220,7 @@ def download(gcode, singleID, filename, taxExempt=False, patronName=''):
         changeStatus(singleID, "131")
     elif passFail == "Valid G-code":
         if config['Make_files_anon'] == True:
-            text_file = open("jiradownloads/" + singleID + ".gcode", "w")
+            text_file = open("jiradownloads/" + projectNumber + "_" + singleID + ".gcode", "w")
         else:
             text_file = open("jiradownloads/" + filename + "__" + singleID + ".gcode", "w")
         n = text_file.write(editedGcode)
@@ -229,7 +229,7 @@ def download(gcode, singleID, filename, taxExempt=False, patronName=''):
         #commentStatus(singleID, "Your print file has been downloaded and is now in the print queue.")
     elif passFail == "Manual G-code":
         if config['Make_files_anon'] == True:
-            text_file = open("manual_prints/" + singleID + ".gcode", "w")
+            text_file = open("manual_prints/" + projectNumber + "_" + singleID + ".gcode", "w")
         else:
             text_file = open("manual_prints/" + filename + "__" + singleID + ".gcode", "w")
         n = text_file.write(editedGcode)
@@ -449,6 +449,7 @@ def validateClassKey(key, cost, count):
     return "Bad key"
 
 def changeStatus(singleID, id):
+    ticketID = singleID.split('.gcode')[0].split('_')[-1]
     """
     Start Progress: 11 (From Open to In Progress)
     Ready for review: 21 (From In Progress to UNDER REVIEW)
@@ -459,7 +460,7 @@ def changeStatus(singleID, id):
     Reopen: 121  (From Cancelled to OPEN)
     Start progress : 141  (From REJECTEDto IN PROGRESS)
     """
-    simple_singleID = singleID.rsplit('__', 1)[-1]
+    simple_singleID = ticketID.rsplit('__', 1)[-1]
     url = config['base_url'] + "/rest/api/2/issue/" + simple_singleID + "/transitions"
     headers = {
        "Content-type": "application/json",
@@ -492,7 +493,8 @@ I removed the following from the changeStatus function
 '''
 
 def commentStatus(singleID, comment):
-    simple_singleID = singleID.rsplit('__', 1)[-1]
+    ticketID = singleID.split('.gcode')[0].split('_')[-1]
+    simple_singleID = ticketID.rsplit('__', 1)[-1]
     url = config['base_url'] + "/rest/api/2/issue/" + simple_singleID + "/comment"
     headers = {
         "Accept": "application/json",
