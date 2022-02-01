@@ -284,13 +284,13 @@ def PrintIsFinished():
                                 if startTime[0] == '0':
                                     startTime = startTime[1:]
                                 response += startTime + "\nFilament Usage ... " + grams + "g\n"
-                                print("Tax exempt status = " + taxExempt)
-                                if taxExempt[0] == 'T':
+                                if taxExempt == 'True':
                                     response += "Actual Cost ... ("+grams+"g * $0.05/g) = $"
                                     cost = float(grams) * .05
                                     cost = str(("%.2f" % (cost)))
                                     response += cost + ' (tax exempt)\n\nYour print is ready for pickup by the orange pillars in the ProtoSpace on the 2nd floor of the library whenever the library is open. Thanks!'
-                                else:
+                                    jira.commentStatus(file, response)
+                                elif taxExempt == 'False':
                                     response += "Actual Cost ... ("+grams+"g * $0.05/g) * 1.0775 state tax = $"
                                     cost = float(grams) * .05 * 1.0775
                                     cost = str(("%.2f" % (cost)))
