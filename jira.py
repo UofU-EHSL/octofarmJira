@@ -114,7 +114,7 @@ def getGcode():
             else:
                 commentStatus(
                     singleID,
-                    "We do not see any files attached to this submission. If this was in error, please try again and make sure to upload a file, if your file is larger than 25mb then paste a google drive share link in the description of the submission. If you have included a google drive link in the description and are still seeing this error, make sure the link is publicly viewable, and give google a second to process your file. You can generate a link before the file is viewable which can cause some hiccups for our system. Here is how to make a publicly viewable google drive link: https://youtu.be/GkNTohTTIjY"
+                    "We do not see any files attached to this submission. If this was in error, please try again and make sure to upload a file, if your file is larger than 25mb then paste a shared Google Drive link in the description of the submission. If you have included a Google Drive link in the description and are still seeing this error, make sure the link is publicly viewable, and give Google a second to process your file. You can sometimes generate a link before the file is viewable which can cause some hiccups for our system. Here is how to make a publicly viewable Google Drive link: https://youtu.be/GkNTohTTIjY"
                 )
                 changeStatus(singleID, "11")
                 changeStatus(singleID, "111")
@@ -154,7 +154,7 @@ def getGcode():
 
 def downloadGoogleDrive(file_ID, singleID, taxExempt="False", patronName='', projectNumber=''):
     if config['Make_files_anon'] == True:
-        gdd.download_file_from_google_drive(file_id=file_ID, dest_path="drivedownloads/" + singleID + ".gcode") #filenamerefrenced
+        gdd.download_file_from_google_drive(file_id=file_ID, dest_path="drivedownloads/" + projectNumber + "_" + singleID + ".gcode") #filenamerefrenced
         file = open("drivedownloads/" + projectNumber + "_" + singleID + ".gcode", "r") #filenamerefrenced
     else:
         gdd.download_file_from_google_drive(file_id=file_ID, dest_path="drivedownloads/" + file_ID + "__" + singleID + ".gcode") #filenamerefrenced
@@ -165,7 +165,7 @@ def downloadGoogleDrive(file_ID, singleID, taxExempt="False", patronName='', pro
     passFail, editedGcode = checkGcode(file, singleID, taxExempt, projectNumber, patronName) #filenamerefrenced
     file.close()
     if passFail == "Bad G-code":
-        commentStatus(singleID, "Please follow the slicing instructions and re-submit. Our automated check suggests you did not use our slicer configs. https://youtu.be/kGpXsIX9E_k")
+        commentStatus(singleID, "Please follow the slicing instructions and re-submit. Our automated check suggests you did not use our slicer configs. Please note you are welcome to tweak our settings after you import them, just see them as a safe base to start on. https://youtu.be/kGpXsIX9E_k")
         changeStatus(singleID, "11")
         changeStatus(singleID, "21")
         changeStatus(singleID, "131")
@@ -214,7 +214,7 @@ def download(gcode, singleID, filename, taxExempt=False, patronName=''):
     projectNumber = gcode.split('/')[-1].split('_')[0]
     passFail, editedGcode = checkGcode(response.text, singleID, taxExempt, projectNumber, patronName)
     if passFail == "Bad G-code":
-        commentStatus(singleID, "Please follow the slicing instructions and re-submit. Our automated check suggests you did not use our slicer configs. https://youtu.be/kGpXsIX9E_k")
+        commentStatus(singleID, "Please follow the slicing instructions and re-submit. Our automated check suggests you did not use our slicer configs. Please note you are welcome to tweak our settings after you import them, just see them as a safe base to start on. https://youtu.be/kGpXsIX9E_k")
         changeStatus(singleID, "11")
         changeStatus(singleID, "21")
         changeStatus(singleID, "131")
