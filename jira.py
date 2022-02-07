@@ -22,30 +22,32 @@ with open("keys.yml", "r") as yamlfile:
 
 auth = HTTPBasicAuth(config['jira_user'], config['jira_password'])
 
+
 def issueList():
-    #os.system('cls' if os.name == 'nt' else 'clear')
+    # os.system('cls' if os.name == 'nt' else 'clear')
     print("Checking for new submissions...")
     url = config['base_url'] + "/rest/api/2/" + config['search_url']
     headers = {
-       "Accept": "application/json"
+        "Accept": "application/json"
     }
     try:
         response = requests.request(
-           "GET",
-           url,
-           headers=headers,
-           auth=auth
+            "GET",
+            url,
+            headers=headers,
+            auth=auth
         )
-    
+
         # parse all open projects:
-    
+
         openissues = json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
-        issues= []
+        issues = []
         for issue in openissues['issues']:
             issues.append(issue['self'])
         return issues
     except:
         print("No new tickets")
+
 
 def getGcode():
     i = 0
@@ -61,40 +63,40 @@ def getGcode():
         singleID = id[-1]
         url = issue
         headers = {
-           "Accept": "application/json"
+            "Accept": "application/json"
         }
-        
+
         response = requests.request(
-           "GET",
-           url,
-           headers=headers,
-           auth=auth
+            "GET",
+            url,
+            headers=headers,
+            auth=auth
         )
 
         # parse all open projects:
         singleIssue = json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
         projectNumber = singleIssue['key']
-        #print(singleIssue['fields']['description'])
+        # print(singleIssue['fields']['description'])
         user = singleIssue['fields']['reporter']['name']
         submitter = singleIssue['fields']['summary']
         patronName = submitter.split('Submission from ')[-1]
-        #print(singleIssue)
-        #parsing class key value
+        # print(singleIssue)
+        # parsing class key value
         start = "*Class Key* \\\\"
         end = "\n\n*Description of print*"
         s = singleIssue['fields']['description']
         description = s.splitlines()
         taxExempt = False
         for line in description:
-            #print(line)
+            # print(line)
             if 'Tax Exempt' in line:
                 print(line.split('*Tax Exempt* \\\\')[1])
                 if line.split('*Tax Exempt* \\\\')[1] == "Yes":
                     taxExempt = True
-        classKey = s[s.find(start)+len(start):s.rfind(end)]
-        #print(s)
-        ## keys can be validated and update the key logs but keys do not change if a print is to be printed or not yet.
-        #print(validateClassKey(classKey,5,1))
+        classKey = s[s.find(start) + len(start):s.rfind(end)]
+        # print(s)
+        # keys can be validated and update the key logs but keys do not change if a print is to be printed or not yet.
+        # print(validateClassKey(classKey,5,1))
 
         if user in userlist["NICE"] or config["use_nice_list"] == False:
             attachments = str(singleIssue).split(',')
@@ -102,15 +104,16 @@ def getGcode():
                 print("Downloading " + singleID)
                 matching = [s for s in attachments if "https://projects.lib.utah.edu:8443/secure/attachment" in s]
                 attachment = str(matching[0]).split("'")
-                filename = attachment[3].rsplit('EHSL3DPR-', 1)[-1] #filenamerefrenced
-                download(attachment[3], singleID, filename, taxExempt, patronName) #filenamerefrenced
+                filename = attachment[3].rsplit('EHSL3DPR-', 1)[-1]  # filenamerefrenced
+                download(attachment[3], singleID, filename, taxExempt, patronName)  # filenamerefrenced
             elif any("https://drive.google.com/file/d/" in s for s in attachments):
                 print("Downloading " + singleID + " from google drive")
                 matching = [s for s in attachments if "https://drive.google.com/file/d/" in s]
                 attachment = str(str(matching[0]).split("'"))
                 start = "https://drive.google.com/file/d/"
                 end = "/view?usp=sharing"
-                downloadGoogleDrive(attachment[attachment.find(start)+len(start):attachment.rfind(end)], singleID, taxExempt, patronName, projectNumber)
+                downloadGoogleDrive(attachment[
+                                    attachment.find(start) + len(start):attachment.rfind(end)], singleID, taxExempt, patronName, projectNumber)
             else:
                 commentStatus(
                     singleID,
@@ -127,14 +130,12 @@ def getGcode():
             changeStatus(singleID, "11")
             changeStatus(singleID, "21")
             changeStatus(singleID, "131")
-        
-        
-        
-        ##If someone is nice they go in here
+
+        # If someone is nice they go in here
         if user in userlist["NICE"] and config["use_nice_list"] == True:
             printIsGoodToGo(singleIssue, singleID, classKey, taxExempt, patronName, projectNumber)
-        
-        #if they are naughty they go in here
+
+        # if they are naughty they go in here
         elif user in userlist["NAUGHTY"] and config["use_naughty_list"] == True:
             printIsNoGo(singleID, singleID)
             if os.path.exists("jiradownloads/" + singleID + ".gcode"):
@@ -153,16 +154,16 @@ def getGcode():
 
 
 def downloadGoogleDrive(file_ID, singleID, taxExempt="False", patronName='', projectNumber=''):
-    if config['Make_files_anon'] == True:
-        gdd.download_file_from_google_drive(file_id=file_ID, dest_path="drivedownloads/" + projectNumber + "_" + singleID + ".gcode") #filenamerefrenced
-        file = open("drivedownloads/" + projectNumber + "_" + singleID + ".gcode", "r") #filenamerefrenced
+    if config['Make_files_anon']:
+        gdd.download_file_from_google_drive(file_id=file_ID, dest_path="drivedownloads/" + projectNumber + "_" + singleID + ".gcode")  # filenamerefrenced
+        file = open("drivedownloads/" + projectNumber + "_" + singleID + ".gcode", "r")  # filenamerefrenced
     else:
-        gdd.download_file_from_google_drive(file_id=file_ID, dest_path="drivedownloads/" + file_ID + "__" + singleID + ".gcode") #filenamerefrenced
-        file = open("drivedownloads/" + projectNumber + "_" + file_ID + "__" + singleID + ".gcode", "r") #filenamerefrenced
-    
-    #passFail, editedGcode = checkGcode(file, singleID)
-    #try updating google drive to include additional info
-    passFail, editedGcode = checkGcode(file, singleID, taxExempt, projectNumber, patronName) #filenamerefrenced
+        gdd.download_file_from_google_drive(file_id=file_ID, dest_path="drivedownloads/" + file_ID + "__" + singleID + ".gcode")  # filenamerefrenced
+        file = open("drivedownloads/" + projectNumber + "_" + file_ID + "__" + singleID + ".gcode", "r")  # filenamerefrenced
+
+    # passFail, editedGcode = checkGcode(file, singleID)
+    # try updating google drive to include additional info
+    passFail, editedGcode = checkGcode(file, singleID, taxExempt, projectNumber, patronName)  # filenamerefrenced
     file.close()
     if passFail == "Bad G-code":
         commentStatus(singleID, "Please follow the slicing instructions and re-submit. Our automated check suggests you did not use our slicer configs. Please note you are welcome to tweak our settings after you import them, just see them as a safe base to start on. https://youtu.be/kGpXsIX9E_k")
@@ -171,46 +172,46 @@ def downloadGoogleDrive(file_ID, singleID, taxExempt="False", patronName='', pro
         changeStatus(singleID, "131")
         if os.path.exists("jiradownloads/" + singleID + ".gcode"):
             os.remove("jiradownloads/" + singleID + ".gcode")
-    
+
     elif passFail == "Manual G-code":
-        if config['Make_files_anon'] == True:
-            text_file = open("manual_prints/" + projectNumber + "_" + singleID + ".gcode", "w") #filenamerefrenced
+        if config['Make_files_anon']:
+            text_file = open("manual_prints/" + projectNumber + "_" + singleID + ".gcode", "w")  # filenamerefrenced
         else:
-            text_file = open("manual_prints/" + file_ID + "__" + singleID + ".gcode", "w") #filenamerefrenced
+            text_file = open("manual_prints/" + file_ID + "__" + singleID + ".gcode", "w")  # filenamerefrenced
         n = text_file.write(editedGcode)
         text_file.close()
         changeStatus(singleID, "11")
         commentStatus(singleID, "Your print will need to be started manually by a human (TAZ prints and Gigabot prints cannot be started automatically) A teammember will start it for you as soon as they are available.")
-    
+
     elif passFail == "Valid G-code":
-        if config['Make_files_anon'] == True:
+        if config['Make_files_anon']:
             text_file = open("jiradownloads/" + singleID + ".gcode", "w")
         else:
             text_file = open("jiradownloads/" + file_ID + "__" + singleID + ".gcode", "w")
         n = text_file.write(editedGcode)
         text_file.close()
         changeStatus(singleID, "11")
-        #commentStatus(singleID, "Your print file has been downloaded and is now in the print queue.")
-    #this final case may be unneccesary (i commented it out -Sebastion)
+        # commentStatus(singleID, "Your print file has been downloaded and is now in the print queue.")
+    # this final case may be unneccesary (i commented it out -Sebastion)
     else:
         changeStatus(singleID, "11")
-        #commentStatus(singleID, "Your print file has been downloaded and is now in the print queue.")
+        # commentStatus(singleID, "Your print file has been downloaded and is now in the print queue.")
 
 
 def download(gcode, singleID, filename, taxExempt=False, patronName=''):
     url = gcode
-    
+
     headers = {
-       "Accept": "application/json"
+        "Accept": "application/json"
     }
-    
+
     response = requests.request(
-       "GET",
-       url,
-       headers=headers,
-       auth=auth
+        "GET",
+        url,
+        headers=headers,
+        auth=auth
     )
-    
+
     projectNumber = gcode.split('/')[-1].split('_')[0]
     passFail, editedGcode = checkGcode(response.text, singleID, taxExempt, projectNumber, patronName)
     if passFail == "Bad G-code":
@@ -219,16 +220,16 @@ def download(gcode, singleID, filename, taxExempt=False, patronName=''):
         changeStatus(singleID, "21")
         changeStatus(singleID, "131")
     elif passFail == "Valid G-code":
-        if config['Make_files_anon'] == True:
+        if config['Make_files_anon']:
             text_file = open("jiradownloads/" + projectNumber + "_" + singleID + ".gcode", "w")
         else:
             text_file = open("jiradownloads/" + filename + "__" + singleID + ".gcode", "w")
         n = text_file.write(editedGcode)
         text_file.close()
         changeStatus(singleID, "11")
-        #commentStatus(singleID, "Your print file has been downloaded and is now in the print queue.")
+        # commentStatus(singleID, "Your print file has been downloaded and is now in the print queue.")
     elif passFail == "Manual G-code":
-        if config['Make_files_anon'] == True:
+        if config['Make_files_anon']:
             text_file = open("manual_prints/" + projectNumber + "_" + singleID + ".gcode", "w")
         else:
             text_file = open("manual_prints/" + filename + "__" + singleID + ".gcode", "w")
@@ -245,14 +246,14 @@ def customGcodeCheck(file, ticketID='', taxExempt=False, projectNumber='', patro
     try:
         splitFile = file.splitlines()
     except:
-        #the google drive download function gives a different flavor of file
+        # the google drive download function gives a different flavor of file
         splitFile = file.read().splitlines()
     if "generated by PrusaSlicer" not in splitFile[0]:
         return "Bad G-code", file
     m0Included = False
     m0startLine = 0
     for line in splitFile:
-        ##Check Whole File
+        # Check Whole File
         if "M0 " in line:
             if "Start" in line:
                 m0startLine = lineCount
@@ -261,7 +262,7 @@ def customGcodeCheck(file, ticketID='', taxExempt=False, projectNumber='', patro
                 m0Included = True
         if 'M300' in line:
             line = ";" + line
-        #nozzle temp checks
+        # nozzle temp checks
         if "M109" in line and "start_gcode" not in line and "end_gcode" not in line:
             M109 = str((re.findall('\d+', line))[-1])
             if int(M109) > int(maxtemp):
@@ -270,7 +271,7 @@ def customGcodeCheck(file, ticketID='', taxExempt=False, projectNumber='', patro
             M104 = str((re.findall('\d+', line))[-1])
             if int(M104) > int(maxtemp):
                 return "Bad G-code", file
-        #bed temp checks
+        # bed temp checks
         if "M190" in line and "start_gcode" not in line and "end_gcode" not in line:
             M190 = str((re.findall('\d+', line))[-1])
             if int(M190) > int(maxbed):
@@ -279,66 +280,68 @@ def customGcodeCheck(file, ticketID='', taxExempt=False, projectNumber='', patro
             M140 = str((re.findall('\d+', line))[-1])
             if int(M140) > int(maxbed):
                 return "Bad G-code", file
-        ##Check end of file
+        # Check end of file
         if "[mm]" in line:
-            m0line = lineCount-1
-            while lineCount < len(splitFile)-1:
+            m0line = lineCount - 1
+            while lineCount < len(splitFile) - 1:
                 lineCount = lineCount + 1
                 if "; printer_settings_id" in splitFile[lineCount]:
                     printerID = splitFile[lineCount].split('= ')[-1].split(' - ')[0]
-                    
-                    #print(printerID)
+
+                    # print(printerID)
                 if "; filament_settings_id" in splitFile[lineCount]:
                     filamentSettings = splitFile[lineCount].split('= ')[-1].strip('"').split(' - ')[0]
-                    #print(filamentSettings)
+                    # print(filamentSettings)
                 if "; print_settings_id" in splitFile[lineCount]:
                     printerSettings = splitFile[lineCount].split('= ')[-1].split(' - ')[0]
-                    #print(printerSettings)
+                    # print(printerSettings)
                 if "total filament used" in splitFile[lineCount]:
                     grams = (re.findall("\d+\.\d+", splitFile[lineCount]))[0]
-                    #print(str(grams) + ' grams of filament used')
+                    # print(str(grams) + ' grams of filament used')
                 if "filament_density" in splitFile[lineCount]:
                     density = (re.findall(r"([\d.]*\d+)", splitFile[lineCount]))[0]
                     if 1.24 > float(density):
                         return "Bad G-code", file
-                    #print(str(density) + " g/cm^3 filament density")
+                    # print(str(density) + " g/cm^3 filament density")
                 if "filament_diameter" in splitFile[lineCount]:
                     diameter = (re.findall("\d+\.\d+", splitFile[lineCount]))[0]
-                    #print(str(diameter) + " mm filament diameter")
+                    # print(str(diameter) + " mm filament diameter")
                 if "printing time (normal mode)" in splitFile[lineCount]:
                     printingTime = splitFile[lineCount].split('= ')[-1]
-                    #print(printingTime + " print duration")
+                    # print(printingTime + " print duration")
                 if "; printer_notes =" in splitFile[lineCount]:
                     profileVersion = splitFile[lineCount].split('~ ')[-1]
-                    #print(profileVersion)
+                    # print(profileVersion)
         lineCount = lineCount + 1
     if len(ticketID) > 0:
-        splitFile[0] = splitFile[0]+",GRAMS="+grams+",TIME="+printingTime+",PRINTER="+printerID+",NAME="+patronName+",FILAMENT="+filamentSettings+",PRINT="+printerSettings+",ID="+str(ticketID)+",TAXEXEMPT="+str(taxExempt)+",PROJECTNUMBER="+projectNumber+",LINK=https://projects.lib.utah.edu:8443/browse/"+projectNumber
+        splitFile[0] = splitFile[
+                           0] + ",GRAMS=" + grams + ",TIME=" + printingTime + ",PRINTER=" + printerID + ",NAME=" + patronName + ",FILAMENT=" + filamentSettings + ",PRINT=" + printerSettings + ",ID=" + str(ticketID) + ",TAXEXEMPT=" + str(taxExempt) + ",PROJECTNUMBER=" + projectNumber + ",LINK=https://projects.lib.utah.edu:8443/browse/" + projectNumber
         print(splitFile[0])
     else:
-        splitFile[0] = splitFile[0] +",GRAMS="+grams+",TIME="+printingTime+",PRINTER="+printerID+",FILAMENT="+filamentSettings+",PRINT="+printerSettings+",TAXEXEMPT="+str(taxExempt)
+        splitFile[0] = splitFile[
+                           0] + ",GRAMS=" + grams + ",TIME=" + printingTime + ",PRINTER=" + printerID + ",FILAMENT=" + filamentSettings + ",PRINT=" + printerSettings + ",TAXEXEMPT=" + str(taxExempt)
     i = 0
     filamentGcodeFound = False
     for line in splitFile:
         if ';LAYER_CHANGE' in line:
             filamentGcodeFound = True
-        if filamentGcodeFound == True:
-            #blankLine = i
-            #splitFile[i] = splitFile[i] + '\nM117 ' + str(ticketID) + ' ' + grams[0] + "g" +'\n' #modify second line
+        if filamentGcodeFound:
+            # blankLine = i
+            # splitFile[i] = splitFile[i] + '\nM117 ' + str(ticketID) + ' ' + grams[0] + "g" +'\n' #modify second line
             if projectNumber != '' and ticketID != '':
                 shortGrams = str(grams)
                 shortGrams = shortGrams.split('.')[0]
-                splitFile[i] = "M117 "+projectNumber+" "+str(ticketID)+" "+str(shortGrams)+"g"
+                splitFile[i] = "M117 " + projectNumber + " " + str(ticketID) + " " + str(shortGrams) + "g"
             else:
-                splitFile[i] = "M117 " + str(grams) + "g" 
+                splitFile[i] = "M117 " + str(grams) + "g"
             break
         i = i + 1
     if m0startLine != 0:
         splitFile[m0startLine] = m0startCommented
-    if m0Included == False:
+    if not m0Included:
         shortGrams = str(grams)
         shortGrams = shortGrams.split('.')[0]
-        splitFile[m0line] = splitFile[m0line] + "\nM0 Done? " + projectNumber +' ' + shortGrams + 'g'
+        splitFile[m0line] = splitFile[m0line] + "\nM0 Done? " + projectNumber + ' ' + shortGrams + 'g'
     try:
         splitFile.close()
     except:
@@ -352,13 +355,14 @@ def customGcodeCheck(file, ticketID='', taxExempt=False, projectNumber='', patro
     else:
         return "Bad G-code", file
 
-def checkGcode(file, ticketID='', taxExempt=False, projectNumber='', patronName = ''):
+
+def checkGcode(file, ticketID='', taxExempt=False, projectNumber='', patronName=''):
     try:
         runCustomChecks = config['gcode_check_text']['customChecks']
     except NameError:
         runCustomChecks = False
         print('Add the line "customChecks: false" to your gcode_check_text: section in config.yml to remove this warning')
-    if runCustomChecks == False:
+    if not runCustomChecks:
         status = True
         for code_check in config['gcode_check_text']:
             code_to_check = config['gcode_check_text'][code_check]
@@ -376,7 +380,8 @@ def checkGcode(file, ticketID='', taxExempt=False, projectNumber='', patronName 
             status, file = customGcodeCheck(file, ticketID, taxExempt, projectNumber, patronName)
         else:
             status, file = customGcodeCheck(file)
-        return(status, file)
+        return (status, file)
+
 
 def printIsNoGo(singleIssue, singleID):
     attachments = str(singleIssue).split(',')
@@ -392,7 +397,7 @@ def printIsNoGo(singleIssue, singleID):
         attachment = str(str(matching[0]).split("'"))
         start = "https://drive.google.com/file/d/"
         end = "/view?usp=sharing"
-        downloadGoogleDrive(attachment[attachment.find(start)+len(start):attachment.rfind(end)], singleID)
+        downloadGoogleDrive(attachment[attachment.find(start) + len(start):attachment.rfind(end)], singleID)
     else:
         commentStatus(
             singleID,
@@ -401,13 +406,14 @@ def printIsNoGo(singleIssue, singleID):
         changeStatus(singleID, "11")
         changeStatus(singleID, "111")
 
+
 def printIsGoodToGo(singleIssue, singleID, classKey, taxExempt=False, patronName='', projectNumber=''):
     attachments = str(singleIssue).split(',')
     if any("https://projects.lib.utah.edu:8443/secure/attachment" in s for s in attachments):
         print("Downloading " + singleID)
         matching = [s for s in attachments if "https://projects.lib.utah.edu:8443/secure/attachment" in s]
         attachment = str(matching[0]).split("'")
-        
+
         filename = attachment[3].rsplit('EHSL3DPR-', 1)[-1]
         download(attachment[3], singleID, filename, taxExempt, patronName)
         if validateClassKey(classKey, 5, 1) == "Valid key":
@@ -420,7 +426,8 @@ def printIsGoodToGo(singleIssue, singleID, classKey, taxExempt=False, patronName
         attachment = str(str(matching[0]).split("'"))
         start = "https://drive.google.com/file/d/"
         end = "/view?usp=sharing"
-        downloadGoogleDrive(attachment[attachment.find(start)+len(start):attachment.rfind(end)], singleID, taxExempt, patronName, projectNumber)
+        downloadGoogleDrive(attachment[
+                            attachment.find(start) + len(start):attachment.rfind(end)], singleID, taxExempt, patronName, projectNumber)
         if validateClassKey(classKey, 5, 1) == "Valid key":
             print("Skip payment, they had a valid class key")
         else:
@@ -432,6 +439,7 @@ def printIsGoodToGo(singleIssue, singleID, classKey, taxExempt=False, patronName
         )
         changeStatus(singleID, "11")
         changeStatus(singleID, "111")
+
 
 def validateClassKey(key, cost, count):
     for singlekey in keys["CLASSKEYS"]:
@@ -448,6 +456,7 @@ def validateClassKey(key, cost, count):
                 return "Valid key"
     return "Bad key"
 
+
 def changeStatus(singleID, id):
     ticketID = singleID.split('.gcode')[0].split('_')[-1]
     """
@@ -463,22 +472,23 @@ def changeStatus(singleID, id):
     simple_singleID = ticketID.rsplit('__', 1)[-1]
     url = config['base_url'] + "/rest/api/2/issue/" + simple_singleID + "/transitions"
     headers = {
-       "Content-type": "application/json",
-       "Accept" : "application/json"
+        "Content-type": "application/json",
+        "Accept": "application/json"
     }
     data = {
         "transition": {
-            "id":id
+            "id": id
         }
     }
-    
+
     response = requests.request(
         "POST",
         url,
         headers=headers,
-        json = data,
+        json=data,
         auth=auth
     )
+
 
 '''
 I removed the following from the changeStatus function
@@ -491,6 +501,7 @@ I removed the following from the changeStatus function
             }]
         },
 '''
+
 
 def commentStatus(singleID, comment):
     ticketID = singleID.split('.gcode')[0].split('_')[-1]
@@ -506,9 +517,9 @@ def commentStatus(singleID, comment):
     }
 
     response = requests.request(
-       "POST",
-       url,
-       json=payload,
-       headers=headers,
-       auth=auth
+        "POST",
+        url,
+        json=payload,
+        headers=headers,
+        auth=auth
     )
