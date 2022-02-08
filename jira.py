@@ -29,34 +29,24 @@ def issueList():
     headers = {
         "Accept": "application/json"
     }
-    try:
-        response = requests.request(
-            "GET",
-            url,
-            headers=headers,
-            auth=auth
-        )
+    response = requests.request(
+        "GET",
+        url,
+        headers=headers,
+        auth=auth
+    )
 
-        # parse all open projects:
+    # parse all open projects:
 
-        openissues = json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
-        issues = []
-        for issue in openissues['issues']:
-            issues.append(issue['self'])
-        return issues
-    except:
-        print("No new tickets")
+    openissues = json.loads(response.text)
+    issues = []
+    for issue in openissues['issues']:
+        issues.append(issue['self'])
+    return issues
 
 
 def getGcode():
-    i = 0
-    listOfIssues = None
-    while listOfIssues is None:
-        listOfIssues = issueList()
-        i = i + 1
-        if i > 5:
-            print("I could not get any issues in the issue list for 5 times in a row. You are being rate limited.")
-            raise TypeError
+    listOfIssues = issueList()
     for issue in listOfIssues:
         id = issue.split("/")
         singleID = id[-1]
