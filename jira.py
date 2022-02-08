@@ -36,7 +36,7 @@ def issueList():
             headers=headers,
             auth=auth
         )
-    except ConnectionError as e:
+    except Exception as e:
         print("Jira didn't respond!")
         print(e)
         return []
