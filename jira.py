@@ -24,7 +24,6 @@ auth = HTTPBasicAuth(config['jira_user'], config['jira_password'])
 
 
 def issueList():
-    # os.system('cls' if os.name == 'nt' else 'clear')
     print("Checking for new submissions...")
     url = config['base_url'] + "/rest/api/2/" + config['search_url']
     headers = {
