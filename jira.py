@@ -29,13 +29,17 @@ def issueList():
     headers = {
         "Accept": "application/json"
     }
-    response = requests.request(
-        "GET",
-        url,
-        headers=headers,
-        auth=auth
-    )
-
+    try:
+        response = requests.request(
+            "GET",
+            url,
+            headers=headers,
+            auth=auth
+        )
+    except ConnectionError as e:
+        print("Jira didn't respond!")
+        print(e)
+        return []
     # parse all open projects:
 
     openissues = json.loads(response.text)
