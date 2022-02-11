@@ -1,0 +1,8 @@
+Go to this folder and do
+
+Docker-compose up
+
+It will install a BUNCH of stuff and then you should be able to navigate to octoprint running local on your own machine. This then lets us install a virtual printer and use a fully offline version of things for testing.
+
+You should also be able to run multiple virtual octoprint installs if you really wanted to test farm functions.
+
