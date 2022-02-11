@@ -132,3 +132,5 @@ config.yml
 config.yml
 lists.yml
 printers.yml
+config.yml
+*.yml
