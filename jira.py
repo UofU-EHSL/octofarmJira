@@ -91,7 +91,7 @@ def getGcode():
         # keys can be validated and update the key logs but keys do not change if a print is to be printed or not yet.
         # print(validateClassKey(classKey,5,1))
 
-        if user in userlist["NICE"] or config["use_nice_list"] == False:
+        if user in userlist["NICE"] and user not in userlist["NAUGHTY"] or config["use_nice_list"] == False:
             attachments = str(singleIssue).split(',')
             if any("https://projects.lib.utah.edu:8443/secure/attachment" in s for s in attachments):
                 print("Downloading " + singleID)

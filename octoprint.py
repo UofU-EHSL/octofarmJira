@@ -204,18 +204,12 @@ def uploadFileToPrinter(apikey, printerIP, file):
             os.remove("jiradownloads/" + file + ".gcode")
         else:
             os.replace("jiradownloads/" + file + ".gcode", "archive_files/" + file + ".gcode")
-        if config["Make_files_anon"] == True:
-            if ticketText != "Your file is now printing and we will update you when it is finished and ready for pickup":
-                # filenamerefrenced
-                jira.commentStatus(file, ticketText)
-            printerName = GetName(printerIP, apikey)
-            print("Now printing: " + file + " on " + printerName + " at " + printerIP)
-        else:
-            if ticketText != "Your file is now printing and we will update you when it is finished and ready for pickup":
-                # filenamerefrenced
-                jira.commentStatus(file, ticketText)
-            printerName = GetName(printerIP, apikey)
-            print("Now printing: " + file + " on " + printerName + " at " + printerIP)
+        if ticketText != "Your file is now printing and we will update you when it is finished and ready for pickup":
+            # filenamerefrenced
+            jira.commentStatus(file, ticketText)
+        printerName = GetName(printerIP, apikey)
+        print("Now printing: " + file + " on " + printerName + " at " + printerIP)
+        
     if config["reciept_printer"]["print_physical_reciept"] == True:
         try:
             printerName = GetName(printerIP, apikey)

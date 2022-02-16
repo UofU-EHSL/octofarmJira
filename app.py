@@ -123,4 +123,4 @@ def dir_listing():
     
 
 if __name__ == '__main__':
-    socketio.run(app)
+    socketio.run(app, host='localhost', port=10001)
