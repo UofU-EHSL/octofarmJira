@@ -1,9 +1,9 @@
-PRINTERS:
+farm_printers:
     printer 1:
         ip: "localhost:81"
         api: "48198016222845619D940A471FA29383"
         stream: "http://localhost:81/webcam/?action=stream"
-        materialName: "pla"
+        materialType: "pla"
         materialColor: "white"
         materialDensity: 1.24
         printerType: "prusa_mk3"
@@ -11,7 +11,7 @@ PRINTERS:
         ip: "localhost:82"
         api: "D3CC2B1015A3488B8369F39E0158888E"
         stream: "http://localhost:82/webcam/?action=stream"
-        materialName: "pla"
+        materialType: "pla"
         materialColor: "white"
         materialDensity: 1.24
         printerType: "prusa_mk3"

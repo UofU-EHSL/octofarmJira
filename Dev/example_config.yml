@@ -9,7 +9,6 @@ Save_printed_files: False
 use_nice_list: False
 use_naughty_list: True
 
-
 messages:
     printStarted: "Your file is now printing and we will update you when it is finished and ready for pickup"
     printFinished: "Your print has been completed and should now be available for pickup"
@@ -17,6 +16,7 @@ messages:
     taxExemptFinalMessage: " (tax exempt)\n\nYour print is ready for pickup by the orange pillars in the ProtoSpace on the 2nd floor of the library whenever the library is open. Thanks!"
     wrongConfig: "Please follow the slicing instructions and re-submit. Our automated check suggests you did not use our slicer configs"
     downloadedFile: "Your print file has been downloaded and is now in the print queue."
+
 payment:
     url: ""
     username: ""

@@ -99,7 +99,7 @@ def downloadGoogleDrive(file_ID, singleID):
         file = open("jiradownloads/" + file_ID + "__" + singleID + ".gcode", "r")
     
     if checkGcode(file.read()) == "Bad G-code":
-        commentStatus(singleID, "Please follow the slicing instructions and re-submit. Our automated check suggests you did not use our slicer configs")
+        commentStatus(singleID, config['messages']['wrongConfig'])
         changeStatus(singleID, "11")
         changeStatus(singleID, "21")
         changeStatus(singleID, "131")
@@ -107,7 +107,7 @@ def downloadGoogleDrive(file_ID, singleID):
             os.remove("jiradownloads/" + singleID + ".gcode")
     else:
         changeStatus(singleID, "11")
-        commentStatus(singleID, "Your print file has been downloaded and is now in the print queue.")
+        commentStatus(singleID, config['messages']['downloadedFile'])
 
 def download(gcode, singleID, filename):
     url = gcode
@@ -123,7 +123,7 @@ def download(gcode, singleID, filename):
        auth=auth
     )
     if checkGcode(response.text) == "Bad G-code":
-        commentStatus(singleID, "Please follow the slicing instructions and re-submit. Our automated check suggests you did not use our slicer configs")
+        commentStatus(singleID, config['messages']['wrongConfig'])
         changeStatus(singleID, "11")
         changeStatus(singleID, "21")
         changeStatus(singleID, "131")
@@ -135,7 +135,7 @@ def download(gcode, singleID, filename):
         n = text_file.write(response.text)
         text_file.close()
         changeStatus(singleID, "11")
-        commentStatus(singleID, "Your print file has been downloaded and is now in the print queue.")
+        commentStatus(singleID, config['messages']['downloadedFile'])
 
 
 def checkGcode(file):
