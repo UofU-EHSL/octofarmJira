@@ -228,9 +228,9 @@ def resetConnection(apikey, printerIP):
     response = requests.post(url, json=connect, headers=header)
 ### If a print is complete update people and mark as ready for new file ###
 def PrintIsFinished():
-    for printer in printers['PRINTERS']:
-        apikey = printers['PRINTERS'][printer]['api']
-        printerIP = printers['PRINTERS'][printer]['ip']
+    for printer in printers['farm_printers']:
+        apikey = printers['farm_printers'][printer]['api']
+        printerIP = printers['farm_printers'][printer]['ip']
         url = "http://" + printerIP + "/api/job"
         headers = {
             "Accept": "application/json",
