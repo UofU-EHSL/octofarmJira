@@ -244,9 +244,13 @@ def PrintIsFinished():
                 url,
                 headers=headers
             )
-            if (json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))):
-                status = json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
+            if("State" not in response.text):
+                if (json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))):
+                    status = json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
+                else:
+                    status = "offline"
             else:
+                print(printer + " is having issues and the pi is un-reachable, if this continues restart the pi")
                 status = "offline"
         except requests.exceptions.RequestException as e:  # This is the correct syntax
             print(printer + "'s raspberry pi is offline and can't be contacted over the network")
