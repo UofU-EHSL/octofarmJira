@@ -1,14 +1,15 @@
+# 
 base_url: "https://projects.lib.utah.edu:8443"
 search_url: "search?jql=project%20%3D%20ED%20AND%20status%20%3D%20Open"
-link_to_canvas_class: ""
-contact_info: ""
+#jira login information
 jira_user: "ehsl_client"
 jira_password: "asdqwe123"
-Make_files_anon: True
-Save_printed_files: False
-use_nice_list: False
-use_naughty_list: True
 
+Make_files_anon: True #This changes the file names so that we don't know exactly what is printing unless you look at the file.
+Save_printed_files: False #this lets us save some extra information but is also less secure on a privacy front.
+use_nice_list: False #if you want an opt-in only printing service you could have people in this list.
+use_naughty_list: True #When someone is bad you can auto reject uses by adding them into this list.
+updateRate: .5 #Time in minutes that it refreshed the jira and octoprint calls.
 
 messages:
     printStarted: "Your file is now printing and we will update you when it is finished and ready for pickup"
@@ -17,20 +18,24 @@ messages:
     taxExemptFinalMessage: " (tax exempt)\n\nYour print is ready for pickup by the orange pillars in the ProtoSpace on the 2nd floor of the library whenever the library is open. Thanks!"
     wrongConfig: "Please follow the slicing instructions and re-submit. Our automated check suggests you did not use our slicer configs"
     downloadedFile: "Your print file has been downloaded and is now in the print queue."
+    noFile: "Please try again and make sure to upload a file, if your file is larger than 25mb then paste a google drive share link in the description of the print"
+
+# this will be used more later #
 payment:
     url: ""
     username: ""
     password: ""
     apikey: ""
     prepay: False
-    costPerGram: 0.05
-    tax: 1.0775
+    costPerGram: 0.05 # This means we are charging 5¢ per gram of material
+    tax: 1.0775 # The sales tax rate in utah as the time of this comment
 
+# this is a very specific section if you have it you know #
 reciept_printer:
     print_physical_reciept: False
     ID: "(0x0416, 0x5011, 0, 0x81, 0x03)"
-    Note: "I dont't have one of these so I can't really test it and am not sure what is needed so we will make a new function that will take this into account"
 
+# Gcode must past these checks to get put into the print list #
 gcode_check_text:
     startGcode: "G28"
     endGcode: "M0"
@@ -46,6 +51,7 @@ gcode_check_text:
     template_custom_gcode: ""
     customChecks: False
 
+# I'm pretty sure this isn't used #
 custom_gcode_check:
     max_hotend: "210"
     max_bed: "65"

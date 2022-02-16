@@ -1,26 +1,21 @@
 import requests
-import schedule
-import time
 from requests.auth import HTTPBasicAuth
 import json
 import yaml
 from google_drive_downloader import GoogleDriveDownloader as gdd
-import find
 import os
 
-from app import CONFIG, KEYS
-
+### load all of our config files ###
 with open("config.yml", "r") as yamlfile:
     config = yaml.load(yamlfile, Loader=yaml.FullLoader)
-
 with open("lists.yml", "r") as yamlfile:
     userlist = yaml.load(yamlfile, Loader=yaml.FullLoader)
-
 with open("keys.yml", "r") as yamlfile:
     keys = yaml.load(yamlfile, Loader=yaml.FullLoader)
 
+### jira authentical information that gets pulled in from the config ###
 auth = HTTPBasicAuth(config['jira_user'], config['jira_password'])
-
+### Get the list of issues in the jira project ###
 def issueList():
     os.system('cls' if os.name == 'nt' else 'clear')
     print("Checking for new submissions...")
@@ -42,7 +37,7 @@ def issueList():
     for issue in openissues['issues']:
         issues.append(issue['self'])
     return issues
-
+### Gets the files and puts them where they need to be ###
 def getGcode():
     for issue in issueList():
         id = issue.split("/")
@@ -88,8 +83,7 @@ def getGcode():
                 printIsNoGo(singleIssue, singleID)
             elif config["use_naughty_list"] == False and config["use_naughty_list"] == False:
                 printIsGoodToGo(singleIssue, singleID, classKey)
-                
-
+### if the jira project has a google drive link in the description download it ###
 def downloadGoogleDrive(file_ID, singleID):
     if config['Make_files_anon'] == True:
         gdd.download_file_from_google_drive(file_id=file_ID, dest_path="jiradownloads/" + singleID + ".gcode")
@@ -108,7 +102,7 @@ def downloadGoogleDrive(file_ID, singleID):
     else:
         changeStatus(singleID, "11")
         commentStatus(singleID, config['messages']['downloadedFile'])
-
+### Downloads the files that getGcode wants ###
 def download(gcode, singleID, filename):
     url = gcode
     
@@ -136,8 +130,7 @@ def download(gcode, singleID, filename):
         text_file.close()
         changeStatus(singleID, "11")
         commentStatus(singleID, config['messages']['downloadedFile'])
-
-
+### Check if gcode fits the requirements that we have set in the config ###
 def checkGcode(file):
     status = True
     for code_check in config['gcode_check_text']:
@@ -151,12 +144,12 @@ def checkGcode(file):
     if status == True:
         print("File checkedout as good")
         return "Valid G-code"
-
+### If the print is a no go and shouldn't continue ###
 def printIsNoGo(singleIssue, singleID):
     attachments = str(singleIssue).split(',')
-    if any("https://projects.lib.utah.edu:8443/secure/attachment" in s for s in attachments):
+    if any(config['base_url'] + "/secure/attachment" in s for s in attachments):
         print("Downloading " + singleID)
-        matching = [s for s in attachments if "https://projects.lib.utah.edu:8443/secure/attachment" in s]
+        matching = [s for s in attachments if config['base_url'] + "/secure/attachment" in s]
         attachment = str(matching[0]).split("'")
         filename = attachment[3].rsplit('EHSL3DPR-', 1)[-1]
         download(attachment[3], singleID, filename)
@@ -170,17 +163,16 @@ def printIsNoGo(singleIssue, singleID):
     else:
         commentStatus(
             singleID,
-            "Please try again and make sure to upload a file, if your file is larger than 25mb then paste a google drive share link in the description of the print"
+            config['messages']['noFile']
         )
         changeStatus(singleID, "11")
         changeStatus(singleID, "111")
-
+### things to do when a print is good to go ###
 def printIsGoodToGo(singleIssue, singleID, classKey):
-    
     attachments = str(singleIssue).split(',')
-    if any("https://projects.lib.utah.edu:8443/secure/attachment" in s for s in attachments):
+    if any(config['base_url'] + "/secure/attachment" in s for s in attachments):
         print("Downloading " + singleID)
-        matching = [s for s in attachments if "https://projects.lib.utah.edu:8443/secure/attachment" in s]
+        matching = [s for s in attachments if config['base_url'] + "/secure/attachment" in s]
         attachment = str(matching[0]).split("'")
         filename = attachment[3].rsplit('EHSL3DPR-', 1)[-1]
         download(attachment[3], singleID, filename)
@@ -202,11 +194,11 @@ def printIsGoodToGo(singleIssue, singleID, classKey):
     else:
         commentStatus(
             singleID,
-            "Please try again and make sure to upload a file, if your file is larger than 25mb then paste a google drive share link in the description of the print"
+            config['messages']['noFile']
         )
         changeStatus(singleID, "11")
         changeStatus(singleID, "111")
-
+### class keys are used when you want to do bulk class orders ###
 def validateClassKey(key, cost, count):
     for singlekey in keys["CLASSKEYS"]:
         if keys["CLASSKEYS"][singlekey]["key"] == key:
@@ -221,9 +213,11 @@ def validateClassKey(key, cost, count):
                     yaml.safe_dump(keys, f, default_flow_style=False)
                 return "Valid key"
     return "Bad key"
-
+### change the status of the jira ticket, you need to have the status IDs for your setup and change them throughout the project ###
 def changeStatus(singleID, id):
     """
+    Here are the status that we have for our system right now at the University of Utah
+
     Start Progress: 11 (From Open to In Progress)
     Ready for review: 21 (From In Progress to UNDER REVIEW)
     Stop Progress: 111 (From In Progress to CANCELLED)
@@ -259,7 +253,7 @@ def changeStatus(singleID, id):
         json = data,
         auth=auth
     )
-    
+### a simple function call to be used whenever you want to comment on a ticket ###
 def commentStatus(singleID, comment):
     simple_singleID = singleID.rsplit('__', 1)[-1]
     url = config['base_url'] + "/rest/api/2/issue/" + simple_singleID + "/comment"

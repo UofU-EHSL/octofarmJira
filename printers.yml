@@ -1,20 +1,22 @@
-PRINTERS:
+farm_printers:
     printer 1:
         ip: "localhost:81"
         api: "48198016222845619D940A471FA29383"
         stream: "http://localhost:81/webcam/?action=stream"
-        materialName: "pla"
+        materialType: "pla"
         materialColor: "white"
         materialDensity: 1.24
         printerType: "prusa_mk3"
+
     printer 2:
         ip: "localhost:82"
         api: "D3CC2B1015A3488B8369F39E0158888E"
         stream: "http://localhost:82/webcam/?action=stream"
-        materialName: "pla"
+        materialType: "pla"
         materialColor: "white"
         materialDensity: 1.24
         printerType: "prusa_mk3"
+
     printer 3:
         ip: "localhost:83"
         api: "6273B49EA3184E2287D046BEABBF23D7"
@@ -23,6 +25,7 @@ PRINTERS:
         materialColor: "white"
         materialDensity: 1.24
         printerType: "prusa_mk3"
+
     printer 4:
         ip: "localhost:84"
         api: "D887B03EF3604774BEB376D1873E3F13"
@@ -31,6 +34,7 @@ PRINTERS:
         materialColor: "white"
         materialDensity: 1.24
         printerType: "prusa_mk3"
+        
     printer 5:
         ip: "localhost:85"
         api: "AA7E8C52244F4AA2B46D41A882D1CB48"
