@@ -104,8 +104,9 @@ def getGcode():
                 matching = [s for s in attachments if "https://drive.google.com/file/d/" in s]
                 attachment = str(str(matching[0]).split("'"))
                 start = "https://drive.google.com/file/d/"
-                downloadGoogleDrive(attachment[attachment.find(start) + len(start):attachment.rfind(end)], singleID, taxExempt, patronName, projectNumber)
-                end = "/view?usp="
+                end = "/view?usp=sharing"
+                downloadGoogleDrive(attachment[
+                                    attachment.find(start) + len(start):attachment.rfind(end)], singleID, taxExempt, patronName, projectNumber)
             else:
                 commentStatus(
                     singleID,
@@ -399,7 +400,7 @@ def printIsNoGo(singleIssue, singleID):
         matching = [s for s in attachments if "https://drive.google.com/file/d/" in s]
         attachment = str(str(matching[0]).split("'"))
         start = "https://drive.google.com/file/d/"
-        end = "/view?usp="
+        end = "/view?usp=sharing"
         downloadGoogleDrive(attachment[attachment.find(start) + len(start):attachment.rfind(end)], singleID)
     else:
         commentStatus(
@@ -428,7 +429,7 @@ def printIsGoodToGo(singleIssue, singleID, classKey, taxExempt=False, patronName
         matching = [s for s in attachments if "https://drive.google.com/file/d/" in s]
         attachment = str(str(matching[0]).split("'"))
         start = "https://drive.google.com/file/d/"
-        end = "/view?usp="
+        end = "/view?usp=sharing"
         downloadGoogleDrive(attachment[
                             attachment.find(start) + len(start):attachment.rfind(end)], singleID, taxExempt, patronName, projectNumber)
         if validateClassKey(classKey, 5, 1) == "Valid key":
