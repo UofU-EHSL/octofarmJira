@@ -250,11 +250,13 @@ def PrintIsFinished():
                 url,
                 headers=headers
             )
-            if (json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))):
+            if (response.ok and json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))):
                 status = json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
             else:
+                print(printer, response)
                 status = "offline"
         except requests.exceptions.RequestException as e:  # This is the correct syntax
+            # print(e)
             print(printer + "'s raspberry pi is offline and can't be contacted over the network")
             status = "offline"
 

@@ -259,7 +259,7 @@ def customGcodeCheck(file, ticketID='', taxExempt=False, projectNumber='', patro
     for line in splitFile:
         # Check Whole File
         if "M0 " in line:
-            if "Start" in line:
+            if "Press To Start" in line and m0startLine == 0:
                 m0startLine = lineCount
                 m0startCommented = ";" + line
             else:
