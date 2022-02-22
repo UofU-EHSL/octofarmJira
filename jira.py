@@ -42,7 +42,11 @@ def issueList():
         return []
     # parse all open projects:
 
-    openissues = json.loads(response.text)
+    if response.text:
+        openissues = json.loads(response.text)
+    else:
+        print("No issues found!")
+        return []
     issues = []
     for issue in openissues['issues']:
         issues.append(issue['self'])
