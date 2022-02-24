@@ -311,7 +311,10 @@ def customGcodeCheck(file, ticketID='', taxExempt=False, projectNumber='', patro
                         return "Bad G-code", file
                     # print(str(density) + " g/cm^3 filament density")
                 if "filament_diameter" in splitFile[lineCount]:
-                    diameter = (re.findall("\d+\.\d+", splitFile[lineCount]))[0]
+                    try:
+                        diameter = (re.findall("\d+\.\d+", splitFile[lineCount]))[0]
+                    except:
+                        diameter = 0
                     # print(str(diameter) + " mm filament diameter")
                 if "printing time (normal mode)" in splitFile[lineCount]:
                     printingTime = splitFile[lineCount].split('= ')[-1]
