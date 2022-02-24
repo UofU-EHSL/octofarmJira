@@ -488,13 +488,19 @@ def changeStatus(singleID, id):
         }
     }
 
-    response = requests.request(
-        "POST",
-        url,
-        headers=headers,
-        json=data,
-        auth=auth
-    )
+    for i in range(2):  # Try twice
+        try:
+            response = requests.request(
+                "POST",
+                url,
+                headers=headers,
+                json=data,
+                auth=auth
+            )
+            return  # Will only hit this if there was a response, otherwise it will go to the exceptionWil
+        except Exception as e:
+            print("Jira didn't respond to status change on", singleID)
+            print(e)
 
 
 '''
@@ -522,11 +528,16 @@ def commentStatus(singleID, comment):
     payload = {
         "body": comment
     }
-
-    response = requests.request(
-        "POST",
-        url,
-        json=payload,
-        headers=headers,
-        auth=auth
-    )
+    for i in range(2):  # Try twice
+        try:
+            response = requests.request(
+                "POST",
+                url,
+                json=payload,
+                headers=headers,
+                auth=auth
+            )
+            return  # Will only hit this if there was a response, otherwise it will go to the exception
+        except Exception as e:
+            print("Jira didn't acknowledge status comment on", singleID)
+            print(e)
