@@ -326,7 +326,6 @@ def customGcodeCheck(file, ticketID='', taxExempt=False, projectNumber='', patro
     if len(ticketID) > 0:
         splitFile[0] = splitFile[
                            0] + ",GRAMS=" + grams + ",TIME=" + printingTime + ",PRINTER=" + printerID + ",NAME=" + patronName + ",FILAMENT=" + filamentSettings + ",PRINT=" + printerSettings + ",ID=" + str(ticketID) + ",TAXEXEMPT=" + str(taxExempt) + ",PROJECTNUMBER=" + projectNumber + ",LINK=https://projects.lib.utah.edu:8443/browse/" + projectNumber
-        print(splitFile[0])
     else:
         splitFile[0] = splitFile[
                            0] + ",GRAMS=" + grams + ",TIME=" + printingTime + ",PRINTER=" + printerID + ",FILAMENT=" + filamentSettings + ",PRINT=" + printerSettings + ",TAXEXEMPT=" + str(taxExempt)
