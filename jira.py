@@ -108,8 +108,8 @@ def getGcode():
                 matching = [s for s in attachments if "https://drive.google.com/file/d/" in s]
                 attachment = str(str(matching[0]).split("'"))
                 start = "https://drive.google.com/file/d/"
-                downloadGoogleDrive(attachment[attachment.find(start) + len(start):attachment.rfind(end)], singleID, taxExempt, patronName, projectNumber)
                 end = "/view?usp="
+                downloadGoogleDrive(attachment[attachment.find(start) + len(start):attachment.rfind(end)], singleID, taxExempt, patronName, projectNumber)
             else:
                 commentStatus(
                     singleID,
