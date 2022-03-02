@@ -261,52 +261,21 @@ def PrintIsFinished():
         if status != "offline":
             if status['state'] == "Operational":
                 if str(status['progress']['completion']) == "100.0":
+                    volume = status['job']['filament']['tool0']['volume']
+                    grams = volume * printers[printer]['materialDensity']
                     print(printer + " is finishing up")
                     file = os.path.splitext(status['job']['file']['display'])[0]
                     resetConnection(apikey, printerIP)
-                    if config['Save_printed_files'] == True:
-                        try:
-                            with open("archive_files/" + file + ".gcode", 'rb') as fh:
-                                first = next(fh).decode()
-                            # print("archive files first line print test")
-                            # print(first)
-                            try:
-                                grams = first.split('GRAMS=')[1].split(',')[0]
-                                print("Grams = " + str(grams))
-                            except:
-                                grams = ''
-                            try:
-                                taxExempt = first.split('TAXEXEMPT=')[1].split(',')[0]
-                            except:
-                                taxExempt = ''
-                            if grams and taxExempt == '':
-                                # filenamerefrenced
-                                jira.commentStatus(file, config['messages']['printFinished'])
-                            else:
-                                response = "{color:#00875A}Print completed successfully!{color}\n\nPrint was harvested at "
-                                startTime = datetime.now().strftime("%I:%M" '%p')
-                                if startTime[0] == '0':
-                                    startTime = startTime[1:]
-                                response += startTime + "\nFilament Usage ... " + grams + "g\n"
-                                if taxExempt == 'True':
-                                    response += "Actual Cost ... (" + grams + "g * $" + config["payment"]["costPerGram"] + "/g) = $"
-                                    cost = float(grams) * config["payment"]["costPerGram"]
-                                    cost = str(("%.2f" % (cost)))
-                                    response += cost + " " + config["messages"]["taxExemptFinalMessage"]
-                                    # filenamerefrenced
-                                    jira.commentStatus(file, response)
-                                elif taxExempt == 'False':
-                                    response += "Actual Cost ... (" + grams + "g * $" + config["payment"]["costPerGram"] + "/g) * " + config["payment"]["tax"] + " state tax = $"
-                                    cost = float(grams) * config["payment"]["costPerGram"] * config["payment"]["tax"]
-                                    cost = str(("%.2f" % (cost)))
-                                    response += cost + config["messages"]["taxedFinalMessage"]
-                                    # filenamerefrenced
-                                    jira.commentStatus(file, response)
-                        except FileNotFoundError:
-                            print("This print was not started by this script, I am ignoring it: " + file)
-                    else:
-                        # filenamerefrenced
-                        jira.commentStatus(file, config['messages']['printFinished'])
+                    try:
+                        response = "{color:#00875A}Print completed successfully!{color}\n\nPrint was harvested at "
+                        response += "\nFilament Usage ... " + grams + "g\n"
+                        response += "Actual Cost ... (" + grams + "g * $" + config["payment"]["costPerGram"] + "/g) = $"
+                        cost = volume * config["payment"]["costPerGram"]
+                        cost = str(("%.2f" % (cost)))
+                        response += cost + " " + config["messages"]["finalMessage"]
+                        jira.commentStatus(file, response)
+                    except FileNotFoundError:
+                        print("This print was not started by this script, I am ignoring it: " + file)
                     jira.changeStatus(file, "21")  # filenamerefrenced
                     jira.changeStatus(file, "31")  # filenamerefrenced
                     if config['payment']['prepay'] == True:
@@ -318,85 +287,12 @@ def PrintIsFinished():
                 print(printer + " is printing")
             else:
                 print(printer + " is offline")
+
 ### for each file in the list see if a printer is open for it ###
 def eachNewFile():
     directory = r'jiradownloads'
-    for filename in os.listdir(directory):
+    for filename in sorted(os.listdir(directory)):
         if filename.endswith(".gcode"):
             TryPrintingFile(os.path.splitext(filename)[0])
-        else:
-            continue
-
-    #!!! not sure what this is a why it's here of all places but I will look into it !!!#
-    directory = r'manual_prints/started'
-    for filename in os.listdir(directory):
-        print(filename)
-        if filename.endswith(".gcode"):
-            with open('manual_prints/started/' + filename, 'rb') as fh:
-                first = next(fh).decode()
-            try:
-                grams = first.split('GRAMS')[1].split(',')[0].strip('=')
-            except:
-                grams = ''
-            try:
-                printTime = first.split('TIME')[1].split(',')[0].strip('=')
-            except:
-                printTime = ''
-            try:
-                taxExempt = first.split('TAXEXEMPT=')[1].split(',')[0]
-            except:
-                taxExempt = ''
-            try:
-                patronName = first.split('NAME=')[1].split(',')[0]
-            except:
-                patronName = ''
-            try:
-                projectNumber = first.split('PROJECTNUMBER=')[1].split(',')[0]
-            except:
-                projectNumber = ''
-            try:
-                ticketNumber = first.split('ID=')[1].split(',')[0]
-            except:
-                ticketNumber = ''
-            startTime = datetime.now().strftime("%I:%M" '%p')
-            if startTime[0] == '0':
-                startTime = startTime[1:]
-            # print(str(grams) + "  " + printTime + " " + startTime + " " + str(taxExempt))
-            if grams != '' and printTime != '' and taxExempt != '':
-                ticketText = "\nPrint was started at " + str(startTime) + "\nEstimated print weight is " + str(grams) + "g" + "\nEstimated print time is " + printTime
-                if taxExempt == "True":
-                    ticketText += "\nEstimated print cost is (" + str(grams) + "g * $0.05/g) = $"
-                    cost = float(grams) * .05
-                    cost = str(("%.2f" % (cost)))
-                    ticketText += cost + ' (tax exempt)'
-                elif taxExempt == "False":
-                    ticketText += "\nEstimated print cost is (" + str(grams) + "g * $0.05/g * 1.0775 state tax = $"
-                    cost = float(grams) * .05 * 1.0775
-                    cost = str(("%.2f" % (cost)))
-                    ticketText += cost
-            else:
-                ticketText = config['messages']['printStarted']
-            if os.path.exists("manual_prints/started/" + filename):
-                # print(config['Save_printed_files'])
-                if config['Save_printed_files'] == False:
-                    os.remove("manual_prints/started/" + filename)
-                else:
-                    os.replace("manual_prints/started/" + filename, "archive_files/" + filename)
-                if config["Make_files_anon"] == True:
-                    if ticketText != config['messages']['printStarted']:
-                        ticketID = filename.split('.gcode')[0].split('_')[-1]
-                        jira.commentStatus(ticketID, ticketText)
-                    print("Now manually printing: " + filename)
-                else:
-                    if ticketText != config['messages']['printStarted']:
-                        ticketID = filename.split('.gcode')[0].split('_')[-1]
-                        jira.commentStatus(ticketID, ticketText)
-                    print("Now manually printing: " + filename)
-
-            if config["reciept_printer"]["print_physical_reciept"] == True:
-                try:
-                    receiptPrinter(projectNumber, ticketNumber, patronName)
-                except:
-                    print("There was a problem printing the receipt " + projectNumber)
         else:
             continue

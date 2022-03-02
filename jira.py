@@ -151,7 +151,7 @@ def printIsNoGo(singleIssue, singleID):
         print("Downloading " + singleID)
         matching = [s for s in attachments if config['base_url'] + "/secure/attachment" in s]
         attachment = str(matching[0]).split("'")
-        filename = attachment[3].rsplit('EHSL3DPR-', 1)[-1]
+        filename = attachment[3].rsplit(config['ticketStartString'], 1)[-1]
         download(attachment[3], singleID, filename)
     elif any("https://drive.google.com/file/d/" in s for s in attachments):
         print("Downloading " + singleID + " from google drive")
@@ -273,3 +273,5 @@ def commentStatus(singleID, comment):
        headers=headers,
        auth=auth
     )
+### When someone asks what their print status if we reply ###
+def askedForStatus():

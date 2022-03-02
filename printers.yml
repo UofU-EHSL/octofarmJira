@@ -5,7 +5,7 @@ farm_printers:
         stream: "http://localhost:81/webcam/?action=stream"
         materialType: "pla"
         materialColor: "white"
-        materialDensity: 1.24
+        materialDensity: 1.25
         printerType: "prusa_mk3"
 
     printer 2:
@@ -14,7 +14,7 @@ farm_printers:
         stream: "http://localhost:82/webcam/?action=stream"
         materialType: "pla"
         materialColor: "white"
-        materialDensity: 1.24
+        materialDensity: 1.25
         printerType: "prusa_mk3"
 
     printer 3:
@@ -23,7 +23,7 @@ farm_printers:
         stream: "http://localhost:83/webcam/?action=stream"
         materialName: "pla"
         materialColor: "white"
-        materialDensity: 1.24
+        materialDensity: 1.25
         printerType: "prusa_mk3"
 
     printer 4:
@@ -32,14 +32,14 @@ farm_printers:
         stream: "http://localhost:84/webcam/?action=stream"
         materialName: "pla"
         materialColor: "white"
-        materialDensity: 1.24
+        materialDensity: 1.25
         printerType: "prusa_mk3"
-        
+
     printer 5:
         ip: "localhost:85"
         api: "AA7E8C52244F4AA2B46D41A882D1CB48"
         stream: "http://localhost:85/webcam/?action=stream"
         materialName: "pla"
         materialColor: "white"
-        materialDensity: 1.24
+        materialDensity: 1.25
         printerType: "prusa_mk3"
