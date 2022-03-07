@@ -80,7 +80,11 @@ def GetName(ip, api):
             url,
             headers=headers
         )
-        status = json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
+        
+        if response.ok:
+            status = json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
+        else:
+            raise
 
         name = status["profiles"]["_default"]["name"]
         return name
