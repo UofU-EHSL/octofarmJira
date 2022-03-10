@@ -1,7 +1,7 @@
 # 
 base_url: "https://projects.lib.utah.edu:8443"
 search_url: "search?jql=project%20%3D%20ED%20AND%20status%20%3D%20Open"
-printing_url: "search?jql=project%20%3D%20ED%20AND%20status%20%3D%20Open"
+printing_url: "search?jql=project%20%3D%20ED%20AND%20status%20%3D%20\"In%20Progress\""
 #jira login information
 jira_user: "ehsl_client"
 jira_password: "asdqwe123"
@@ -20,7 +20,19 @@ messages:
     wrongConfig: "Please follow the slicing instructions and re-submit. Our automated check suggests you did not use our slicer configs"
     downloadedFile: "Your print file has been downloaded and is now in the print queue."
     noFile: "Please try again and make sure to upload a file, if your file is larger than 25mb then paste a google drive share link in the description of the print"
-
+    statusUpdate: "Your print stats: "
+    statusUpdateEnd: ""
+    statusInQueue: "We have your file and it is in the print queue, we will send your another message when your print has started on a printer and again when the print is ready for pick-up. You can request a status update anytime by commenting \"status update\" "
+    stopMessage: "Due to your request your print has stopped printing."
+    
+requestUpdate:
+    update: "update"
+    status: "status"
+    
+requestStop:
+    update: "Kill my print"
+    status: "Stop my print"
+    
 # this will be used more later #
 payment:
     url: ""

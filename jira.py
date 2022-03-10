@@ -1,9 +1,11 @@
+from pyexpat.errors import messages
 import requests
 from requests.auth import HTTPBasicAuth
 import json
 import yaml
 from google_drive_downloader import GoogleDriveDownloader as gdd
 import os
+import time
 
 ### load all of our config files ###
 with open("config.yml", "r") as yamlfile:
@@ -12,6 +14,8 @@ with open("lists.yml", "r") as yamlfile:
     userlist = yaml.load(yamlfile, Loader=yaml.FullLoader)
 with open("keys.yml", "r") as yamlfile:
     keys = yaml.load(yamlfile, Loader=yaml.FullLoader)
+with open("printers.yml", "r") as yamlfile:
+    printers = yaml.load(yamlfile, Loader=yaml.FullLoader)
 
 ### jira authentical information that gets pulled in from the config ###
 auth = HTTPBasicAuth(config['jira_user'], config['jira_password'])
@@ -273,5 +277,76 @@ def commentStatus(singleID, comment):
        headers=headers,
        auth=auth
     )
+
 ### When someone asks what their print status if we reply ###
 def askedForStatus():
+    os.system('cls' if os.name == 'nt' else 'clear')
+    print("Checking for status updates...")
+    url = config['base_url'] + "/rest/api/2/" + config['printing_url']
+    headers = {
+       "Accept": "application/json"
+    }
+    
+    response = requests.request(
+       "GET",
+       url,
+       headers=headers,
+       auth=auth
+    )
+
+    # parse all open projects:
+    openissues = json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
+    for issue in openissues['issues']:
+        url = issue['self']
+        headers = {
+           "Accept": "application/json"
+        }
+        
+        response = requests.request(
+           "GET",
+           url,
+           headers=headers,
+           auth=auth
+        )
+
+        ticketID = url[url.find("issue/")+len("issue/"):url.rfind("")]
+        singleIssue = json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
+        comment = singleIssue['fields']['comment']['comments'][-1]['body']
+        for trigger in config['requestUpdate']:
+            if str(comment).find(trigger) != -1:
+                print(comment)
+                directory = r'jiradownloads'
+                for filename in sorted(os.listdir(directory)):
+                    if filename.find(ticketID):
+                        commentStatus(ticketID, config["messages"]["statusInQueue"])
+                for printer in printers['farm_printers']:
+                    apikey = printers['farm_printers'][printer]['api']
+                    printerIP = printers['farm_printers'][printer]['ip']
+                    
+                    url = "http://" + printerIP + "/api/job"
+
+                    headers = {
+                        "Accept": "application/json",
+                        "Host": printerIP,
+                        "X-Api-Key": apikey
+                    }
+                    try:
+                        response = requests.request(
+                            "GET",
+                            url,
+                            headers=headers
+                        )
+                        status = json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
+                        if str(status['job']['file']['name']).find(ticketID) != -1:
+                            base = config['messages']['statusUpdate'] + "\n"
+                            completion = "Completion: " + str(round(status['progress']['completion'], 2)) + "%" + "\n"
+                            eta = "Print time left: " + str(time.strftime('%H:%M:%S', time.gmtime(status['progress']['printTimeLeft']))) + "\n"
+                            material = "Cost: $" + str(round(status['job']['filament']['tool0']['volume'] * printers['farm_printers'][printer]['materialDensity'] * config['payment']['costPerGram'],2)) + "\n"
+                            end =  config['messages']['statusUpdateEnd']
+                            
+                            printerStatusUpdate = base + completion + eta + material + end
+                            commentStatus(ticketID, printerStatusUpdate)
+                            print(printerStatusUpdate)
+                    except requests.exceptions.RequestException as e:  # This is the correct syntax
+                        print("Skipping " + printer + " due to network error.")
+                return

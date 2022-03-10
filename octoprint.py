@@ -43,6 +43,7 @@ def TryPrintingFile(file):
                 return
         except requests.exceptions.RequestException as e:  # This is the correct syntax
             print("Skipping " + printer + " due to network error")
+            print("code needed to reboot printer is it's having this issue")
 ### Get the status of the printer you are asking about ###
 def GetStatus(ip, api):
     apikey = api
@@ -262,15 +263,15 @@ def PrintIsFinished():
             if status['state'] == "Operational":
                 if str(status['progress']['completion']) == "100.0":
                     volume = status['job']['filament']['tool0']['volume']
-                    grams = volume * printers[printer]['materialDensity']
+                    grams = volume * printers['farm_printers'][printer]['materialDensity']
                     print(printer + " is finishing up")
                     file = os.path.splitext(status['job']['file']['display'])[0]
                     resetConnection(apikey, printerIP)
                     try:
                         response = "{color:#00875A}Print completed successfully!{color}\n\nPrint was harvested at "
-                        response += "\nFilament Usage ... " + grams + "g\n"
-                        response += "Actual Cost ... (" + grams + "g * $" + config["payment"]["costPerGram"] + "/g) = $"
-                        cost = volume * config["payment"]["costPerGram"]
+                        response += "Filament Usage ... " + str(grams) + "g"
+                        response += "Actual Cost ... (" + str(grams) + "g * $" + str(config["payment"]["costPerGram"]) + "/g) = $"
+                        cost = grams * config["payment"]["costPerGram"]
                         cost = str(("%.2f" % (cost)))
                         response += cost + " " + config["messages"]["finalMessage"]
                         jira.commentStatus(file, response)
