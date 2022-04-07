@@ -184,7 +184,7 @@ def printIsNoGo(singleIssue, singleID):
         matching = [s for s in attachments if "https://drive.google.com/file/d/" in s]
         attachment = str(str(matching[0]).split("'"))
         start = "https://drive.google.com/file/d/"
-        end = "/view?usp=sharing"
+        end = "/view?usp="
         downloadGoogleDrive(attachment[attachment.find(start) + len(start):attachment.rfind(end)], singleID)
     else:
         commentStatus(
@@ -215,7 +215,7 @@ def printIsGoodToGo(singleIssue, singleID, classKey):
         matching = [s for s in attachments if "https://drive.google.com/file/d/" in s]
         attachment = str(str(matching[0]).split("'"))
         start = "https://drive.google.com/file/d/"
-        end = "/view?usp=sharing"
+        end = "/view?usp="
         downloadGoogleDrive(attachment[attachment.find(start) + len(start):attachment.rfind(end)], singleID)
         if validateClassKey(classKey, 5, 1) == "Valid key":
             print("Skip payment, they had a valid class key")
