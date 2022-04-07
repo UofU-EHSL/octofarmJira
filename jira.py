@@ -5,6 +5,7 @@ import yaml
 from google_drive_downloader import GoogleDriveDownloader as gdd
 import os
 import time
+from enumDefinitions import ClassKeyStates, GcodeStates, JiraTransitionCodes
 
 # load all of our config files
 with open("config.yml", "r") as yamlFile:
@@ -106,15 +107,15 @@ def downloadGoogleDrive(file_ID, singleID):
         gdd.download_file_from_google_drive(file_id=file_ID, dest_path="jiradownloads/" + file_ID + "__" + singleID + ".gcode")
         file = open("jiradownloads/" + file_ID + "__" + singleID + ".gcode", "r")
 
-    if checkGcode(file.read()) == "Bad G-code":
+    if checkGcode(file.read()) == GcodeStates.INVALID:
         commentStatus(singleID, config['messages']['wrongConfig'])
-        changeStatus(singleID, "11")
-        changeStatus(singleID, "21")
-        changeStatus(singleID, "131")
+        changeStatus(singleID, JiraTransitionCodes.START_PROGRESS)
+        changeStatus(singleID, JiraTransitionCodes.READY_FOR_REVIEW)
+        changeStatus(singleID, JiraTransitionCodes.REJECT)
         if os.path.exists("jiradownloads/" + singleID + ".gcode"):
             os.remove("jiradownloads/" + singleID + ".gcode")
     else:
-        changeStatus(singleID, "11")
+        changeStatus(singleID, JiraTransitionCodes.START_PROGRESS)
         commentStatus(singleID, config['messages']['downloadedFile'])
 
 
@@ -134,11 +135,11 @@ def download(gcode, singleID, filename):
         headers=headers,
         auth=auth
     )
-    if checkGcode(response.text) == "Bad G-code":
+    if checkGcode(response.text) == GcodeStates.INVALID:
         commentStatus(singleID, config['messages']['wrongConfig'])
-        changeStatus(singleID, "11")
-        changeStatus(singleID, "21")
-        changeStatus(singleID, "131")
+        changeStatus(singleID, JiraTransitionCodes.START_PROGRESS)
+        changeStatus(singleID, JiraTransitionCodes.READY_FOR_REVIEW)
+        changeStatus(singleID, JiraTransitionCodes.REJECT)
     else:
         if config['Make_files_anon'] is True:
             text_file = open("jiradownloads/" + singleID + ".gcode", "w")
@@ -146,7 +147,7 @@ def download(gcode, singleID, filename):
             text_file = open("jiradownloads/" + filename + "__" + singleID + ".gcode", "w")
         n = text_file.write(response.text)
         text_file.close()
-        changeStatus(singleID, "11")
+        changeStatus(singleID, JiraTransitionCodes.START_PROGRESS)
         commentStatus(singleID, config['messages']['downloadedFile'])
 
 
@@ -162,10 +163,10 @@ def checkGcode(file):
             status = False
         if status is False:
             print("File is bad at: " + code_check)
-            return "Bad G-code"
+            return GcodeStates.INVALID
     if status is True:
         print("File checked out as good")
-        return "Valid G-code"
+        return GcodeStates.VALID
 
 
 def printIsNoGo(singleIssue, singleID):
@@ -191,8 +192,8 @@ def printIsNoGo(singleIssue, singleID):
             singleID,
             config['messages']['noFile']
         )
-        changeStatus(singleID, "11")
-        changeStatus(singleID, "111")
+        changeStatus(singleID, JiraTransitionCodes.START_PROGRESS)
+        changeStatus(singleID, JiraTransitionCodes.STOP_PROGRESS)
 
 
 def printIsGoodToGo(singleIssue, singleID, classKey):
@@ -206,7 +207,7 @@ def printIsGoodToGo(singleIssue, singleID, classKey):
         attachment = str(matching[0]).split("'")
         filename = attachment[3].rsplit('EHSL3DPR-', 1)[-1]
         download(attachment[3], singleID, filename)
-        if validateClassKey(classKey, 5, 1) == "Valid key":
+        if validateClassKey(classKey, 5, 1) == ClassKeyStates.VALID:
             print("Skip payment, they had a valid class key")
         else:
             print("payment")
@@ -217,7 +218,7 @@ def printIsGoodToGo(singleIssue, singleID, classKey):
         start = "https://drive.google.com/file/d/"
         end = "/view?usp="
         downloadGoogleDrive(attachment[attachment.find(start) + len(start):attachment.rfind(end)], singleID)
-        if validateClassKey(classKey, 5, 1) == "Valid key":
+        if validateClassKey(classKey, 5, 1) == ClassKeyStates.VALID:
             print("Skip payment, they had a valid class key")
         else:
             print("payment")
@@ -226,8 +227,8 @@ def printIsGoodToGo(singleIssue, singleID, classKey):
             singleID,
             config['messages']['noFile']
         )
-        changeStatus(singleID, "11")
-        changeStatus(singleID, "111")
+        changeStatus(singleID, JiraTransitionCodes.START_PROGRESS)
+        changeStatus(singleID, JiraTransitionCodes.STOP_PROGRESS)
 
 
 def validateClassKey(key, cost, count):
@@ -245,23 +246,14 @@ def validateClassKey(key, cost, count):
                     keys['CLASSKEYS'][singleKey]['classCost'] = keys['CLASSKEYS'][singleKey]['classCost'] + cost
                 with open("keys.yml", 'w') as f:
                     yaml.safe_dump(keys, f, default_flow_style=False)
-                return "Valid key"
-    return "Bad key"
+                return ClassKeyStates.VALID
+    return ClassKeyStates.INVALID
 
 
-def changeStatus(singleID, issueId):
+def changeStatus(singleID, transitionCode):
     """
-    Change the status of the jira ticket, you need to have the status IDs for your setup and change them throughout the project
-    Here are the status that we have for our system right now at the University of Utah
-
-    Start Progress: 11 (From Open to In Progress)
-    Ready for review: 21 (From In Progress to UNDER REVIEW)
-    Stop Progress: 111 (From In Progress to CANCELLED)
-    Approve : 31 (From Under Review to APPROVED)
-    Reject: 131 (From Under Review to REJECTED)
-    Done: 41  (From APPROVED to DONE)
-    Reopen: 121  (From Cancelled to OPEN)
-    Start progress : 141  (From REJECTED to IN PROGRESS)
+    Changes status of issue in Jira.
+    See enumDefinitions JiraTransitionCodes for codes.
     """
     simple_singleID = singleID.rsplit('__', 1)[-1]
     url = config['base_url'] + "/rest/api/2/issue/" + simple_singleID + "/transitions"
@@ -278,7 +270,7 @@ def changeStatus(singleID, issueId):
             }]
         },
         "transition": {
-            "id": issueId
+            "id": str(transitionCode.value)
         }
     }
 

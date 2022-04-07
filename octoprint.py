@@ -2,6 +2,7 @@ import requests
 import json
 import yaml
 import jira
+from enumDefinitions import JiraTransitionCodes
 import os
 import time
 from datetime import datetime
@@ -302,10 +303,10 @@ def PrintIsFinished():
                         jira.commentStatus(file, response)
                     except FileNotFoundError:
                         print("This print was not started by this script, I am ignoring it: " + file)
-                    jira.changeStatus(file, "21")  # file name referenced
-                    jira.changeStatus(file, "31")  # file name referenced
+                    jira.changeStatus(file, JiraTransitionCodes.READY_FOR_REVIEW)  # file name referenced
+                    jira.changeStatus(file, JiraTransitionCodes.APPROVE)  # file name referenced
                     if config['payment']['prepay'] is True:
-                        jira.changeStatus(file, "41")  # file name referenced
+                        jira.changeStatus(file, JiraTransitionCodes.DONE)  # file name referenced
                 else:
                     print(printer + " is ready")
                     continue
