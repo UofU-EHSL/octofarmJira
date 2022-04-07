@@ -1,6 +1,4 @@
 import requests
-import time
-from requests.auth import HTTPBasicAuth
 import json
 import yaml
 import jira
@@ -8,14 +6,17 @@ import os
 import time
 from datetime import datetime
 
-### importing confits ###
-with open("config.yml", "r") as yamlfile:
-    config = yaml.load(yamlfile, Loader=yaml.FullLoader)
-with open("printers.yml", "r") as yamlfile:
-    printers = yaml.load(yamlfile, Loader=yaml.FullLoader)
+# importing configs
+with open("config.yml", "r") as yamlFile:
+    config = yaml.load(yamlFile, Loader=yaml.FullLoader)
+with open("printers.yml", "r") as yamlFile:
+    printers = yaml.load(yamlFile, Loader=yaml.FullLoader)
 
-### This will look at the prints we have waiting and see if a printer is open for it ###
+
 def TryPrintingFile(file):
+    """
+    This will look at the prints we have waiting and see if a printer is open for it
+    """
     for printer in printers['farm_printers']:
         apikey = printers['farm_printers'][printer]['api']
         printerIP = printers['farm_printers'][printer]['ip']
@@ -23,7 +24,7 @@ def TryPrintingFile(file):
         materialColor = printers['farm_printers'][printer]['materialColor']
         materialDensity = printers['farm_printers'][printer]['materialDensity']
         printerType = printers['farm_printers'][printer]['printerType']
-        
+
         url = "http://" + printerIP + "/api/job"
 
         headers = {
@@ -44,8 +45,12 @@ def TryPrintingFile(file):
         except requests.exceptions.RequestException as e:  # This is the correct syntax
             print("Skipping " + printer + " due to network error")
             print("code needed to reboot printer is it's having this issue")
-### Get the status of the printer you are asking about ###
+
+
 def GetStatus(ip, api):
+    """
+    Get the status of the printer you are asking about
+    """
     apikey = api
     printerIP = ip
     url = "http://" + printerIP + "/api/job"
@@ -67,8 +72,12 @@ def GetStatus(ip, api):
         print(printerIP + "'s raspberry pi is offline and can't be contacted over the network")
         status = "offline"
         return status
-### get the name of the printer you are asking about ###
+
+
 def GetName(ip, api):
+    """
+    get the name of the printer you are asking about
+    """
     apikey = api
     printerIP = ip
     url = "http://" + printerIP + "/api/printerprofiles"
@@ -92,8 +101,12 @@ def GetName(ip, api):
         print(printerIP + "'s raspberry pi is offline and can't be contacted over the network")
         status = "offline"
         return name
-### probably shouldn't be in the octoprint file but this gets the receipt printer stuff ###
-def receiptPrinter(scrapedprNumber, ticketNumber, scrapedPatronName, printer=''):
+
+
+def receiptPrinter(scrapedPRNumber, ticketNumber, scrapedPatronName, printer=''):
+    """
+    probably shouldn't be in the octoprint file but this gets the receipt printer stuff
+    """
     from PIL import Image, ImageDraw, ImageFont, ImageOps
     from escpos.printer import Usb
 
@@ -122,10 +135,10 @@ def receiptPrinter(scrapedprNumber, ticketNumber, scrapedPatronName, printer='')
         alreadyAligned = True
     # create new image large enough to fit super long names
     img = Image.new('RGB', (2400, 400), color=(0, 0, 0))
-    fnt = ImageFont.truetype(r"recources/arialbd.ttf", 110, encoding="unic")
-    tiny = ImageFont.truetype(r"recources/arial.ttf", 20, encoding="unic")
+    fnt = ImageFont.truetype(r"resources/arialbd.ttf", 110, encoding="unic")
+    tiny = ImageFont.truetype(r"resources/arial.ttf", 20, encoding="unic")
     d = ImageDraw.Draw(img)
-    d.text((32, 0), scrapedprNumber, font=fnt, fill=(255, 255, 255))
+    d.text((32, 0), scrapedPRNumber, font=fnt, fill=(255, 255, 255))
     firstFew = patronName[:8]
     if 'y' in firstFew or 'g' in firstFew or 'p' in firstFew or 'q' in firstFew:
         d.text((32, 121), patronName, font=fnt, fill=(255, 255, 255))
@@ -147,8 +160,12 @@ def receiptPrinter(scrapedprNumber, ticketNumber, scrapedPatronName, printer='')
     except:
         print("\nThe receipt printer is unplugged or not powered on, please double check physical connections.")
         raise ValueError
-### Uploads a file to a printer ###
+
+
 def uploadFileToPrinter(apikey, printerIP, file):
+    """
+    Uploads a file to a printer
+    """
     openFile = open('jiradownloads/' + file + '.gcode', 'rb')
     fle = {'file': openFile, 'filename': file}
     url = "http://" + printerIP + "/api/files/{}".format("local")
@@ -190,36 +207,40 @@ def uploadFileToPrinter(apikey, printerIP, file):
         if taxExempt == "True":
             ticketText += "\nEstimated print cost is (" + str(grams) + "g * $0.05/g) = $"
             cost = float(grams) * .05
-            cost = str(("%.2f" % (cost)))
+            cost = str(("%.2f" % cost))
             ticketText += cost + ' (tax exempt)'
         elif taxExempt == "False":
             ticketText += "\nEstimated print cost is (" + str(grams) + "g * $0.05/g * 1.0775 state tax = $"
             cost = float(grams) * .05 * 1.0775
-            cost = str(("%.2f" % (cost)))
+            cost = str(("%.2f" % cost))
             ticketText += cost
     else:
         ticketText = config['messages']['printStarted']
     openFile.close()
     if os.path.exists("jiradownloads/" + file + ".gcode"):
         # print(config['Save_printed_files'])
-        if config['Save_printed_files'] == False:
+        if config['Save_printed_files'] is False:
             os.remove("jiradownloads/" + file + ".gcode")
         else:
             os.replace("jiradownloads/" + file + ".gcode", "archive_files/" + file + ".gcode")
         if ticketText != config['messages']['printStarted']:
-            # filenamerefrenced
+            # file name referenced
             jira.commentStatus(file, ticketText)
         printerName = GetName(printerIP, apikey)
         print("Now printing: " + file + " on " + printerName + " at " + printerIP)
-        
-    if config["reciept_printer"]["print_physical_reciept"] == True:
+
+    if config["receipt_printer"]["print_physical_receipt"] is True:
         try:
             printerName = GetName(printerIP, apikey)
             receiptPrinter(projectNumber, ticketNumber, patronName, printerName)
         except:
             print("There was a problem printing the receipt " + projectNumber)
-### Resets the connection to a printer, done as a safety check and status clear ###
+
+
 def resetConnection(apikey, printerIP):
+    """
+    Resets the connection to a printer, done as a safety check and status clear
+    """
     url = "http://" + printerIP + "/api/connection"
     disconnect = {'command': 'disconnect'}
     connect = {'command': 'connect'}
@@ -227,8 +248,12 @@ def resetConnection(apikey, printerIP):
     response = requests.post(url, json=disconnect, headers=header)
     time.sleep(30)
     response = requests.post(url, json=connect, headers=header)
-### If a print is complete update people and mark as ready for new file ###
+
+
 def PrintIsFinished():
+    """
+    If a print is complete update people and mark as ready for new file
+    """
     for printer in printers['farm_printers']:
         apikey = printers['farm_printers'][printer]['api']
         printerIP = printers['farm_printers'][printer]['ip']
@@ -244,8 +269,8 @@ def PrintIsFinished():
                 url,
                 headers=headers
             )
-            if("State" not in response.text):
-                if (json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))):
+            if "State" not in response.text:
+                if json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": "))):
                     status = json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
                 else:
                     status = "offline"
@@ -257,7 +282,7 @@ def PrintIsFinished():
             status = "offline"
 
         """
-        I might want to change some of this code when I am in front of the printers to make it so each printers status get's printed out
+        I might want to change some of this code when I am in front of the printers to make it so each printers status gets printed out
         """
         if status != "offline":
             if status['state'] == "Operational":
@@ -272,15 +297,15 @@ def PrintIsFinished():
                         response += "Filament Usage ... " + str(grams) + "g"
                         response += "Actual Cost ... (" + str(grams) + "g * $" + str(config["payment"]["costPerGram"]) + "/g) = $"
                         cost = grams * config["payment"]["costPerGram"]
-                        cost = str(("%.2f" % (cost)))
+                        cost = str(("%.2f" % cost))
                         response += cost + " " + config["messages"]["finalMessage"]
                         jira.commentStatus(file, response)
                     except FileNotFoundError:
                         print("This print was not started by this script, I am ignoring it: " + file)
-                    jira.changeStatus(file, "21")  # filenamerefrenced
-                    jira.changeStatus(file, "31")  # filenamerefrenced
-                    if config['payment']['prepay'] == True:
-                        jira.changeStatus(file, "41")  # filenamerefrenced
+                    jira.changeStatus(file, "21")  # file name referenced
+                    jira.changeStatus(file, "31")  # file name referenced
+                    if config['payment']['prepay'] is True:
+                        jira.changeStatus(file, "41")  # file name referenced
                 else:
                     print(printer + " is ready")
                     continue
@@ -289,8 +314,11 @@ def PrintIsFinished():
             else:
                 print(printer + " is offline")
 
-### for each file in the list see if a printer is open for it ###
+
 def eachNewFile():
+    """
+    for each file in the list see if a printer is open for it
+    """
     directory = r'jiradownloads'
     for filename in sorted(os.listdir(directory)):
         if filename.endswith(".gcode"):
