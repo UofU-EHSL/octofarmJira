@@ -155,51 +155,7 @@ def uploadFileToPrinter(apikey, printerIP, file):
     payload = {'select': 'true', 'print': 'true'}
     header = {'X-Api-Key': apikey}
     response = requests.post(url, files=fle, data=payload, headers=header)
-    with open('jiradownloads/' + file + '.gcode', 'rb') as fh:
-        first = next(fh).decode()
-    try:
-        grams = first.split('GRAMS')[1].split(',')[0].strip('=')
-    except:
-        grams = ''
-    try:
-        printTime = first.split('TIME')[1].split(',')[0].strip('=')
-    except:
-        printTime = ''
-    try:
-        taxExempt = first.split('TAXEXEMPT=')[1].split(',')[0]
-    except:
-        taxExempt = ''
-    try:
-        patronName = first.split('NAME=')[1].split(',')[0]
-    except:
-        patronName = ''
-    try:
-        projectNumber = first.split('PROJECTNUMBER=')[1].split(',')[0]
-    except:
-        projectNumber = ''
-    try:
-        ticketNumber = first.split('ID=')[1].split(',')[0]
-    except:
-        ticketNumber = ''
-    startTime = datetime.now().strftime("%I:%M" '%p')
-    if startTime[0] == '0':
-        startTime = startTime[1:]
-    # print(str(grams) + "  " + printTime + " " + startTime + " " + str(taxExempt))
-    if grams != '' and printTime != '' and taxExempt != '':
-        ticketText = "\nPrint was started at " + str(startTime) + "\nEstimated print weight is " + str(grams) + "g" + "\nEstimated print time is " + printTime
-        if taxExempt == "True":
-            ticketText += "\nEstimated print cost is (" + str(grams) + "g * $0.05/g) = $"
-            cost = float(grams) * .05
-            cost = str(("%.2f" % (cost)))
-            ticketText += cost + ' (tax exempt)'
-        elif taxExempt == "False":
-            ticketText += "\nEstimated print cost is (" + str(grams) + "g * $0.05/g * 1.0775 state tax = $"
-            cost = float(grams) * .05 * 1.0775
-            cost = str(("%.2f" % (cost)))
-            ticketText += cost
-    else:
-        ticketText = config['messages']['printStarted']
-    openFile.close()
+
     if os.path.exists("jiradownloads/" + file + ".gcode"):
         # print(config['Save_printed_files'])
         if config['Save_printed_files'] == False:

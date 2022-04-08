@@ -19,6 +19,7 @@ with open("printers.yml", "r") as yamlfile:
 
 ### jira authentical information that gets pulled in from the config ###
 auth = HTTPBasicAuth(config['jira_user'], config['jira_password'])
+
 ### Get the list of issues in the jira project ###
 def issueList():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -41,6 +42,7 @@ def issueList():
     for issue in openissues['issues']:
         issues.append(issue['self'])
     return issues
+
 ### Gets the files and puts them where they need to be ###
 def getGcode():
     for issue in issueList():
@@ -87,6 +89,7 @@ def getGcode():
                 printIsNoGo(singleIssue, singleID)
             elif config["use_naughty_list"] == False and config["use_naughty_list"] == False:
                 printIsGoodToGo(singleIssue, singleID, classKey)
+
 ### if the jira project has a google drive link in the description download it ###
 def downloadGoogleDrive(file_ID, singleID):
     if config['Make_files_anon'] == True:
@@ -97,6 +100,8 @@ def downloadGoogleDrive(file_ID, singleID):
         file = open("jiradownloads/" + file_ID + "__" + singleID + ".gcode", "r")
     
     if checkGcode(file.read()) == "Bad G-code":
+        print("Go check the gcode file");
+        time.sleep(120);
         commentStatus(singleID, config['messages']['wrongConfig'])
         changeStatus(singleID, "11")
         changeStatus(singleID, "21")
@@ -106,6 +111,7 @@ def downloadGoogleDrive(file_ID, singleID):
     else:
         changeStatus(singleID, "11")
         commentStatus(singleID, config['messages']['downloadedFile'])
+
 ### Downloads the files that getGcode wants ###
 def download(gcode, singleID, filename):
     url = gcode
@@ -130,10 +136,16 @@ def download(gcode, singleID, filename):
             text_file = open("jiradownloads/" + singleID + ".gcode", "w")
         else:
             text_file = open("jiradownloads/" + filename + "__" + singleID + ".gcode", "w")
-        n = text_file.write(response.text)
+            
+        for injectGcode in config['inject_gcode']
+            injection == injection + injectGcode +" \n";
+            
+        n = text_file.write(response.text + injection.text)
         text_file.close()
         changeStatus(singleID, "11")
         commentStatus(singleID, config['messages']['downloadedFile'])
+        
+
 ### Check if gcode fits the requirements that we have set in the config ###
 def checkGcode(file):
     status = True
@@ -171,6 +183,7 @@ def printIsNoGo(singleIssue, singleID):
         )
         changeStatus(singleID, "11")
         changeStatus(singleID, "111")
+
 ### things to do when a print is good to go ###
 def printIsGoodToGo(singleIssue, singleID, classKey):
     attachments = str(singleIssue).split(',')
