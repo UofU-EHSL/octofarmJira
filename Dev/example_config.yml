@@ -49,10 +49,3 @@ gcode_check_text:
     color_change: ""
     pause_print_gcode: ""
     template_custom_gcode: ""
-    customChecks: False
-
-# I'm pretty sure this isn't used #
-custom_gcode_check:
-    max_hotend: "210"
-    max_bed: "65"
-    minimum_profile_version: "1.2"
