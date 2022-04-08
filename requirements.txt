@@ -21,4 +21,3 @@ six
 Werkzeug
 python-escpos
 Pillow
-gcodeparser~=0.0.8
