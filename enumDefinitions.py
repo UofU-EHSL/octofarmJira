@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import Enum, auto
 
 
 class GcodeStates(Enum):
@@ -28,3 +28,29 @@ class JiraTransitionCodes(Enum):
     """Reopen: 121  (From Cancelled to OPEN)"""
     RESTART_PROGRESS = 141
     """Restart progress : 141  (From REJECTED to IN PROGRESS) # Renamed from "Start progress" to "Restart progress" when changing these to enums"""
+
+
+class GcodeCommands(Enum):
+    M0 = ('M', 0),
+    """Stop and wait for user"""
+    COMMENT = (';', None)
+    G28 = ('G', 28)
+    """Auto home"""
+    M300 = ('M', 300)
+    """Play tone"""
+
+
+class GcodeCheckActions(Enum):
+    ADD_COMMAND_AT_END = auto()
+    """Add this command at the end of the file if it is not already the last command."""
+    REMOVE_COMMAND_ALL = auto()
+    """Remove all instances of this command. Will occur BEFORE ADD_COMMAND_AT_END"""
+    COMMAND_MUST_EXIST = auto()
+    """Ensure the command is present. For example, check for comment with a specific string such as nozzle diameter = 0.4"""
+    COMMAND_PARAM_MAX = auto()
+    """First parameter of command must be UNDER this value."""
+    COMMAND_PARAM_MIN = auto()
+    """First parameter of command must be OVER this value."""
+    COMMAND_PARAM_RANGE = auto()
+    """First parameter of command must be BETWEEN two values provided as comma separated string: 'x,x' """
+
