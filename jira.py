@@ -5,7 +5,7 @@ import yaml
 from google_drive_downloader import GoogleDriveDownloader as gdd
 import os
 import time
-from enumDefinitions import ClassKeyStates, GcodeStates, JiraTransitionCodes
+from enumDefinitions import *
 
 # load all of our config files
 with open("config.yml", "r") as yamlFile:
