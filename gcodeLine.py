@@ -6,6 +6,6 @@ class GcodeLine:
         param params: List with all params for the command in the order they appear in the .gcode file. May be empty.
         param comment: Comment associated with command. If the line is ONLY a comment, the command will be ';' and this field will be filled.
         """
-        self.commandType = command
+        self.command = command
         self.params = params
         self.comment = comment

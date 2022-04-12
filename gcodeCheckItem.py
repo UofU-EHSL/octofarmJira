@@ -9,6 +9,6 @@ class GcodeCheckItem:
         param checkAction: Type of action to perform with the commandType. See GcodeCheckActions Enum.
         param actionValue: Value associated with the command and type if required. For example, the string to check for in a comment.
         """
-        self.commandType = command
+        self.command = command
         self.checkAction = checkAction
         self.actionValue = actionValue
