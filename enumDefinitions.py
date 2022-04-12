@@ -36,9 +36,11 @@ class GcodeCheckActions(Enum):
     REMOVE_COMMAND_ALL = auto()
     """Remove all instances of this command. Will occur BEFORE ADD_COMMAND_AT_END"""
     COMMAND_MUST_EXIST = auto()
-    """Ensure the command is present. For example, check for comment with a specific string such as nozzle diameter = 0.4"""
+    """Ensure the command is present. For comments, a specific string such as 'nozzle diameter = 0.4' must be present in the comment. 
+    For other commands, the only thing checked is the command itself."""
     COMMAND_PARAM_MAX = auto()
-    """First parameter of command must be UNDER this value."""
+    """First parameter of command must be UNDER this value.
+    Only sees digits. For example, M104 S205 is set nozzle temp. The S will be ignored and only the 205 checked."""
     COMMAND_PARAM_MIN = auto()
     """First parameter of command must be OVER this value."""
     COMMAND_PARAM_RANGE = auto()
