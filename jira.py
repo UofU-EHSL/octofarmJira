@@ -4,9 +4,11 @@ import json
 import yaml
 from google_drive_downloader import GoogleDriveDownloader as gdd
 from gcodeLine import GcodeLine
+from gcodeCheckItem import GcodeCheckItem
 import os
 import time
 from enumDefinitions import *
+import re
 
 # load all of our config files
 with open("config.yml", "r") as yamlFile:
@@ -108,7 +110,7 @@ def downloadGoogleDrive(file_ID, singleID):
         gdd.download_file_from_google_drive(file_id=file_ID, dest_path="jiradownloads/" + file_ID + "__" + singleID + ".gcode")
         file = open("jiradownloads/" + file_ID + "__" + singleID + ".gcode", "r")
 
-    if checkGcode(file.read()) == GcodeStates.INVALID:
+    if checkGcode(file) == GcodeStates.INVALID:
         commentStatus(singleID, config['messages']['wrongConfig'])
         changeStatus(singleID, JiraTransitionCodes.START_PROGRESS)
         changeStatus(singleID, JiraTransitionCodes.READY_FOR_REVIEW)
@@ -176,22 +178,62 @@ def parseGcode(gcode):
     return parsedGcode
 
 
+def filter_characters(string):
+    """Removes all characters from a string except for numbers."""
+    return re.sub("\D", "", string)
+
+
 def checkGcode(file):
     """
     Check if gcode fits the requirements that we have set in the config
     """
-    status = True
-    for code_check in config['gcode_check_text']:
-        code_to_check = config['gcode_check_text'][code_check]
-        print(code_to_check)
-        if code_to_check not in file:
-            status = False
-        if status is False:
-            print("File is bad at: " + code_check)
-            return GcodeStates.INVALID
-    if status is True:
-        print("File checked out as good")
-        return GcodeStates.VALID
+    parsedGcode = parseGcode(file)
+
+    for checkItem in config['gcodeCheckItems']:
+        if GcodeCheckActions[checkItem['checkAction']] is GcodeCheckActions.REMOVE_COMMAND_ALL:
+            for i in range(len(parsedGcode)):
+                if parsedGcode[i].command == checkItem['command']:
+                    parsedGcode.pop(i)
+
+        elif GcodeCheckActions[checkItem['checkAction']] is GcodeCheckActions.ADD_COMMAND_AT_END:
+            parsedGcode.append(GcodeLine(checkItem['command'], checkItem['actionValue'], ''))
+
+        elif GcodeCheckActions[checkItem['checkAction']] is GcodeCheckActions.COMMAND_MUST_EXIST:
+            commandFound = False
+            for line in parsedGcode:
+                if line.command == checkItem['command'] and line.command != ';':  # If it is not a comment, only check that the command is there.
+                    commandFound = True
+                    break
+                elif line.command == checkItem['command'] and line.command == ';':  # If it is a comment, ensure the string matches.
+                    if checkItem['actionValue'][0].lower().strip() in line.comment.lower().strip():
+                        commandFound = True
+                        break
+            if not commandFound:
+                return GcodeStates.INVALID
+
+        elif GcodeCheckActions[checkItem['checkAction']] is GcodeCheckActions.COMMAND_PARAM_MIN:
+            for line in parsedGcode:
+                if line.command == checkItem['command']:
+                    value = int(filter_characters(line.params[0]))  # Get int value of first param.
+                    if value < int(checkItem['actionValue'][0]):
+                        return GcodeStates.INVALID
+
+        elif GcodeCheckActions[checkItem['checkAction']] is GcodeCheckActions.COMMAND_PARAM_MAX:
+            for line in parsedGcode:
+                if line.command == checkItem['command']:
+                    value = int(filter_characters(line.params[0]))  # Get int value of first param.
+                    if value > int(checkItem['actionValue'][0]):
+                        return GcodeStates.INVALID
+
+        elif GcodeCheckActions[checkItem['checkAction']] is GcodeCheckActions.COMMAND_PARAM_RANGE:
+            for line in parsedGcode:
+                if line.command == checkItem['command']:
+                    value1 = int(filter_characters(line.params[0]))  # Get int value of first param.
+                    value2 = int(filter_characters(line.params[1]))  # Get int value of second param.
+                    if not value1 > int(checkItem['actionValue'][0]) > value2:
+                        return GcodeStates.INVALID
+
+    return GcodeStates.VALID
 
 
 def printIsNoGo(singleIssue, singleID):

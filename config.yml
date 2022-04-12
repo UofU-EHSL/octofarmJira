@@ -48,21 +48,51 @@ receipt_printer:
     print_physical_receipt: False
     ID: "(0x0416, 0x5011, 0, 0x81, 0x03)"
 
-# Gcode must past these checks to get put into the print list #
-addIfMissing: "
-M0 Did print finish?;
-G28;
-"
-gcode_check_text:
-    startGcode: "G28"
-    endGcode: "M0 Did print finish?;"
-    material: "M1"
-    printer: ""
-    notes_print_settings: "EHSL"
-    before_layer_change: ""
-    after_layer_change: ""
-    tool_change: ""
-    between_objects: ""
-    color_change: ""
-    pause_print_gcode: ""
-    template_custom_gcode: ""
+#Structure of check items:
+
+#    - command: 'EXAMPLE' # ';' for a comment, 'M73' or something for a different command
+#      checkAction: 'EXAMPLE' # Comes from enumDefinitions GcodeCheckActions
+#      actionValue:
+#        - 'EXAMPLE' # Contains the information associated with a command. For instance, for M0 you could put 'Done?' as the actionValue.
+#        - 'EXAMPLE2' # This is a list of parameters for the command. Each will be added after the command with a space between them.
+
+gcodeCheckItems:
+          # Remove unwanted M0's
+        - command: "M0"
+          checkAction: "REMOVE_COMMAND_ALL"
+
+          # Add the M0 we want.
+        - command: "M0"
+          checkAction: "ADD_COMMAND_AT_END"
+          actionValue:
+            - "Done?"
+
+          # Make sure a homing command exists.
+        - command: "G28"
+          checkAction: "COMMAND_MUST_EXIST"
+
+          # Check that MLIB exists (This should be made better)
+        - command: ";"
+          checkAction: "COMMAND_MUST_EXIST"
+          actionValue:
+            - "MLIB"
+
+          # Set max nozzle temps
+        - command: "M104"
+          checkAction: "COMMAND_PARAM_MAX"
+          actionValue:
+            - "205"
+        - command: "M109"
+          checkAction: "COMMAND_PARAM_MAX"
+          actionValue:
+            - "205"
+
+          # Set max bed temps
+        - command: "M140"
+          checkAction: "COMMAND_PARAM_MAX"
+          actionValue:
+            - "60"
+        - command: "M190"
+          checkAction: "COMMAND_PARAM_MAX"
+          actionValue:
+            - "60"
