@@ -3,6 +3,7 @@ from requests.auth import HTTPBasicAuth
 import json
 import yaml
 from google_drive_downloader import GoogleDriveDownloader as gdd
+from gcodeLine import GcodeLine
 import os
 import time
 from enumDefinitions import *
@@ -149,6 +150,30 @@ def download(gcode, singleID, filename):
         text_file.close()
         changeStatus(singleID, JiraTransitionCodes.START_PROGRESS)
         commentStatus(singleID, config['messages']['downloadedFile'])
+
+
+def parseGcode(gcode):
+    """
+    Parses a .gcode file into a list of GcodeLine objects.
+    Empty lines are ignored and not added.
+    """
+    gcode = gcode.split("\n")
+    parsedGcode = []
+    for line in gcode:
+        if line:  # Filter out empty lines.
+            commentIndex = 0  # Start at 0 so we enter the loop.
+            comment = ""
+            while commentIndex >= 0:  # Find any comments.
+                commentIndex = line.find(';')  # Will be -1 if no comments found.
+                if commentIndex >= 0:
+                    comment = comment + line[commentIndex + 1:].strip()  # Pull out the comment
+                    line = line[:commentIndex]  # Remove it from the line.
+            if line:  # If there is anything left in the line keep going.
+                split_line = line.split()
+                parsedGcode.append(GcodeLine(split_line[0], split_line[1:], comment))
+            else:  # If nothing is left at this point, the line is purely a comment.
+                parsedGcode.append(GcodeLine(';', None, comment))
+    return parsedGcode
 
 
 def checkGcode(file):
