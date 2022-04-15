@@ -110,7 +110,7 @@ def downloadGoogleDrive(file_ID, singleID):
         gdd.download_file_from_google_drive(file_id=file_ID, dest_path="jiradownloads/" + file_ID + "__" + singleID + ".gcode")
         file = open("jiradownloads/" + file_ID + "__" + singleID + ".gcode", "r")
 
-    if checkGcode(file) == GcodeStates.INVALID:
+    if check_gcode(file) == GcodeStates.INVALID:
         commentStatus(singleID, config['messages']['wrongConfig'])
         changeStatus(singleID, JiraTransitionCodes.START_PROGRESS)
         changeStatus(singleID, JiraTransitionCodes.READY_FOR_REVIEW)
@@ -138,7 +138,8 @@ def download(gcode, singleID, filename):
         headers=headers,
         auth=auth
     )
-    if checkGcode(response.text) == GcodeStates.INVALID:
+    checkResult, validatedGcode = check_gcode(response.text)
+    if checkResult is GcodeStates.INVALID:
         commentStatus(singleID, config['messages']['wrongConfig'])
         changeStatus(singleID, JiraTransitionCodes.START_PROGRESS)
         changeStatus(singleID, JiraTransitionCodes.READY_FOR_REVIEW)
@@ -148,19 +149,19 @@ def download(gcode, singleID, filename):
             text_file = open("jiradownloads/" + singleID + ".gcode", "w")
         else:
             text_file = open("jiradownloads/" + filename + "__" + singleID + ".gcode", "w")
-        n = text_file.write(response.text)
+        n = text_file.write(validatedGcode)
         text_file.close()
         changeStatus(singleID, JiraTransitionCodes.START_PROGRESS)
         commentStatus(singleID, config['messages']['downloadedFile'])
 
 
-def parseGcode(gcode):
+def parse_gcode(gcode):
     """
     Parses a .gcode file into a list of GcodeLine objects.
     Empty lines are ignored and not added.
     """
     gcode = gcode.split("\n")
-    parsedGcode = []
+    parsed_gcode = []
     for line in gcode:
         if line:  # Filter out empty lines.
             commentIndex = 0  # Start at 0 so we enter the loop.
@@ -172,10 +173,29 @@ def parseGcode(gcode):
                     line = line[:commentIndex]  # Remove it from the line.
             if line:  # If there is anything left in the line keep going.
                 split_line = line.split()
-                parsedGcode.append(GcodeLine(split_line[0], split_line[1:], comment))
+                parsed_gcode.append(GcodeLine(split_line[0], split_line[1:], comment))
             else:  # If nothing is left at this point, the line is purely a comment.
-                parsedGcode.append(GcodeLine(';', None, comment))
-    return parsedGcode
+                parsed_gcode.append(GcodeLine(';', None, comment))
+    return parsed_gcode
+
+
+def gcode_to_text(parsed_gcode):
+    """
+    Turns a list of GcodeLine objects into plain text suitable to be written to a text file and run on a printer.
+    """
+    text_gcode = ''
+    for line in parsed_gcode:
+        new_line = ''
+        new_line += line.command + ' '
+        if line.params:
+            new_line += ' '.join(line.params)
+        if line.comment and line.command is not ';':
+            new_line += ' ;'
+        if line.comment:
+            new_line += line.comment
+        new_line += '\n'
+        text_gcode += new_line
+    return text_gcode
 
 
 def filter_characters(string):
@@ -183,11 +203,11 @@ def filter_characters(string):
     return re.sub("\D", "", string)
 
 
-def checkGcode(file):
+def check_gcode(file):
     """
     Check if gcode fits the requirements that we have set in the config
     """
-    parsedGcode = parseGcode(file)
+    parsedGcode = parse_gcode(file)
 
     for checkItem in config['gcodeCheckItems']:
         if GcodeCheckActions[checkItem['checkAction']] is GcodeCheckActions.REMOVE_COMMAND_ALL:
@@ -209,21 +229,21 @@ def checkGcode(file):
                         commandFound = True
                         break
             if not commandFound:
-                return GcodeStates.INVALID
+                return None, GcodeStates.INVALID
 
         elif GcodeCheckActions[checkItem['checkAction']] is GcodeCheckActions.COMMAND_PARAM_MIN:
             for line in parsedGcode:
                 if line.command == checkItem['command']:
                     value = int(filter_characters(line.params[0]))  # Get int value of first param.
                     if value < int(checkItem['actionValue'][0]):
-                        return GcodeStates.INVALID
+                        return None, GcodeStates.INVALID
 
         elif GcodeCheckActions[checkItem['checkAction']] is GcodeCheckActions.COMMAND_PARAM_MAX:
             for line in parsedGcode:
                 if line.command == checkItem['command']:
                     value = int(filter_characters(line.params[0]))  # Get int value of first param.
                     if value > int(checkItem['actionValue'][0]):
-                        return GcodeStates.INVALID
+                        return None, GcodeStates.INVALID
 
         elif GcodeCheckActions[checkItem['checkAction']] is GcodeCheckActions.COMMAND_PARAM_RANGE:
             for line in parsedGcode:
@@ -231,9 +251,10 @@ def checkGcode(file):
                     value1 = int(filter_characters(line.params[0]))  # Get int value of first param.
                     value2 = int(filter_characters(line.params[1]))  # Get int value of second param.
                     if not value1 > int(checkItem['actionValue'][0]) > value2:
-                        return GcodeStates.INVALID
+                        return None, GcodeStates.INVALID
 
-    return GcodeStates.VALID
+    text_gcode = gcode_to_text(parsedGcode)
+    return GcodeStates.VALID, text_gcode
 
 
 def printIsNoGo(singleIssue, singleID):
