@@ -4,7 +4,6 @@ import json
 import yaml
 from google_drive_downloader import GoogleDriveDownloader as gdd
 from gcodeLine import GcodeLine
-from gcodeCheckItem import GcodeCheckItem
 import os
 import time
 from enumDefinitions import *

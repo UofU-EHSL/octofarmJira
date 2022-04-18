@@ -61,6 +61,10 @@ gcodeCheckItems:
         - command: "M0"
           checkAction: "REMOVE_COMMAND_ALL"
 
+          # Remove M300
+        - command: "M300"
+          checkAction: "REMOVE_COMMAND_ALL"
+
           # Add the M0 we want.
         - command: "M0"
           checkAction: "ADD_COMMAND_AT_END"
@@ -75,7 +79,7 @@ gcodeCheckItems:
         - command: ";"
           checkAction: "COMMAND_MUST_EXIST"
           actionValue:
-            - "MLIB"
+            - "MLIB profile version 2."
 
           # Set max nozzle temps
         - command: "M104"

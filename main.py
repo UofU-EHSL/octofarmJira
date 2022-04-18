@@ -7,7 +7,6 @@ import yaml
 with open("config.yml", "r") as yamlfile:
     config = yaml.load(yamlfile, Loader=yaml.FullLoader)
 
-
 ### we start the services from the start ###
 jira.getGcode()
 octoprint.eachNewFile()
