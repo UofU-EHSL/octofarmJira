@@ -405,7 +405,8 @@ def askedForStatus():
     """
     When someone asks what their print status if we reply
     """
-    os.system('cls' if os.name == 'nt' else 'clear')
+    if config['clearTerminal']:
+        os.system('cls' if os.name == 'nt' else 'clear')
     print("Checking for status updates...")
     url = config['base_url'] + "/rest/api/2/" + config['printing_url']
     headers = {
