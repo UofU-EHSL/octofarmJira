@@ -132,3 +132,5 @@ config.yml
 lists.yml
 printers.yml
 config.yml
+recources/arial.ttf
+recources/arialbd.ttf
