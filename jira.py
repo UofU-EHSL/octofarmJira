@@ -27,7 +27,8 @@ def issueList():
     """
     Get the list of issues in the jira project
     """
-    os.system('cls' if os.name == 'nt' else 'clear')
+    if config['clearTerminal']:
+        os.system('cls' if os.name == 'nt' else 'clear')
     print("Checking for new submissions...")
     url = config['base_url'] + "/rest/api/2/" + config['search_url']
     headers = {
