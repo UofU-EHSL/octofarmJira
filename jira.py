@@ -374,6 +374,10 @@ def commentStatus(singleID, comment):
     """
     a simple function call to be used whenever you want to comment on a ticket
     """
+    # Don't comment empty strings. Done so you can leave strings empty in the config if you don't want to send that message.
+    if not comment:
+        return
+
     simple_singleID = singleID.rsplit('__', 1)[-1]
     url = config['base_url'] + "/rest/api/2/issue/" + simple_singleID + "/comment"
     headers = {
