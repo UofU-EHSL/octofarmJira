@@ -104,25 +104,12 @@ def GetName(ip, api):
         return name
 
 
-def receiptPrinter(scrapedPRNumber, ticketNumber, scrapedPatronName, printer=''):
+def receiptPrinter(scrapedPRNumber, printer=''):
     """
     probably shouldn't be in the octoprint file but this gets the receipt printer stuff
     """
     from PIL import Image, ImageDraw, ImageFont, ImageOps
     from escpos.printer import Usb
-
-    patronName = scrapedPatronName
-    try:
-        patronName = str(patronName)
-        patronName = patronName.title()
-    except:
-        patronName = ''
-
-    if len(patronName) > 0:
-        firstName = patronName.split(' ')[0]
-        lastName = patronName.split(' ')[-1]
-        if firstName != lastName:
-            patronName = firstName[0] + ', ' + lastName
 
     try:
         # try to reconnect to printer
@@ -140,12 +127,6 @@ def receiptPrinter(scrapedPRNumber, ticketNumber, scrapedPatronName, printer='')
     tiny = ImageFont.truetype(r"resources/arial.ttf", 20, encoding="unic")
     d = ImageDraw.Draw(img)
     d.text((32, 0), scrapedPRNumber, font=fnt, fill=(255, 255, 255))
-    firstFew = patronName[:8]
-    if 'y' in firstFew or 'g' in firstFew or 'p' in firstFew or 'q' in firstFew:
-        d.text((32, 121), patronName, font=fnt, fill=(255, 255, 255))
-    else:
-        d.text((32, 128), patronName, font=fnt, fill=(255, 255, 255))
-    d.text((32, 256), ticketNumber, font=fnt, fill=(255, 255, 255))
     d.text((34, 355), printer, font=tiny, fill=(255, 255, 255))
 
     imageBox = img.getbbox()
@@ -173,48 +154,24 @@ def uploadFileToPrinter(apikey, printerIP, file):
     payload = {'select': 'true', 'print': 'true'}
     header = {'X-Api-Key': apikey}
     response = requests.post(url, files=fle, data=payload, headers=header)
-    with open('jiradownloads/' + file + '.gcode', 'rb') as fh:
-        first = next(fh).decode()
-    try:
-        grams = first.split('GRAMS')[1].split(',')[0].strip('=')
-    except:
-        grams = ''
-    try:
-        printTime = first.split('TIME')[1].split(',')[0].strip('=')
-    except:
-        printTime = ''
-    try:
-        taxExempt = first.split('TAXEXEMPT=')[1].split(',')[0]
-    except:
-        taxExempt = ''
-    try:
-        patronName = first.split('NAME=')[1].split(',')[0]
-    except:
-        patronName = ''
-    try:
-        projectNumber = first.split('PROJECTNUMBER=')[1].split(',')[0]
-    except:
-        projectNumber = ''
-    try:
-        ticketNumber = first.split('ID=')[1].split(',')[0]
-    except:
-        ticketNumber = ''
+
+    with open('jiradownloads/' + file + '.gcode', 'rb') as gcode:
+        for line in gcode:
+            line = line.decode()
+            if line.startswith('; filament used [g]'):
+                grams = line.split('=')[1].strip()
+            elif line.startswith('; estimated printing time (normal mode)'):
+                printTime = line.split('=')[1].strip()
+
     startTime = datetime.now().strftime("%I:%M" '%p')
     if startTime[0] == '0':
         startTime = startTime[1:]
-    # print(str(grams) + "  " + printTime + " " + startTime + " " + str(taxExempt))
-    if grams != '' and printTime != '' and taxExempt != '':
+    if grams != '' and printTime != '':
         ticketText = "\nPrint was started at " + str(startTime) + "\nEstimated print weight is " + str(grams) + "g" + "\nEstimated print time is " + printTime
-        if taxExempt == "True":
-            ticketText += "\nEstimated print cost is (" + str(grams) + "g * $0.05/g) = $"
-            cost = float(grams) * .05
-            cost = str(("%.2f" % cost))
-            ticketText += cost + ' (tax exempt)'
-        elif taxExempt == "False":
-            ticketText += "\nEstimated print cost is (" + str(grams) + "g * $0.05/g * 1.0775 state tax = $"
-            cost = float(grams) * .05 * 1.0775
-            cost = str(("%.2f" % cost))
-            ticketText += cost
+        ticketText += "\nEstimated print cost is (" + str(grams) + "g * $0.05/g * 1.0775 state tax = $"
+        cost = float(grams) * .05 * 1.0775
+        cost = str(("%.2f" % cost))
+        ticketText += cost
     else:
         ticketText = config['messages']['printStarted']
     openFile.close()
@@ -233,7 +190,8 @@ def uploadFileToPrinter(apikey, printerIP, file):
     if config["receipt_printer"]["print_physical_receipt"] is True:
         try:
             printerName = GetName(printerIP, apikey)
-            receiptPrinter(projectNumber, ticketNumber, patronName, printerName)
+            projectNumber = file.split('__')[0]
+            receiptPrinter(projectNumber, printerName)
         except:
             print("There was a problem printing the receipt " + projectNumber)
 

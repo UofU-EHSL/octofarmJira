@@ -265,7 +265,8 @@ def printIsNoGo(singleIssue, singleID):
         print("Downloading " + singleID)
         matching = [s for s in attachments if config['base_url'] + "/secure/attachment" in s]
         attachment = str(matching[0]).split("'")
-        filename = attachment[3].rsplit(config['ticketStartString'], 1)[-1]
+        filename = attachment[3].split('/' + config['jiraTicketPrefix'] + '-', 1)[-1].split('_')[0]
+        filename = config['jiraTicketPrefix'] + '-' + filename
         download(attachment[3], singleID, filename)
     elif any("https://drive.google.com/file/d/" in s for s in attachments):
         print("Downloading " + singleID + " from google drive")
@@ -292,7 +293,8 @@ def printIsGoodToGo(singleIssue, singleID, classKey):
         print("Downloading " + singleID)
         matching = [s for s in attachments if config['base_url'] + "/secure/attachment" in s]
         attachment = str(matching[0]).split("'")
-        filename = attachment[3].rsplit('EHSL3DPR-', 1)[-1]
+        filename = attachment[3].split('/' + config['jiraTicketPrefix'] + '-', 1)[-1].split('_')[0]
+        filename = config['jiraTicketPrefix'] + '-' + filename
         download(attachment[3], singleID, filename)
         if validateClassKey(classKey, 5, 1) == ClassKeyStates.VALID:
             print("Skip payment, they had a valid class key")
