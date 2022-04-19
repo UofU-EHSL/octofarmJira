@@ -11,7 +11,7 @@ tickerStartString: "EHSL3DPR-"
 Make_files_anon: False #This changes the file names so that we don't know exactly what is printing unless you look at the file.
 #jiraTicketPrefix: 'PR' # Used to parse the URL to get custom Jira ticket numbers. We use PR-#### on live. Dev is ED-####
 jiraTicketPrefix: 'ED' # Used to parse the URL to get custom Jira ticket numbers. We use PR-#### on live. Dev is ED-####
-Save_printed_files: True#this lets us save some extra information but is also less secure on a privacy front.
+Save_printed_files: True #this lets us save some extra information but is also less secure on a privacy front.
 use_nice_list: False #if you want an opt-in only printing service you could have people in this list.
 use_naughty_list: True #When someone is bad you can auto reject uses by adding them into this list.
 updateRate: 1 #Time in minutes that it refreshed the jira and octoprint calls.
