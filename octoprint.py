@@ -247,14 +247,15 @@ def PrintIsFinished():
             if status['state'] == "Operational":
                 if str(status['progress']['completion']) == "100.0":
                     volume = status['job']['filament']['tool0']['volume']
-                    grams = volume * printers['farm_printers'][printer]['materialDensity']
+                    grams = round(volume * printers['farm_printers'][printer]['materialDensity'], 2)
                     print(printer + " is finishing up")
                     file = os.path.splitext(status['job']['file']['display'])[0]
                     resetConnection(apikey, printerIP)
                     try:
-                        response = "{color:#00875A}Print completed successfully!{color}\n\nPrint was harvested at "
-                        response += "Filament Usage ... " + str(grams) + "g"
-                        response += "Actual Cost ... (" + str(grams) + "g * $" + str(config["payment"]["costPerGram"]) + "/g) = $"
+                        finishTime = datetime.now().strftime("%I:%M" '%p')
+                        response = "{color:#00875A}Print completed successfully!{color}\n\nPrint was harvested at " + finishTime
+                        response += "\nFilament Usage ... " + str(grams) + "g"
+                        response += "\nActual Cost ... (" + str(grams) + "g * $" + str(config["payment"]["costPerGram"]) + "/g) = $"
                         cost = grams * config["payment"]["costPerGram"]
                         cost = str(("%.2f" % cost))
                         response += cost + " " + config["messages"]["finalMessage"]
