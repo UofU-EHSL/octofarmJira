@@ -296,10 +296,10 @@ def printIsGoodToGo(singleIssue, singleID, classKey):
         filename = attachment[3].split('/' + config['jiraTicketPrefix'] + '-', 1)[-1].split('_')[0]
         filename = config['jiraTicketPrefix'] + '-' + filename
         download(attachment[3], singleID, filename)
-        if validateClassKey(classKey, 5, 1) == ClassKeyStates.VALID:
-            print("Skip payment, they had a valid class key")
-        else:
-            print("payment")
+        # if validateClassKey(classKey, 5, 1) == ClassKeyStates.VALID:
+        #     print("Skip payment, they had a valid class key")
+        # else:
+        #     print("payment")
     elif any("https://drive.google.com/file/d/" in s for s in attachments):
         print("Downloading " + singleID + " from google drive")
         matching = [s for s in attachments if "https://drive.google.com/file/d/" in s]
@@ -307,10 +307,10 @@ def printIsGoodToGo(singleIssue, singleID, classKey):
         start = "https://drive.google.com/file/d/"
         end = "/view?usp="
         downloadGoogleDrive(attachment[attachment.find(start) + len(start):attachment.rfind(end)], singleID)
-        if validateClassKey(classKey, 5, 1) == ClassKeyStates.VALID:
-            print("Skip payment, they had a valid class key")
-        else:
-            print("payment")
+        # if validateClassKey(classKey, 5, 1) == ClassKeyStates.VALID:
+        #     print("Skip payment, they had a valid class key")
+        # else:
+        #     print("payment")
     else:
         commentStatus(
             singleID,
