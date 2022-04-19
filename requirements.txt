@@ -21,3 +21,4 @@ six
 Werkzeug
 python-escpos
 Pillow
+pony~=0.7.16
