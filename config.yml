@@ -1,12 +1,17 @@
 base_url: "https://projects.lib.utah.edu:8443"
-#search_url: "search?jql=project%20%3D%20EHSL3DPR%20AND%20status%20%3D%20Open"
-search_url: "search?jql=project%20%3D%20EHSL3DPR%20AND%20status%20%3D%20Rejected"
+#search_url: "search?jql=project%20%3D%20PR%20AND%20status%20%3D%20Rejected%20"
+#search_url: "search?jql=project%20%3D%20PR%20AND%20resolution%20%3D%20Declined%20AND%20createdDate%20>%202022-1-6"
+#search_url: "search?jql=text%20~%20%27blank%20ticket%20test%20https%3A%2F%2F%27"
+search_url: "search?jql=project%20%3D%20PR%20AND%20status%20%3D%20Open%20AND%20createdDate%20>%202022-1-23"
+
 link_to_canvas_class: ""
-contact_info: ""
-jira_user: "ehsl_client"
-jira_password: "asdqwe123"
+contact_info: "mlib-3dprinting@lists.utah.edu"
+jira_user: "mlib3d_client"
+jira_password: "oceanframetopheavy"
 Make_files_anon: True
-Save_printed_files: False
+Save_printed_files: True
+use_nice_list: False
+use_naughty_list: True
 
 payment:
     url: ""
@@ -16,9 +21,8 @@ payment:
     prepay: false
 
 reciept_printer:
-    print_physical_reciept: false
-    ID: ""
-    TF: ""
+    print_physical_reciept: true
+    ID: "(0x0416, 0x5011, 0, 0x81, 0x03)"
     Note: "I dont't have one of these so I can't really test it and am not sure what is needed so we will make a new function that will take this into account"
 
 gcode_check_text:
@@ -34,3 +38,9 @@ gcode_check_text:
     color_change: ""
     pause_print_gcode: ""
     template_custom_gcode: ""
+    customChecks: true
+
+custom_gcode_check:
+    max_hotend: "210"
+    max_bed: "65"
+    minimum_profile_version: "1.2"
