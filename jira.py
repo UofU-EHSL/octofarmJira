@@ -188,7 +188,7 @@ def gcode_to_text(parsed_gcode):
         new_line += line.command + ' '
         if line.params:
             new_line += ' '.join(line.params)
-        if line.comment and line.command is not ';':
+        if line.comment and line.command != ';':
             new_line += ' ;'
         if line.comment:
             new_line += line.comment
