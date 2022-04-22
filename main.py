@@ -4,7 +4,7 @@ import time
 import octoprint
 import yaml
 
-with open("config.yml", "r") as yamlfile:
+with open("config_files/config.yml", "r") as yamlfile:
     config = yaml.load(yamlfile, Loader=yaml.FullLoader)
 
 ### we start the services from the start ###

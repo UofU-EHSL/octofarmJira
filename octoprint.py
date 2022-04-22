@@ -2,15 +2,15 @@ import requests
 import json
 import yaml
 import jira
-from enumDefinitions import JiraTransitionCodes
+from classes.enumDefinitions import JiraTransitionCodes
 import os
 import time
 from datetime import datetime
 
 # importing configs
-with open("config.yml", "r") as yamlFile:
+with open("config_files/config.yml", "r") as yamlFile:
     config = yaml.load(yamlFile, Loader=yaml.FullLoader)
-with open("printers.yml", "r") as yamlFile:
+with open("config_files/printers.yml", "r") as yamlFile:
     printers = yaml.load(yamlFile, Loader=yaml.FullLoader)
 
 

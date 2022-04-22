@@ -128,9 +128,9 @@ dmypy.json
 # Pyre type checker
 .pyre/
 *.gcode
-config.yml
-lists.yml
-printers.yml
-config.yml
+config_files/config.yml
+config_files/lists.yml
+config_files/printers.yml
+config_files/config.yml
 recources/arial.ttf
 recources/arialbd.ttf

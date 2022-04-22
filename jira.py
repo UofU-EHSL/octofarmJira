@@ -3,20 +3,20 @@ from requests.auth import HTTPBasicAuth
 import json
 import yaml
 from google_drive_downloader import GoogleDriveDownloader as gdd
-from gcodeLine import GcodeLine
+from classes.gcodeLine import GcodeLine
 import os
 import time
-from enumDefinitions import *
+from classes.enumDefinitions import *
 import re
 
 # load all of our config files
-with open("config.yml", "r") as yamlFile:
+with open("config_files/config.yml", "r") as yamlFile:
     config = yaml.load(yamlFile, Loader=yaml.FullLoader)
-with open("lists.yml", "r") as yamlFile:
+with open("config_files/lists.yml", "r") as yamlFile:
     userList = yaml.load(yamlFile, Loader=yaml.FullLoader)
-with open("keys.yml", "r") as yamlFile:
+with open("config_files/keys.yml", "r") as yamlFile:
     keys = yaml.load(yamlFile, Loader=yaml.FullLoader)
-with open("printers.yml", "r") as yamlFile:
+with open("config_files/printers.yml", "r") as yamlFile:
     printers = yaml.load(yamlFile, Loader=yaml.FullLoader)
 
 # jira authentication information that gets pulled in from the config ###
@@ -330,11 +330,11 @@ def validateClassKey(key, cost, count):
             if keys["CLASSKEYS"][singleKey]["active"] is True:
                 if count > 0:
                     keys['CLASSKEYS'][singleKey]['printCount'] = keys['CLASSKEYS'][singleKey]['printCount'] + count
-                with open("keys.yml", 'w') as f:
+                with open("config_files/keys.yml", 'w') as f:
                     yaml.safe_dump(keys, f, default_flow_style=False)
                 if cost > 0:
                     keys['CLASSKEYS'][singleKey]['classCost'] = keys['CLASSKEYS'][singleKey]['classCost'] + cost
-                with open("keys.yml", 'w') as f:
+                with open("config_files/keys.yml", 'w') as f:
                     yaml.safe_dump(keys, f, default_flow_style=False)
                 return ClassKeyStates.VALID
     return ClassKeyStates.INVALID

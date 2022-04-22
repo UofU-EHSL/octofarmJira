@@ -16,7 +16,7 @@ from flask import Flask, render_template, session, request, \
     copy_current_request_context
 from flask_socketio import SocketIO, emit
 
-with open("./config.yml", "r") as yamlfile:
+with open("config_files/config.yml", "r") as yamlfile:
     config = yaml.load(yamlfile, Loader=yaml.FullLoader)
 
 async_mode = None
