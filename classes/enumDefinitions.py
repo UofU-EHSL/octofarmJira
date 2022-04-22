@@ -2,25 +2,6 @@ from enum import Enum, auto
 from pony.orm.dbapiprovider import StrConverter
 
 
-class EnumConverter(StrConverter):
-    """
-    Needed to make enums work with Pony ORM.
-    """
-
-    def validate(self, val, not_used):
-        """not_used param was required to keep it from crashing... Not sure what its needed for. Things seem to be working without it."""
-        if not isinstance(val, Enum):
-            raise ValueError('Must be an Enum.  Got {}'.format(type(val)))
-        return val
-
-    def py2sql(self, val):
-        return val.name
-
-    def sql2py(self, value):
-        # Any enum type can be used, so py_type ensures the correct one is used to create the enum instance
-        return self.py_type[value]
-
-
 class GcodeStates(Enum):
     VALID = 1
     INVALID = 2
