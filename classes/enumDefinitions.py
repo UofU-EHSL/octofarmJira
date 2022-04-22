@@ -30,6 +30,13 @@ class JiraTransitionCodes(Enum):
     """Restart progress : 141  (From REJECTED to IN PROGRESS) # Renamed from "Start progress" to "Restart progress" when changing these to enums"""
 
 
+class PrinterModel(Enum):
+    PRUSA_MK3 = auto()
+    GIGABOT = auto()
+    TAZ6 = auto()
+    PRUSA_XL = auto()
+
+
 class GcodeCheckActions(Enum):
     ADD_COMMAND_AT_END = auto()
     """Add this command at the end of the file if it is not already the last command."""
