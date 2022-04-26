@@ -1,0 +1,38 @@
+{% extends "layout.html" %}
+{% block title %}Printers{% endblock %}
+{% block head %}
+  {{ super() }}
+{% endblock %}
+
+{% block content %}
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>IP</th>
+                <th>API Key</th>
+                <th>Stream IP</th>
+                <th>Material Type</th>
+                <th>Material Color</th>
+                <th>Material Density</th>
+                <th>Enabled</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for printer in printers %}
+                <tr>
+                    <td>{{ printer.name }}</td>
+                    <td>{{ printer.model }}</td>
+                    <td>{{ printer.ip }}</td>
+                    <td>{{ printer.api_key }}</td>
+                    <td>{{ printer.stream_ip }}</td>
+                    <td>{{ printer.materrial_type }}</td>
+                    <td>{{ printer.material_color }}</td>
+                    <td>{{ printer.material_density }}</td>
+                    <td>{{ printer.enabled }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

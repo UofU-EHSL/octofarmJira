@@ -19,6 +19,7 @@ class Printer(db.Entity):
     material_type = Optional(str)
     material_color = Optional(str)
     material_density = Optional(float)
+    enabled = Required(bool)
     print_jobs = Set('PrintJob')
     """Used to relate print jobs to this printer. Not an actual field, just a Pony ORM thing"""
 
