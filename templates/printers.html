@@ -30,9 +30,22 @@
                     <td>{{ printer.materrial_type }}</td>
                     <td>{{ printer.material_color }}</td>
                     <td>{{ printer.material_density }}</td>
-                    <td>{{ printer.enabled }}</td>
+                    <td><button id="{{ printer.id }}" type="button" onclick="toggleEnabled({{ printer.id }})" class="btn btn-outline-primary">{{ printer.enabled }}</button></td>
                 </tr>
             {% endfor %}
         </tbody>
     </table>
+    <script>
+    toggleEnabled = function(printer_id) {
+        $.post( "/printers/togglePrinterStatus/" + printer_id, ( data ) => {
+            console.log(data)
+            if(data.status == "success") {
+                document.getElementById(printer_id).innerHTML = data.enabled ? "True" : "False"
+            }
+            else if(data.status == "failed") {
+                alert("Toggling printer status failed!")
+            }
+        });
+    }
+    </script>
 {% endblock %}

@@ -3,6 +3,7 @@ import octoprint
 import os
 import flask
 from classes.printer import *
+from pony.flask import Pony
 import threading
 from markupsafe import escape
 from multiprocessing import Process
@@ -35,9 +36,11 @@ KEYS = "./config_files/keys.yml"
 LISTS = "./config_files/lists.yml"
 HISTORY = "./config_files/history.yml"
 
-set_sql_debug(True)  # Shows the SQL queries pony is running in the console.
+set_sql_debug(False)  # Shows the SQL queries pony is running in the console.
 db.bind(provider='sqlite', filename='octofarmJira_database.sqlite', create_db=True)  # Establish DB connection.
 db.generate_mapping(create_tables=True)
+
+Pony(app)
 
 
 def background_thread():
@@ -75,6 +78,17 @@ def index():
 def printers():
     all_printers = Printer.Get_All()
     return flask.render_template('printers.html', printers=all_printers, async_mode=socketio.async_mode, config=config, ip=flask.request.host)
+
+
+@app.route('/printers/togglePrinterStatus/<printer_id>', methods=['POST'])
+def toggle_printer_status(printer_id):
+    try:
+        printer = Printer[printer_id]
+        printer.enabled = not printer.enabled
+        commit()
+        return {'status': 'success', 'enabled': printer.enabled}
+    except:
+        return {'status': 'failed'}
 
 
 @socketio.event
