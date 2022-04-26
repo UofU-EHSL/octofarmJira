@@ -17,6 +17,8 @@
                 <th>Material Color</th>
                 <th>Material Density</th>
                 <th>Enabled</th>
+                <th></th>
+                <th></th>
             </tr>
         </thead>
         <tbody>
@@ -30,17 +32,34 @@
                     <td>{{ printer.materrial_type }}</td>
                     <td>{{ printer.material_color }}</td>
                     <td>{{ printer.material_density }}</td>
-                    <td><button id="{{ printer.id }}" type="button" onclick="toggleEnabled({{ printer.id }})" class="btn btn-outline-primary">{{ printer.enabled }}</button></td>
+                    <td><button id="enable{{printer.id }}" type="button" onclick="toggleEnabled({{ printer.id }})" class="btn btn-outline-primary">{{ printer.enabled }}</button></td>
+                    <td><button id="edit{{printer.id }}" type="button" onclick="editPrinter({{ printer.id }})" class="btn btn-outline-primary">Edit</button></td>
+                    <td><button id="delete{{printer.id }}" type="button" onclick="deletePrinter({{ printer.id }})" class="btn btn-outline-danger">Delete</button></td>
                 </tr>
             {% endfor %}
         </tbody>
     </table>
+
     <script>
-    toggleEnabled = function(printer_id) {
+    const deletePrinter = function(printer_id) {
+        if (confirm("Are you sure you want to delete this printer?")) {
+            $.post("/printers/deletePrinter/" + printer_id, (data) => {
+                if (data.status == "success") {
+                    el = document.getElementById("delete" + printer_id)
+                    el.parentElement.parentElement.remove()
+                } else if (data.status == "failed") {
+                    alert("Deleting printer failed!")
+                }
+            });
+        }
+    }
+    const editPrinter = function(printer_id) {
+
+    }
+    const toggleEnabled = function(printer_id) {
         $.post( "/printers/togglePrinterStatus/" + printer_id, ( data ) => {
-            console.log(data)
             if(data.status == "success") {
-                el = document.getElementById(printer_id)
+                el = document.getElementById("enable" + printer_id)
                 el.innerHTML = data.enabled ? "True" : "False"
                 if (data.enabled) {
                     el.parentElement.parentElement.classList.remove("table-warning")

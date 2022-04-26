@@ -80,6 +80,16 @@ def printers():
     return flask.render_template('printers.html', printers=all_printers, async_mode=socketio.async_mode, config=config, ip=flask.request.host)
 
 
+@app.route('/printers/deletePrinter/<printer_id>', methods=['POST'])
+def delete_printer(printer_id):
+    try:
+        Printer[printer_id].delete()
+        commit()
+        return {'status': 'success'}
+    except:
+        return {'status': 'failed'}
+
+
 @app.route('/printers/togglePrinterStatus/<printer_id>', methods=['POST'])
 def toggle_printer_status(printer_id):
     try:
