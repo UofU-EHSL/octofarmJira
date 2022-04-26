@@ -27,7 +27,7 @@ def main():
     with open("config_files/config.yml", "r") as yamlfile:
         config = yaml.load(yamlfile, Loader=yaml.FullLoader)
 
-    printers = Printer.Get_All()
+    printers = Printer.Get_All_Enabled()
 
     # jira.getGcode()
     # octoprint.eachNewFile()

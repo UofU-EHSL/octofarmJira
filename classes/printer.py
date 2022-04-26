@@ -34,6 +34,15 @@ class Printer(db.Entity):
 
     @staticmethod
     @db_session
+    def Get_All_Enabled():
+        query_result = select(p for p in Printer if p.enabled is True)
+        printers = []
+        for p in query_result:
+            printers.append(p)
+        return printers
+
+    @staticmethod
+    @db_session
     def Get_All_By_Type(printer_model: PrinterModel):
         query_result = select(p for p in Printer if p.model == printer_model.name)
         printers = []
