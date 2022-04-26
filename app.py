@@ -28,11 +28,11 @@ thread = None
 thread_lock = Lock()
 
 DOWNLOAD_FOLDER = './jiradownloads'
-CONFIG = './config.yml'
-PRINTERS = './printers.yml'
-KEYS = "./keys.yml"
-LISTS = "./lists.yml"
-HISTORY = "./history.yml"
+CONFIG = './config_files/config.yml'
+PRINTERS = './config_files/printers.yml'
+KEYS = "./config_files/keys.yml"
+LISTS = "./config_files/lists.yml"
+HISTORY = "./config_files/history.yml"
     
 def background_thread():
     """How to send server generated events to clients."""
