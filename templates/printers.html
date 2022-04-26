@@ -21,7 +21,7 @@
         </thead>
         <tbody>
             {% for printer in printers %}
-                <tr>
+                <tr class="{{"" if printer.enabled else "table-warning" }}">
                     <td>{{ printer.name }}</td>
                     <td>{{ printer.model }}</td>
                     <td>{{ printer.ip }}</td>
@@ -40,7 +40,14 @@
         $.post( "/printers/togglePrinterStatus/" + printer_id, ( data ) => {
             console.log(data)
             if(data.status == "success") {
-                document.getElementById(printer_id).innerHTML = data.enabled ? "True" : "False"
+                el = document.getElementById(printer_id)
+                el.innerHTML = data.enabled ? "True" : "False"
+                if (data.enabled) {
+                    el.parentElement.parentElement.classList.remove("table-warning")
+                }
+                else {
+                    el.parentElement.parentElement.classList.add("table-warning")
+                }
             }
             else if(data.status == "failed") {
                 alert("Toggling printer status failed!")
