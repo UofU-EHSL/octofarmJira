@@ -38,9 +38,9 @@ HISTORY = "./config_files/history.yml"
 
 set_sql_debug(False)  # Shows the SQL queries pony is running in the console.
 db.bind(provider='sqlite', filename='octofarmJira_database.sqlite', create_db=True)  # Establish DB connection.
-db.generate_mapping(create_tables=True)
+db.generate_mapping(create_tables=True)  # Have to generate mapping to use Pony. Will create tables that do not already exist.
 
-Pony(app)
+Pony(app)  # Connects routes to the DB as needed without having to do it manually.
 
 
 def background_thread():
