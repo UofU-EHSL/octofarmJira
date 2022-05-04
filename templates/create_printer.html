@@ -1,5 +1,5 @@
 {% extends "layout.html" %}
-{% block title %}Edit Printer: {{ printer.name }}{% endblock %}
+{% block title %}Create Printer{% endblock %}
 {% block head %}
   {{ super() }}
 {% endblock %}
@@ -10,49 +10,49 @@
         <form>
             <div class="mb-3">
                 <label class="form-label" for="name">Name</label>
-                <input class="form-control" type="text" id="name" value="{{ printer.name }}">
+                <input class="form-control" type="text" id="name" value="">
             </div>
             <div class="mb-3">
                 <label class="form-label" for="name">Model</label>
                 <select name="model" id="model">
                 {% for key, value in models.items() %}
-                    <option {{"selected" if printer.model == key}} value="{{ value }}">{{ key }}</option>
+                    <option value="{{ value }}">{{ key }}</option>
                 {% endfor %}
                 </select>
             </div>
             <div class="mb-3">
                 <label class="form-label" for="ip">IP</label>
-                <input class="form-control" type="text" id="ip" value="{{ printer.ip }}">
+                <input class="form-control" type="text" id="ip">
             </div>
             <div class="mb-3">
                 <label class="form-label" for="api_key">API Key</label>
-                <input class="form-control" type="text" id="api_key" value="{{ printer.api_key }}">
+                <input class="form-control" type="text" id="api_key">
             </div>
             <div class="mb-3">
                 <label class="form-label" for="stream_ip">Stream IP</label>
-                <input class="form-control" type="text" id="stream_ip" value="{{ printer.stream_ip }}">
+                <input class="form-control" type="text" id="stream_ip">
             </div>
             <div class="mb-3">
                 <label class="form-label" for="material_type">Material Type</label>
-                <input class="form-control" type="text" id="material_type" value="{{ printer.material_type }}">
+                <input class="form-control" type="text" id="material_type">
             </div>
             <div class="mb-3">
                 <label class="form-label" for="material_color">Material Color</label>
-                <input class="form-control" type="text" id="material_color" value="{{ printer.material_color }}">
+                <input class="form-control" type="text" id="material_color">
             </div>
             <div class="mb-3">
                 <label class="form-label" for="material_density">Material Density</label>
-                <input class="form-control" type="text" id="material_density" value="{{ printer.material_density }}">
+                <input class="form-control" type="text" id="material_density">
             </div>
             <div class="mb-3">
                 <label class="form-check-label" for="enabled">Enabled</label>
-                <input class="form-check-input" type="checkbox" id="enabled" {{"checked" if printer.enabled}}>
+                <input class="form-check-input" type="checkbox" id="enabled">
             </div>
-            <button type="button" onclick="submitEdit({{ printer.id }})">Submit</button>
+            <button type="button" onclick="create()">Submit</button>
         </form>
     </div>
     <script>
-        const submitEdit = function(printer_id) {
+        const create = function() {
             let formData = {}
             formData.name = $("#name").val()
             formData.model = $("#model").val()
@@ -77,12 +77,11 @@
                 return
             }
 
-
-            $.post("/printers/editPrinter/" + printer_id, formData, (data) => {
+            $.post("/printers/createPrinter", formData, (data) => {
                 if (data.status == "success") {
                     window.location.href = "/printers"
                 } else if (data.status == "failed") {
-                    alert("Updating printer failed!")
+                    alert("Creating printer failed!")
                 }
             });
         }

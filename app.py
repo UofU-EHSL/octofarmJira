@@ -101,6 +101,22 @@ def toggle_printer_status(printer_id):
         return {'status': 'failed'}
 
 
+@app.route('/printers/createPrinter', methods=['GET'])
+def create_printer_get():
+    return flask.render_template('create_printer.html', models=get_dict(PrinterModel), async_mode=socketio.async_mode, ip=flask.request.host)
+
+
+@app.route('/printers/createPrinter', methods=['POST'])
+def create_printer_post():
+    try:
+        form_data = request.form
+        Printer.Add_Printer_From_Request(form_data)
+        commit()
+        return {'status': 'success'}
+    except:
+        return {'status': 'failed'}
+
+
 @app.route('/printers/editPrinter/<printer_id>', methods=['GET'])
 def edit_printer_get(printer_id):
     printer = Printer[printer_id]

@@ -69,6 +69,27 @@ class Printer(db.Entity):
         printer.enabled = form_data['enabled'] == 'true'
 
 
+    @staticmethod
+    def Add_Printer_From_Request(form_data):
+        """
+        Maps request data to a printer object.
+        """
+        name = form_data['name']
+        model = PrinterModel(int(form_data['model'])).name
+        ip = form_data['ip']
+        api_key = form_data['api_key']
+        stream_ip = form_data['stream_ip']
+        material_type = form_data['material_type']
+        material_color = form_data['material_color']
+        try:
+            material_density = float(form_data['material_density'])
+        except:
+            material_density = None
+        enabled = form_data['enabled'] == 'true'
+
+        Printer(name=name, model=model, ip=ip,api_key=api_key,stream_ip=stream_ip,material_type=material_type,material_color=material_color, material_density=material_density, enabled=enabled)
+
+
 class PrintJob(db.Entity):
     printed_on = Optional(Printer)
     """Printer this job was processed on."""
