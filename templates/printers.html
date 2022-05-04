@@ -54,7 +54,7 @@
         }
     }
     const editPrinter = function(printer_id) {
-
+        window.location.href = "/printers/editPrinter/" + printer_id
     }
     const toggleEnabled = function(printer_id) {
         $.post( "/printers/togglePrinterStatus/" + printer_id, ( data ) => {

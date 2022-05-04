@@ -9,13 +9,13 @@ from markupsafe import escape
 from multiprocessing import Process
 import time
 import pythonFunctions
+from classes.enumDefinitions import *
 from flask import request
 import yaml
 import asyncio
 import jsonify
 from threading import Lock
-from flask import Flask, render_template, session, request, \
-    copy_current_request_context
+from flask import Flask, render_template, session, request, copy_current_request_context
 from flask_socketio import SocketIO, emit
 
 with open("config_files/config.yml", "r") as yamlfile:
@@ -71,13 +71,13 @@ def background_thread():
 
 @app.route('/')
 def index():
-    return flask.render_template('layout.html', async_mode=socketio.async_mode, config=config, ip=flask.request.host)
+    return flask.render_template('layout.html', async_mode=socketio.async_mode, ip=flask.request.host)
 
 
 @app.route('/printers')
 def printers():
     all_printers = Printer.Get_All()
-    return flask.render_template('printers.html', printers=all_printers, async_mode=socketio.async_mode, config=config, ip=flask.request.host)
+    return flask.render_template('printers.html', printers=all_printers, async_mode=socketio.async_mode, ip=flask.request.host)
 
 
 @app.route('/printers/deletePrinter/<printer_id>', methods=['POST'])
@@ -97,6 +97,24 @@ def toggle_printer_status(printer_id):
         printer.enabled = not printer.enabled
         commit()
         return {'status': 'success', 'enabled': printer.enabled}
+    except:
+        return {'status': 'failed'}
+
+
+@app.route('/printers/editPrinter/<printer_id>', methods=['GET'])
+def edit_printer_get(printer_id):
+    printer = Printer[printer_id]
+    return flask.render_template('edit_printer.html', printer=printer, models=get_dict(PrinterModel), async_mode=socketio.async_mode, ip=flask.request.host)
+
+
+@app.route('/printers/editPrinter/<printer_id>', methods=['POST'])
+def edit_printer_post(printer_id):
+    try:
+        form_data = request.form
+        printer = Printer[printer_id]
+        Printer.Map_Request(printer, form_data)
+        commit()
+        return {'status': 'success'}
     except:
         return {'status': 'failed'}
 

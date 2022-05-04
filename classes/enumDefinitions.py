@@ -53,3 +53,10 @@ class GcodeCheckActions(Enum):
     """First parameter of command must be OVER this value."""
     COMMAND_PARAM_RANGE = auto()
     """First parameter of command must be BETWEEN two values provided as comma separated string: 'x,x' """
+
+
+def get_dict(enum_type):
+    result = {}
+    for x in enum_type:
+        result[x.name] = x.value
+    return result

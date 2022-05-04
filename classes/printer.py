@@ -50,6 +50,24 @@ class Printer(db.Entity):
             printers.append(p)
         return printers
 
+    @staticmethod
+    def Map_Request(printer, form_data):
+        """
+        Maps request data to a printer object.
+        """
+        printer.name = form_data['name']
+        printer.model = PrinterModel(int(form_data['model'])).name
+        printer.ip = form_data['ip']
+        printer.api_key = form_data['api_key']
+        printer.stream_ip = form_data['stream_ip']
+        printer.material_type = form_data['material_type']
+        printer.material_color = form_data['material_color']
+        try:
+            printer.material_density = float(form_data['material_density'])
+        except:
+            printer.material_density = None
+        printer.enabled = form_data['enabled'] == 'true'
+
 
 class PrintJob(db.Entity):
     printed_on = Optional(Printer)

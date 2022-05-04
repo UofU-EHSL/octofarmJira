@@ -9,3 +9,9 @@ iframe{
 #preview{
 	width:100%;
 }
+
+.form-container {
+	max-width: 750px;
+	padding-top: 20px;
+	margin: auto;
+}

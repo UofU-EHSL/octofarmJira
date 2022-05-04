@@ -1,0 +1,77 @@
+{% extends "layout.html" %}
+{% block title %}Edit Printer: {{ printer.name }}{% endblock %}
+{% block head %}
+  {{ super() }}
+{% endblock %}
+
+{% block content %}
+
+    <div class="form-container">
+        <form>
+            <div class="mb-3">
+                <label class="form-label" for="name">Name</label>
+                <input class="form-control" type="text" id="name" value="{{ printer.name }}">
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="name">Model</label>
+                <select name="model" id="model">
+                {% for key, value in models.items() %}
+                    <option {{"selected" if printer.model == key}} value="{{ value }}">{{ key }}</option>
+                {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="ip">IP</label>
+                <input class="form-control" type="text" id="ip" value="{{ printer.ip }}">
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="api_key">API Key</label>
+                <input class="form-control" type="text" id="api_key" value="{{ printer.api_key }}">
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="stream_ip">Stream IP</label>
+                <input class="form-control" type="text" id="stream_ip" value="{{ printer.stream_ip }}">
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="material_type">Material Type</label>
+                <input class="form-control" type="text" id="material_type" value="{{ printer.material_type }}">
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="material_color">Material Color</label>
+                <input class="form-control" type="text" id="material_color" value="{{ printer.material_color }}">
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="material_density">Material Density</label>
+                <input class="form-control" type="text" id="material_density" value="{{ printer.material_density }}">
+            </div>
+            <div class="mb-3">
+                <label class="form-check-label" for="enabled">Enabled</label>
+                <input class="form-check-input" type="checkbox" id="enabled" {{"checked" if printer.enabled}}>
+            </div>
+            <button type="button" onclick="submitEdit({{ printer.id }})">Submit</button>
+        </form>
+    </div>
+    <script>
+        const submitEdit = function(printer_id) {
+            let formData = {}
+            formData.name = $("#name").val()
+            formData.model = $("#model").val()
+            formData.ip = $("#ip").val()
+            formData.api_key = $("#api_key").val()
+            formData.stream_ip = $("#stream_ip").val()
+            formData.material_type = $("#material_type").val()
+            formData.material_color = $("#material_color").val()
+            formData.material_density = $("#material_density").val()
+            formData.enabled = $("#enabled").prop('checked')
+
+            $.post("/printers/editPrinter/" + printer_id, formData, (data) => {
+                if (data.status == "success") {
+                    window.location.href = "/printers"
+                } else if (data.status == "failed") {
+                    alert("Updating printer failed!")
+                }
+            });
+        }
+
+    </script>
+{% endblock %}
