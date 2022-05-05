@@ -76,6 +76,10 @@
                 alert("API Key is required!")
                 return
             }
+            if (!formData.material_density){
+                alert("Material Density is required! Use 1.25 for PLA.")
+                return
+            }
 
 
             $.post("/printers/editPrinter/" + printer_id, formData, (data) => {
