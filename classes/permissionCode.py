@@ -1,4 +1,5 @@
 from classes.printer import *
+from classes.enumDefinitions import *
 import datetime
 
 
@@ -78,3 +79,21 @@ class PermissionCode(db.Entity):
             raise Exception
 
         PermissionCode(name=name, code=code, description=description, start_date=start_date, end_date=end_date)
+
+    @staticmethod
+    @db_session
+    def Validate_Permission_Code(code):
+        """
+        Checks if a given permission code is valid.
+        """
+        all_codes = PermissionCode.Get_All()
+        today = datetime.date.today()
+        for c in all_codes:
+            if code == c.code:
+                if (c.start_date is None or c.start_date <= today) and (c.end_date is None or today <= c.end_date):
+                    return PermissionCodeStates.VALID
+                elif c.start_date > today:
+                    return PermissionCodeStates.NOT_YET_ACTIVE
+                elif c.end_date < today:
+                    return PermissionCodeStates.EXPIRED
+        return PermissionCodeStates.INVALID

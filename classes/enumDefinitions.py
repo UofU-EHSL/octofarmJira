@@ -7,9 +7,17 @@ class GcodeStates(Enum):
     INVALID = 2
 
 
-class ClassKeyStates(Enum):
+class PermissionCodeStates(Enum):
     VALID = 1
+    """Active code"""
     INVALID = 2
+    """Code does not exist"""
+    EXPIRED = 3
+    """Code exists, but has expired"""
+    NOT_YET_ACTIVE = 4
+    """Code exists, but not yet active"""
+    OVER_BUDGET = 5
+    """Not yet implemented"""
 
 
 class JiraTransitionCodes(Enum):

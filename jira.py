@@ -5,6 +5,7 @@ import yaml
 from google_drive_downloader import GoogleDriveDownloader as gdd
 from classes.gcodeLine import GcodeLine
 from classes.printer import Printer
+from classes.permissionCode import *
 import os
 import time
 from classes.enumDefinitions import *
@@ -72,30 +73,35 @@ def getGcode():
         singleIssue = json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
         user = singleIssue['fields']['reporter']['name']
 
-        # parsing class key value
-        start = "*Class Key* \\\\"
+        # parsing permission code value
+        start = "*Class Key* \\\\"  # TODO: UPDATE TO PERMISSION CODE ONCE FORM CHANGES
         end = "\n\n*Description of print*"
         s = singleIssue['fields']['description']
-        classKey = s[s.find(start) + len(start):s.rfind(end)]
-
-        # keys can be validated and update the key logs but keys do not change if a print is to be printed or not yet.
-
-        # If someone is nice they go in here
-        if user in userList["NICE"] and config["use_nice_list"] is True:
-            printIsGoodToGo(singleIssue, singleID, classKey)
-        # if they are naughty they go in here
-        elif user in userList["NAUGHTY"] and config["use_naughty_list"] is True:
-            printIsNoGo(singleID, singleID)
-            if os.path.exists("jiradownloads/" + singleID + ".gcode"):
-                os.remove("jiradownloads/" + singleID + ".gcode")
-        # if they are a new user they go in here
+        permission_code = s[s.find(start) + len(start):s.rfind(end)]
+        if permission_code:
+            key_val = PermissionCode.Validate_Permission_Code(permission_code)
         else:
-            if config["use_naughty_list"] is True:
-                printIsGoodToGo(singleIssue, singleID, classKey)
-            elif config["use_nice_list"] is False:
-                printIsNoGo(singleIssue, singleID)
-            elif config["use_naughty_list"] is False and config["use_naughty_list"] is False:
-                printIsGoodToGo(singleIssue, singleID, classKey)
+            key_val = None
+
+        if key_val is None or key_val == PermissionCodeStates.VALID:
+            # If someone is nice they go in here
+            if user in userList["NICE"] and config["use_nice_list"] is True:
+                printIsGoodToGo(singleIssue, singleID)
+            # if they are naughty they go in here
+            elif user in userList["NAUGHTY"] and config["use_naughty_list"] is True:
+                printIsNoGo(singleID, singleID)
+                if os.path.exists("jiradownloads/" + singleID + ".gcode"):
+                    os.remove("jiradownloads/" + singleID + ".gcode")
+            # if they are a new user they go in here
+            else:
+                if config["use_naughty_list"] is True:
+                    printIsGoodToGo(singleIssue, singleID)
+                elif config["use_nice_list"] is False:
+                    printIsNoGo(singleIssue, singleID)
+                elif config["use_naughty_list"] is False and config["use_naughty_list"] is False:
+                    printIsGoodToGo(singleIssue, singleID)
+        else:
+            printIsNoGo(singleIssue, singleID)  # TODO: This will give the no file error, not the appropriate permission code error.
 
 
 def downloadGoogleDrive(file_ID, singleID):
@@ -284,7 +290,7 @@ def printIsNoGo(singleIssue, singleID):
         changeStatus(singleID, JiraTransitionCodes.STOP_PROGRESS)
 
 
-def printIsGoodToGo(singleIssue, singleID, classKey):
+def printIsGoodToGo(singleIssue, singleID):
     """
     Things to do when a print is good to go
     """
@@ -296,10 +302,6 @@ def printIsGoodToGo(singleIssue, singleID, classKey):
         filename = attachment[3].split('/' + config['jiraTicketPrefix'] + '-', 1)[-1].split('_')[0]
         filename = config['jiraTicketPrefix'] + '-' + filename
         download(attachment[3], singleID, filename)
-        # if validateClassKey(classKey, 5, 1) == ClassKeyStates.VALID:
-        #     print("Skip payment, they had a valid class key")
-        # else:
-        #     print("payment")
     elif any("https://drive.google.com/file/d/" in s for s in attachments):
         print("Downloading " + singleID + " from google drive")
         matching = [s for s in attachments if "https://drive.google.com/file/d/" in s]
@@ -307,10 +309,6 @@ def printIsGoodToGo(singleIssue, singleID, classKey):
         start = "https://drive.google.com/file/d/"
         end = "/view?usp="
         downloadGoogleDrive(attachment[attachment.find(start) + len(start):attachment.rfind(end)], singleID)
-        # if validateClassKey(classKey, 5, 1) == ClassKeyStates.VALID:
-        #     print("Skip payment, they had a valid class key")
-        # else:
-        #     print("payment")
     else:
         commentStatus(
             singleID,
@@ -318,25 +316,6 @@ def printIsGoodToGo(singleIssue, singleID, classKey):
         )
         changeStatus(singleID, JiraTransitionCodes.START_PROGRESS)
         changeStatus(singleID, JiraTransitionCodes.STOP_PROGRESS)
-
-
-def validateClassKey(key, cost, count):
-    """
-    class keys are used when you want to do bulk class orders
-    """
-    for singleKey in keys["CLASSKEYS"]:
-        if keys["CLASSKEYS"][singleKey]["key"] == key:
-            if keys["CLASSKEYS"][singleKey]["active"] is True:
-                if count > 0:
-                    keys['CLASSKEYS'][singleKey]['printCount'] = keys['CLASSKEYS'][singleKey]['printCount'] + count
-                with open("config_files/keys.yml", 'w') as f:
-                    yaml.safe_dump(keys, f, default_flow_style=False)
-                if cost > 0:
-                    keys['CLASSKEYS'][singleKey]['classCost'] = keys['CLASSKEYS'][singleKey]['classCost'] + cost
-                with open("config_files/keys.yml", 'w') as f:
-                    yaml.safe_dump(keys, f, default_flow_style=False)
-                return ClassKeyStates.VALID
-    return ClassKeyStates.INVALID
 
 
 def changeStatus(singleID, transitionCode):
