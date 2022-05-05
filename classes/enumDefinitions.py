@@ -63,6 +63,20 @@ class GcodeCheckActions(Enum):
     """First parameter of command must be BETWEEN two values provided as comma separated string: 'x,x' """
 
 
+class PrintStatus(Enum):
+    IN_QUEUE = auto()
+    PRINTING = auto()
+    FINISHED = auto()
+    CANCELLED = auto()
+    FAILED = auto()
+
+
+class PaymentStatus(Enum):
+    NEEDS_PAYMENT_LINK = auto()
+    WAITING_FOR_PAYMENT = auto()
+    PAID = auto()
+
+
 def get_dict(enum_type):
     result = {}
     for x in enum_type:
