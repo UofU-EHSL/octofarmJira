@@ -70,7 +70,8 @@ class Printer(db.Entity):
 
 
     @staticmethod
-    def Add_Printer_From_Request(form_data):
+    @db_session
+    def Add_From_Request(form_data):
         """
         Maps request data to a printer object.
         """

@@ -1,0 +1,62 @@
+{% extends "layout.html" %}
+{% block title %}Create Permission Code{% endblock %}
+{% block head %}
+  {{ super() }}
+{% endblock %}
+
+{% block content %}
+
+    <div class="form-container">
+        <form>
+            <div class="mb-3">
+                <label class="form-label" for="name">Name</label>
+                <input class="form-control" type="text" id="name" value="">
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="code">Code</label>
+                <input class="form-control" type="text" id="code">
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="description">Description</label>
+                <input class="form-control" type="text" id="description">
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="start_date">Start Date (First day code is valid)</label>
+                <input class="form-control" type="date" id="start_date">
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="end_date">End Date (Last day code is valid)</label>
+                <input class="form-control" type="date" id="end_date">
+            </div>
+            <button type="button" onclick="create()">Submit</button>
+        </form>
+    </div>
+    <script>
+        const create = function() {
+            let formData = {}
+            formData.name = $("#name").val()
+            formData.code = $("#code").val()
+            formData.description = $("#description").val()
+            formData.start_date = $("#start_date").val()
+            formData.end_date = $("#end_date").val()
+
+            if (!formData.name){
+                alert("Name is required!")
+                return
+            }
+            if (!formData.code){
+                alert("Code is required!")
+                return
+            }
+
+            $.post("/permissionCodes/createPermissionCode", formData, (data) => {
+                if (data.status == "success") {
+                    window.location.href = "/permissionCodes"
+                } else if (data.status == "failed") {
+                    alert("Creating permission code failed!")
+                }
+            });
+        }
+
+    </script>
+{% endblock %}

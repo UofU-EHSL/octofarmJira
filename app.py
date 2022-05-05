@@ -3,6 +3,7 @@ import octoprint
 import os
 import flask
 from classes.printer import *
+from classes.permissionCode import *
 from pony.flask import Pony
 import threading
 from markupsafe import escape
@@ -110,7 +111,7 @@ def create_printer_get():
 def create_printer_post():
     try:
         form_data = request.form
-        Printer.Add_Printer_From_Request(form_data)
+        Printer.Add_From_Request(form_data)
         commit()
         return {'status': 'success'}
     except:
@@ -129,6 +130,56 @@ def edit_printer_post(printer_id):
         form_data = request.form
         printer = Printer[printer_id]
         Printer.Map_Request(printer, form_data)
+        commit()
+        return {'status': 'success'}
+    except:
+        return {'status': 'failed'}
+
+
+@app.route('/permissionCodes')
+def permissionCodes():
+    all_codes = PermissionCode.Get_All()
+    return flask.render_template('permission_codes.html', permissionCodes=all_codes, async_mode=socketio.async_mode, ip=flask.request.host)
+
+
+@app.route('/permissionCodes/deletePermissionCode/<code_id>', methods=['POST'])
+def delete_permission_code(code_id):
+    try:
+        PermissionCode[code_id].delete()
+        commit()
+        return {'status': 'success'}
+    except:
+        return {'status': 'failed'}
+
+
+@app.route('/permissionCodes/createPermissionCode', methods=['GET'])
+def create_permission_code_get():
+    return flask.render_template('create_permission_code.html', async_mode=socketio.async_mode, ip=flask.request.host)
+
+
+@app.route('/permissionCodes/createPermissionCode', methods=['POST'])
+def create_permission_code_post():
+    try:
+        form_data = request.form
+        PermissionCode.Add_From_Request(form_data)
+        commit()
+        return {'status': 'success'}
+    except:
+        return {'status': 'failed'}
+
+
+@app.route('/permissionCodes/editPermissionCode/<code_id>', methods=['GET'])
+def edit_permission_code_get(code_id):
+    permissionCode = PermissionCode[code_id]
+    return flask.render_template('edit_permission_code.html', permissionCode=permissionCode, async_mode=socketio.async_mode, ip=flask.request.host)
+
+
+@app.route('/permissionCodes/editPermissionCode/<code_id>', methods=['POST'])
+def edit_permission_code_post(code_id):
+    try:
+        form_data = request.form
+        code = PermissionCode[code_id]
+        PermissionCode.Map_Request(code, form_data)
         commit()
         return {'status': 'success'}
     except:

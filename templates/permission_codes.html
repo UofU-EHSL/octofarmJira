@@ -1,0 +1,53 @@
+{% extends "layout.html" %}
+{% block title %}Permission Codes{% endblock %}
+{% block head %}
+  {{ super() }}
+{% endblock %}
+
+{% block content %}
+    <a href="/permissionCodes/createPermissionCode">Add New Permission Code</a>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Code</th>
+                <th>Description</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th></th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for code in permissionCodes %}
+                <tr>
+                    <td>{{ code.name }}</td>
+                    <td>{{ code.code }}</td>
+                    <td>{{ code.description }}</td>
+                    <td>{{ code.start_date }}</td>
+                    <td>{{ code.end_date }}</td>
+                    <td><button id="edit{{code.id }}" type="button" onclick="editPermissionCode({{ code.id }})" class="btn btn-outline-primary">Edit</button></td>
+                    <td><button id="delete{{code.id }}" type="button" onclick="deletePermissionCode({{ code.id }})" class="btn btn-outline-danger">Delete</button></td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <script>
+    const deletePermissionCode = function(code_id) {
+        if (confirm("Are you sure you want to delete this permission code?")) {
+            $.post("/permissionCodes/deletePermissionCode/" + code_id, (data) => {
+                if (data.status == "success") {
+                    el = document.getElementById("delete" + code_id)
+                    el.parentElement.parentElement.remove()
+                } else if (data.status == "failed") {
+                    alert("Deleting permission code failed!")
+                }
+            });
+        }
+    }
+    const editPermissionCode = function(code_id) {
+        window.location.href = "/permissionCodes/editPermissionCode/" + code_id
+    }
+    </script>
+{% endblock %}

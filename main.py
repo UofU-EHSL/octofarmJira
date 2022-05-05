@@ -4,6 +4,7 @@ import time
 import octoprint
 import yaml
 from classes.printer import *
+from classes.permissionCode import *
 
 
 def main():
