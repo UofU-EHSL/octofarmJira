@@ -259,12 +259,11 @@ def PrintIsFinished():
                     if config['payment']['prepay'] is True:
                         jira.changeStatus(file, JiraTransitionCodes.DONE)  # file name referenced
                 else:
-                    print(printer.name + " is ready")
+                    print(printer.name + " : Ready")
                     continue
-            elif status['state'] == "Printing":
-                print(printer.name + " is printing")
             else:
-                print(printer.name + " is offline")
+                print(printer.name + " : " + status['state'])
+
 
 
 def eachNewFile():
