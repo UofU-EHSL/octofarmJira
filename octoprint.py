@@ -258,11 +258,8 @@ def PrintIsFinished():
                     jira.changeStatus(file, JiraTransitionCodes.APPROVE)  # file name referenced
                     if config['payment']['prepay'] is True:
                         jira.changeStatus(file, JiraTransitionCodes.DONE)  # file name referenced
-                else:
-                    print(printer.name + " : Ready")
-                    continue
-            else:
-                print(printer.name + " : " + status['state'])
+
+        print(printer.name + " : " + status['state'])
 
 
 
