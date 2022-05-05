@@ -13,6 +13,9 @@ class PermissionCode(db.Entity):
     """Date the key beings being valid."""
     end_date = Optional(datetime.date)
     """Date the key stops being valid."""
+    print_jobs = Set(PrintJob)
+    """Used to relate print jobs to this permission code. Not an actual field, just a Pony ORM thing"""
+
 
     @staticmethod
     @db_session
