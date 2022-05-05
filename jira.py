@@ -4,6 +4,7 @@ import json
 import yaml
 from google_drive_downloader import GoogleDriveDownloader as gdd
 from classes.gcodeLine import GcodeLine
+from classes.printer import Printer
 import os
 import time
 from classes.enumDefinitions import *
@@ -16,8 +17,6 @@ with open("config_files/lists.yml", "r") as yamlFile:
     userList = yaml.load(yamlFile, Loader=yaml.FullLoader)
 with open("config_files/keys.yml", "r") as yamlFile:
     keys = yaml.load(yamlFile, Loader=yaml.FullLoader)
-with open("config_files/printers.yml", "r") as yamlFile:
-    printers = yaml.load(yamlFile, Loader=yaml.FullLoader)
 
 # jira authentication information that gets pulled in from the config ###
 auth = HTTPBasicAuth(config['jira_user'], config['jira_password'])
@@ -445,16 +444,13 @@ def askedForStatus():
                 for filename in sorted(os.listdir(directory)):
                     if filename.find(ticketID):
                         commentStatus(ticketID, config["messages"]["statusInQueue"])
-                for printer in printers['farm_printers']:
-                    apikey = printers['farm_printers'][printer]['api']
-                    printerIP = printers['farm_printers'][printer]['ip']
-
-                    url = "http://" + printerIP + "/api/job"
-
+                printers = Printer.Get_All_Enabled()
+                for printer in printers:
+                    url = "http://" + printer.ip + "/api/job"
                     headers = {
                         "Accept": "application/json",
-                        "Host": printerIP,
-                        "X-Api-Key": apikey
+                        "Host": printer.ip,
+                        "X-Api-Key": printer.api_key
                     }
                     try:
                         response = requests.request(
@@ -468,7 +464,7 @@ def askedForStatus():
                             completion = "Completion: " + str(round(status['progress']['completion'], 2)) + "%" + "\n"
                             eta = "Print time left: " + str(time.strftime('%H:%M:%S', time.gmtime(status['progress']['printTimeLeft']))) + "\n"
                             material = "Cost: $" + str(round(
-                                status['job']['filament']['tool0']['volume'] * printers['farm_printers'][printer]['materialDensity'] *
+                                status['job']['filament']['tool0']['volume'] * printer.material_density *
                                 config['payment']['costPerGram'], 2)) + "\n"
                             end = config['messages']['statusUpdateEnd']
 
