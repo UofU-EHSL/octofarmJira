@@ -27,6 +27,7 @@ def drop_and_create_db():
         pc6 = PermissionCode(name='Test6', code='abcdefghi', description='Both dates valid', start_date=datetime.date.today() - datetime.timedelta(days=1), end_date=datetime.date.today() + datetime.timedelta(days=1))
         pc6 = PermissionCode(name='Test7', code='abcdefghij', description='Both dates not valid', start_date=datetime.date.today() - datetime.timedelta(days=2), end_date=datetime.date.today() - datetime.timedelta(days=1))
 
+
 def main():
     set_sql_debug(True)  # Shows the SQL queries pony is running in the console.
     db.bind(provider='sqlite', filename='octofarmJira_database.sqlite', create_db=True)  # Establish DB connection.
