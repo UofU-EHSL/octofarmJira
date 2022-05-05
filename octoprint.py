@@ -3,6 +3,7 @@ import json
 import yaml
 import jira
 from classes.enumDefinitions import JiraTransitionCodes
+from classes.printer import Printer
 import os
 import time
 from datetime import datetime
@@ -10,28 +11,20 @@ from datetime import datetime
 # importing configs
 with open("config_files/config.yml", "r") as yamlFile:
     config = yaml.load(yamlFile, Loader=yaml.FullLoader)
-with open("config_files/printers.yml", "r") as yamlFile:
-    printers = yaml.load(yamlFile, Loader=yaml.FullLoader)
 
 
 def TryPrintingFile(file):
     """
     This will look at the prints we have waiting and see if a printer is open for it
     """
-    for printer in printers['farm_printers']:
-        apikey = printers['farm_printers'][printer]['api']
-        printerIP = printers['farm_printers'][printer]['ip']
-        materialType = printers['farm_printers'][printer]['materialType']
-        materialColor = printers['farm_printers'][printer]['materialColor']
-        materialDensity = printers['farm_printers'][printer]['materialDensity']
-        printerType = printers['farm_printers'][printer]['printerType']
-
-        url = "http://" + printerIP + "/api/job"
+    printers = Printer.Get_All_Enabled()
+    for printer in printers:
+        url = "http://" + printer.ip + "/api/job"
 
         headers = {
             "Accept": "application/json",
-            "Host": printerIP,
-            "X-Api-Key": apikey
+            "Host": printer.ip,
+            "X-Api-Key": printer.api_key
         }
         try:
             response = requests.request(
@@ -41,7 +34,7 @@ def TryPrintingFile(file):
             )
             status = json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
             if str(status['state']) == "Operational" and str(status['progress']['completion']) != "100.0":
-                uploadFileToPrinter(apikey, printerIP, file)
+                uploadFileToPrinter(printer.api_key, printer.ip, file)
                 return
         except requests.exceptions.RequestException as e:  # This is the correct syntax
             print("Skipping " + printer + " due to network error")
@@ -213,14 +206,13 @@ def PrintIsFinished():
     """
     If a print is complete update people and mark as ready for new file
     """
-    for printer in printers['farm_printers']:
-        apikey = printers['farm_printers'][printer]['api']
-        printerIP = printers['farm_printers'][printer]['ip']
-        url = "http://" + printerIP + "/api/job"
+    printers = Printer.Get_All_Enabled()
+    for printer in printers:
+        url = "http://" + printer.ip + "/api/job"
         headers = {
             "Accept": "application/json",
-            "Host": printerIP,
-            "X-Api-Key": apikey
+            "Host": printer.ip,
+            "X-Api-Key": printer.api_key
         }
         try:
             response = requests.request(
@@ -234,10 +226,10 @@ def PrintIsFinished():
                 else:
                     status = "offline"
             else:
-                print(printer + " is having issues and the pi is un-reachable, if this continues restart the pi")
+                print(printer.name + " is having issues and the pi is un-reachable, if this continues restart the pi")
                 status = "offline"
         except requests.exceptions.RequestException as e:  # This is the correct syntax
-            print(printer + "'s raspberry pi is offline and can't be contacted over the network")
+            print(printer.name + "'s raspberry pi is offline and can't be contacted over the network")
             status = "offline"
 
         """
@@ -247,10 +239,10 @@ def PrintIsFinished():
             if status['state'] == "Operational":
                 if str(status['progress']['completion']) == "100.0":
                     volume = status['job']['filament']['tool0']['volume']
-                    grams = round(volume * printers['farm_printers'][printer]['materialDensity'], 2)
-                    print(printer + " is finishing up")
+                    grams = round(volume * printer.material_density, 2)
+                    print(printer.name + " is finishing up")
                     file = os.path.splitext(status['job']['file']['display'])[0]
-                    resetConnection(apikey, printerIP)
+                    resetConnection(printer.api_key, printer.ip)
                     try:
                         finishTime = datetime.now().strftime("%I:%M" '%p')
                         response = "{color:#00875A}Print completed successfully!{color}\n\nPrint was harvested at " + finishTime
@@ -267,12 +259,12 @@ def PrintIsFinished():
                     if config['payment']['prepay'] is True:
                         jira.changeStatus(file, JiraTransitionCodes.DONE)  # file name referenced
                 else:
-                    print(printer + " is ready")
+                    print(printer.name + " is ready")
                     continue
             elif status['state'] == "Printing":
-                print(printer + " is printing")
+                print(printer.name + " is printing")
             else:
-                print(printer + " is offline")
+                print(printer.name + " is offline")
 
 
 def eachNewFile():
