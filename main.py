@@ -5,6 +5,7 @@ import octoprint
 import yaml
 from classes.printer import *
 from classes.permissionCode import *
+from classes.printJob import *
 
 
 def drop_and_create_db():

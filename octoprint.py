@@ -37,7 +37,7 @@ def TryPrintingFile(file):
                 uploadFileToPrinter(printer.api_key, printer.ip, file)
                 return
         except requests.exceptions.RequestException as e:  # This is the correct syntax
-            print("Skipping " + printer + " due to network error")
+            print("Skipping " + printer.name + " due to network error")
             print("code needed to reboot printer is it's having this issue")
 
 

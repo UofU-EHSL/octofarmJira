@@ -4,6 +4,7 @@ import os
 import flask
 from classes.printer import *
 from classes.permissionCode import *
+from classes.printJob import *
 from pony.flask import Pony
 import threading
 from markupsafe import escape
