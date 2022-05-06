@@ -67,7 +67,7 @@ def parse_permission_code(description):
     start = "*Class Key* \\\\"  # TODO: UPDATE TO PERMISSION CODE ONCE FORM CHANGES
     end = "\n\n*Description of print*"
     code_string = description[description.find(start) + len(start):description.rfind(end)]
-    code = PermissionCode.get(code=code_string)
+    code = PermissionCode.get(code=code_string)  # TODO: Handle invalid codes if they don't exist. Currently just processes the job as if there were no code.
     return code.id if code is not None else None
 
 
