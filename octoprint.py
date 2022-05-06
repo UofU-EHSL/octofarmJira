@@ -224,13 +224,13 @@ def PrintIsFinished():
                 if json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": "))):
                     status = json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
                 else:
-                    status = "offline"
+                    status = {'state': 'Offline'}
             else:
                 print(printer.name + " is having issues and the pi is un-reachable, if this continues restart the pi")
-                status = "offline"
+                status = {'state': 'Offline'}
         except requests.exceptions.RequestException as e:  # This is the correct syntax
             print(printer.name + "'s raspberry pi is offline and can't be contacted over the network")
-            status = "offline"
+            status = {'state': 'Offline'}
 
         """
         I might want to change some of this code when I am in front of the printers to make it so each printers status gets printed out
