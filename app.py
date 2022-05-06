@@ -5,6 +5,7 @@ import flask
 from classes.printer import *
 from classes.permissionCode import *
 from classes.printJob import *
+from classes.user import *
 from pony.flask import Pony
 import threading
 from markupsafe import escape
@@ -79,7 +80,7 @@ def index():
 @app.route('/printers')
 def printers():
     all_printers = Printer.Get_All()
-    return flask.render_template('printers.html', printers=all_printers, async_mode=socketio.async_mode, ip=flask.request.host)
+    return flask.render_template('printers/printers.html', printers=all_printers, async_mode=socketio.async_mode, ip=flask.request.host)
 
 
 @app.route('/printers/deletePrinter/<printer_id>', methods=['POST'])
@@ -105,7 +106,7 @@ def toggle_printer_status(printer_id):
 
 @app.route('/printers/createPrinter', methods=['GET'])
 def create_printer_get():
-    return flask.render_template('create_printer.html', models=get_dict(PrinterModel), async_mode=socketio.async_mode, ip=flask.request.host)
+    return flask.render_template('printers/create_printer.html', models=get_dict(PrinterModel), async_mode=socketio.async_mode, ip=flask.request.host)
 
 
 @app.route('/printers/createPrinter', methods=['POST'])
@@ -122,7 +123,7 @@ def create_printer_post():
 @app.route('/printers/editPrinter/<printer_id>', methods=['GET'])
 def edit_printer_get(printer_id):
     printer = Printer[printer_id]
-    return flask.render_template('edit_printer.html', printer=printer, models=get_dict(PrinterModel), async_mode=socketio.async_mode, ip=flask.request.host)
+    return flask.render_template('printers/edit_printer.html', printer=printer, models=get_dict(PrinterModel), async_mode=socketio.async_mode, ip=flask.request.host)
 
 
 @app.route('/printers/editPrinter/<printer_id>', methods=['POST'])
@@ -137,10 +138,66 @@ def edit_printer_post(printer_id):
         return {'status': 'failed'}
 
 
+@app.route('/users')
+def users():
+    all_users = User.Get_All()
+    return flask.render_template('users/users.html', users=all_users, async_mode=socketio.async_mode, ip=flask.request.host)
+
+
+# @app.route('/printers/deletePrinter/<printer_id>', methods=['POST'])
+# def delete_printer(printer_id):
+#     try:
+#         Printer[printer_id].delete()
+#         commit()
+#         return {'status': 'success'}
+#     except:
+#         return {'status': 'failed'}
+#
+#
+@app.route('/users/toggleWhiteListed/<user_id>', methods=['POST'])
+def toggle_white_listed_status(user_id):
+    try:
+        user = User[user_id]
+        user.white_listed = not user.white_listed
+        commit()
+        return {'status': 'success', 'white_listed': user.white_listed}
+    except:
+        return {'status': 'failed'}
+
+
+@app.route('/users/toggleBlackListed/<user_id>', methods=['POST'])
+def toggle_black_listed_status(user_id):
+    try:
+        user = User[user_id]
+        user.black_listed = not user.black_listed
+        commit()
+        return {'status': 'success', 'black_listed': user.black_listed}
+    except:
+        return {'status': 'failed'}
+
+
+@app.route('/users/editUser/<user_id>', methods=['GET'])
+def edit_user_get(user_id):
+    user = User[user_id]
+    return flask.render_template('users/edit_user.html', user=user, async_mode=socketio.async_mode, ip=flask.request.host)
+
+
+@app.route('/users/editUser/<user_id>', methods=['POST'])
+def edit_user_post(user_id):
+    try:
+        form_data = request.form
+        user = User[user_id]
+        User.Map_Request(user, form_data)
+        commit()
+        return {'status': 'success'}
+    except:
+        return {'status': 'failed'}
+
+
 @app.route('/permissionCodes')
 def permissionCodes():
     all_codes = PermissionCode.Get_All()
-    return flask.render_template('permission_codes.html', permissionCodes=all_codes, async_mode=socketio.async_mode, ip=flask.request.host)
+    return flask.render_template('permission_codes/permission_codes.html', permissionCodes=all_codes, async_mode=socketio.async_mode, ip=flask.request.host)
 
 
 @app.route('/permissionCodes/deletePermissionCode/<code_id>', methods=['POST'])
@@ -155,7 +212,7 @@ def delete_permission_code(code_id):
 
 @app.route('/permissionCodes/createPermissionCode', methods=['GET'])
 def create_permission_code_get():
-    return flask.render_template('create_permission_code.html', async_mode=socketio.async_mode, ip=flask.request.host)
+    return flask.render_template('permission_codes/create_permission_code.html', async_mode=socketio.async_mode, ip=flask.request.host)
 
 
 @app.route('/permissionCodes/createPermissionCode', methods=['POST'])
@@ -172,7 +229,7 @@ def create_permission_code_post():
 @app.route('/permissionCodes/editPermissionCode/<code_id>', methods=['GET'])
 def edit_permission_code_get(code_id):
     permissionCode = PermissionCode[code_id]
-    return flask.render_template('edit_permission_code.html', permissionCode=permissionCode, async_mode=socketio.async_mode, ip=flask.request.host)
+    return flask.render_template('permission_codes/edit_permission_code.html', permissionCode=permissionCode, async_mode=socketio.async_mode, ip=flask.request.host)
 
 
 @app.route('/permissionCodes/editPermissionCode/<code_id>', methods=['POST'])

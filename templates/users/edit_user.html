@@ -1,0 +1,58 @@
+{% extends "layout.html" %}
+{% block title %}Edit User: {{ user.name }}{% endblock %}
+{% block head %}
+  {{ super() }}
+{% endblock %}
+
+{% block content %}
+
+    <div class="form-container">
+        <form>
+            <div class="mb-3">
+                <label class="form-label" for="user_id">User ID</label>
+                <input class="form-control" type="text" id="user_id" value="{{ user.user_id }}">
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="name">Name</label>
+                <input class="form-control" type="text" id="name" value="{{ user.name }}">
+            </div>
+            <div class="mb-3">
+                <label class="form-check-label" for="white_listed">White Listed</label>
+                <input class="form-check-input" type="checkbox" id="white_listed" {{"checked" if user.white_listed}}>
+            </div>
+            <div class="mb-3">
+                <label class="form-check-label" for="black_listed">Black Listed</label>
+                <input class="form-check-input" type="checkbox" id="black_listed" {{"checked" if user.black_listed}}>
+            </div>
+            <button type="button" onclick="submitEdit({{ user.id }})">Submit</button>
+        </form>
+    </div>
+    <script>
+        const submitEdit = function(user_id) {
+            let formData = {}
+            formData.name = $("#name").val()
+            formData.user_id = $("#user_id").val()
+            formData.white_listed = $("#white_listed").prop('checked')
+            formData.black_listed = $("#black_listed").prop('checked')
+
+
+            if (!formData.user_id){
+                alert("User ID is required!")
+                return
+            }
+            if (!formData.name){
+                alert("Name is required!")
+                return
+            }
+
+            $.post("/users/editUser/" + user_id, formData, (data) => {
+                if (data.status == "success") {
+                    window.location.href = "/users"
+                } else if (data.status == "failed") {
+                    alert("Updating user failed!")
+                }
+            });
+        }
+
+    </script>
+{% endblock %}

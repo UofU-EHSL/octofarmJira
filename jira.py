@@ -95,7 +95,8 @@ def get_new_print_jobs():
         job_id = parsed_issue['id']
         job_name = parsed_issue['key']
         user_id = parsed_issue['fields']['reporter']['name']
-        user = User.Get_Or_Create(user_id)
+        user_name = parsed_issue['fields']['reporter']['displayName']
+        user = User.Get_Or_Create(user_id, user_name)
         permission_code_id = parse_permission_code(parsed_issue['fields']['description'])
         gcode_url = parse_gcode_url(parsed_issue)
 

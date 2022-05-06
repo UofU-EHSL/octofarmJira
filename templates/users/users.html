@@ -1,0 +1,82 @@
+{% extends "layout.html" %}
+{% block title %}Users{% endblock %}
+{% block head %}
+  {{ super() }}
+{% endblock %}
+
+{% block content %}
+    <span>(Users are added automatically when submitting tickets)</span>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>User ID</th>
+                <th>Name</th>
+                <th>White Listed</th>
+                <th>Black Listed</th>
+                <th></th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+                <tr class="{{"" if not user.black_listed else "table-warning" }}">
+                    <td>{{ user.user_id }}</td>
+                    <td>{{ user.name }}</td>
+                    <td><button id="white_listed_{{user.id }}" type="button" onclick="toggleWhiteListed({{ user.id }})" class="btn btn-outline-primary">{{ user.white_listed }}</button></td>
+                    <td><button id="black_listed_{{user.id }}" type="button" onclick="toggleBlackListed({{ user.id }})" class="btn btn-outline-primary">{{ user.black_listed }}</button></td>
+                    <td><button id="edit{{user.id }}" type="button" onclick="editUser({{ user.id }})" class="btn btn-outline-primary">Edit</button></td>
+                    <td><button id="delete{{user.id }}" type="button" onclick="deleteUser({{ user.id }})" class="btn btn-outline-danger">Delete</button></td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <script>
+    const deleteUser = function(user) {
+        if (confirm("Are you sure you want to delete this user?")) {
+            $.post("/users/deleteUser/" + user, (data) => {
+                if (data.status == "success") {
+                    el = document.getElementById("delete" + user)
+                    el.parentElement.parentElement.remove()
+                } else if (data.status == "failed") {
+                    alert("Deleting user failed!")
+                }
+            });
+        }
+    }
+    const editUser = function(user_id) {
+        window.location.href = "/users/editUser/" + user_id
+    }
+
+    const toggleWhiteListed = function(user_id) {
+        $.post( "/users/toggleWhiteListed/" + user_id, ( data ) => {
+            if(data.status == "success") {
+                el = document.getElementById("white_listed_" + user_id)
+                el.innerHTML = data.white_listed ? "True" : "False"
+            }
+            else if(data.status == "failed") {
+                alert("Toggling user white listed status failed!")
+            }
+        });
+    }
+
+    const toggleBlackListed = function(user_id) {
+        $.post( "/users/toggleBlackListed/" + user_id, ( data ) => {
+            if(data.status == "success") {
+                el = document.getElementById("black_listed_" + user_id)
+                el.innerHTML = data.black_listed ? "True" : "False"
+                if (data.black_listed) {
+                    el.parentElement.parentElement.classList.add("table-warning")
+                }
+                else {
+                    el.parentElement.parentElement.classList.remove("table-warning")
+                }
+            }
+            else if(data.status == "failed") {
+                alert("Toggling user black listed status failed!")
+            }
+        });
+    }
+
+    </script>
+{% endblock %}
