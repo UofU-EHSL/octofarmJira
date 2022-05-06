@@ -29,25 +29,25 @@ def drop_and_create_db():
         pc6 = PermissionCode(name='Test7', code='abcdefghij', description='Both dates not valid', start_date=datetime.date.today() - datetime.timedelta(days=2), end_date=datetime.date.today() - datetime.timedelta(days=1))
 
 
-def main():
-    set_sql_debug(True)  # Shows the SQL queries pony is running in the console.
-    db.bind(provider='sqlite', filename='octofarmJira_database.sqlite', create_db=True)  # Establish DB connection.
-    db.generate_mapping(create_tables=True)
+def print_loop():
+    jira.getGcode()
+    octoprint.eachNewFile()
+    octoprint.PrintIsFinished()
+    jira.askedForStatus()
 
-    # drop_and_create_db()
+
+def main():
+    set_sql_debug(False)  # Shows the SQL queries pony is running in the console.
+    db.bind(provider='sqlite', filename='octofarmJira_database.sqlite', create_db=True)  # Establish DB connection.
+    # db.generate_mapping(create_tables=True)
+    drop_and_create_db()
 
     with open("config_files/config.yml", "r") as yamlfile:
         config = yaml.load(yamlfile, Loader=yaml.FullLoader)
 
-    jira.getGcode()
-    octoprint.eachNewFile()
-    octoprint.PrintIsFinished()
-
+    print_loop()
     print("PRINT MONITORING SYSTEM LOOP STARTED")
-    schedule.every(config['updateRate']).minutes.do(jira.getGcode)
-    schedule.every(config['updateRate']).minutes.do(octoprint.eachNewFile)
-    schedule.every(config['updateRate']).minutes.do(octoprint.PrintIsFinished)
-    schedule.every(config['updateRate']).minutes.do(jira.askedForStatus)
+    schedule.every(config['updateRate']).minutes.do(print_loop)
 
     while 1:
         schedule.run_pending()
