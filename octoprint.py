@@ -38,7 +38,6 @@ def TryPrintingFile(file):
                 return
         except requests.exceptions.RequestException as e:  # This is the correct syntax
             print("Skipping " + printer.name + " due to network error")
-            print("code needed to reboot printer is it's having this issue")
 
 
 def GetStatus(ip, api):
@@ -63,7 +62,7 @@ def GetStatus(ip, api):
         status = json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
         return status
     except requests.exceptions.RequestException as e:  # This is the correct syntax
-        print(printerIP + "'s raspberry pi is offline and can't be contacted over the network")
+        print(printerIP + "'s raspberry pi is offline")
         status = "offline"
         return status
 

@@ -1,6 +1,6 @@
 import jira
+import os
 import schedule
-import time
 import octoprint
 import yaml
 from classes.printer import *
@@ -29,7 +29,10 @@ def drop_and_create_db():
         pc6 = PermissionCode(name='Test7', code='abcdefghij', description='Both dates not valid', start_date=datetime.date.today() - datetime.timedelta(days=2), end_date=datetime.date.today() - datetime.timedelta(days=1))
 
 
-def print_loop():
+def print_loop(clearTerminal):
+    if clearTerminal:
+        os.system('cls' if os.name == 'nt' else 'clear')
+    print("Checking for new submissions...")
     jira.getGcode()
     octoprint.eachNewFile()
     octoprint.PrintIsFinished()
@@ -45,13 +48,12 @@ def main():
     with open("config_files/config.yml", "r") as yamlfile:
         config = yaml.load(yamlfile, Loader=yaml.FullLoader)
 
-    print_loop()
+    print_loop(config['clearTerminal'])
     print("PRINT MONITORING SYSTEM LOOP STARTED")
-    schedule.every(config['updateRate']).minutes.do(print_loop)
+    schedule.every(config['updateRate']).minutes.do(print_loop, config['clearTerminal'])
 
     while 1:
         schedule.run_pending()
-        time.sleep(config['updateRate'])
 
 
 if __name__ == "__main__":

@@ -23,13 +23,10 @@ with open("config_files/keys.yml", "r") as yamlFile:
 auth = HTTPBasicAuth(config['jira_user'], config['jira_password'])
 
 
-def issueList():
+def get_issues():
     """
     Get the list of issues in the jira project
     """
-    if config['clearTerminal']:
-        os.system('cls' if os.name == 'nt' else 'clear')
-    print("Checking for new submissions...")
     url = config['base_url'] + "/rest/api/2/" + config['search_url']
     headers = {
         "Accept": "application/json"
@@ -54,7 +51,8 @@ def getGcode():
     """
     Gets the files and puts them where they need to be
     """
-    for issue in issueList():
+    issues = get_issues()
+    for issue in issues:
         issueId = issue.split("/")
         singleID = issueId[-1]
         url = issue
@@ -383,8 +381,6 @@ def askedForStatus():
     """
     When someone asks what their print status if we reply
     """
-    if config['clearTerminal']:
-        os.system('cls' if os.name == 'nt' else 'clear')
     print("Checking for status updates...")
     url = config['base_url'] + "/rest/api/2/" + config['printing_url']
     headers = {
