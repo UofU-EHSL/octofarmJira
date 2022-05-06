@@ -415,7 +415,10 @@ def askedForStatus():
 
         ticketID = url[url.find("issue/") + len("issue/"):url.rfind("")]
         singleIssue = json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
-        comment = singleIssue['fields']['comment']['comments'][-1]['body']
+        comments = singleIssue['fields']['comment']['comments']
+        comment = ''
+        if len(comments) > 0:
+            comment = comments[-1]['body']
         for trigger in config['requestUpdate']:
             if str(comment).find(trigger) != -1:
                 print(comment)
