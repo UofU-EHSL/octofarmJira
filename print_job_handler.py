@@ -22,14 +22,14 @@ def process_new_jobs():
     new_jobs = PrintJob.Get_All_By_Status(PrintStatus.NEW)
     for job in new_jobs:
         if config["use_naughty_list"] is True and job.user.black_listed:
-            pass  # TODO: Handle black list
+            pass  # TODO: Handle black list fail
         if config["use_nice_list"] is True and not job.user.white_listed:
-            pass  # TODO: Handle white list
+            pass  # TODO: Handle white list fail
         if job.permission_code:
             code_state = PermissionCode.Validate_Permission_Code(job.permission_code.code)
             if code_state != PermissionCodeStates.VALID:
                 pass  # TODO: Handle bad code
-
+    # TODO: Download gcode and parse
 
 
 def parse_gcode(gcode):
