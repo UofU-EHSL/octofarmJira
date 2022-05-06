@@ -4,8 +4,9 @@ import json
 import yaml
 from google_drive_downloader import GoogleDriveDownloader as gdd
 from classes.gcodeLine import GcodeLine
-from classes.printer import Printer
+from classes.printer import *
 from classes.permissionCode import *
+from classes.printJob import *
 import os
 import time
 from classes.enumDefinitions import *
@@ -43,8 +44,61 @@ def get_issues():
     openIssues = json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
     issues = []
     for issue in openIssues['issues']:
-        issues.append(issue['self'])
+        url = issue['self']
+        headers = {
+            "Accept": "application/json"
+        }
+        response = requests.request(
+            "GET",
+            url,
+            headers=headers,
+            auth=auth
+        )
+        if response.ok:
+            issues.append(response)
+        else:
+            print("Bad response from Jira on issue:", issue.split('/')[-1])
+
     return issues
+
+
+def parse_permission_code(description):
+    start = "*Class Key* \\\\"  # TODO: UPDATE TO PERMISSION CODE ONCE FORM CHANGES
+    end = "\n\n*Description of print*"
+    code = description[description.find(start) + len(start):description.rfind(end)]
+    return code if code else None
+
+
+def parse_gcode_url(issue):
+    attachments = issue['fields']['attachment']
+    if attachments:
+        return attachments[0]['self']
+
+    description = issue['fields']['description']
+    split = description.split('\\\\')
+    for s in split:
+        if s.startswith('https'):
+            url = s[:s.rfind('\n\n')]
+            return url
+
+    return None
+
+
+@db_session
+def get_new_print_jobs():
+    new_issues = get_issues()
+    new_print_jobs = []
+    for issue in new_issues:
+        parsed_issue = json.loads(issue.text)
+        job_id = parsed_issue['id']
+        job_name = parsed_issue['key']
+        patron_id = parsed_issue['fields']['reporter']['name']
+        permission_code = parse_permission_code(parsed_issue['fields']['description'])
+        gcode_url = parse_gcode_url(parsed_issue)
+
+        new_print_jobs.append(PrintJob(job_id=job_id, job_name=job_name, print_status=PrintStatus.NEW.name, patron_id=patron_id, permission_code=permission_code, gcode_url=gcode_url))
+    commit()
+    return new_print_jobs
 
 
 def getGcode():

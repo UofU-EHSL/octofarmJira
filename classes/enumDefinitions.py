@@ -64,16 +64,27 @@ class GcodeCheckActions(Enum):
 
 
 class PrintStatus(Enum):
+    NEW = auto()
+    """Job has not been validated."""
     IN_QUEUE = auto()
+    """Job is waiting for printer."""
     PRINTING = auto()
+    """Currently Printing or waiting to be cleared."""
     FINISHED = auto()
+    """Print has been completed and patron notified."""
     CANCELLED = auto()
+    """Job cancelled for some reason."""
     FAILED = auto()
+    """Print failed and was not completed."""
 
 
 class PaymentStatus(Enum):
+    PRINTING = auto()
+    """Job has not been completed"""
     NEEDS_PAYMENT_LINK = auto()
+    """Job has been finished but payment link has not been generated."""
     WAITING_FOR_PAYMENT = auto()
+    """Payment link has been generated but not paid."""
     PAID = auto()
 
 

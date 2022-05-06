@@ -6,6 +6,7 @@ import yaml
 from classes.printer import *
 from classes.permissionCode import *
 from classes.printJob import *
+import print_job_handler
 
 
 def drop_and_create_db():
@@ -33,17 +34,21 @@ def print_loop(clearTerminal):
     if clearTerminal:
         os.system('cls' if os.name == 'nt' else 'clear')
     print("Checking for new submissions...")
-    jira.getGcode()
+    jira.get_new_print_jobs()
+    print_job_handler.process_new_jobs()
     octoprint.eachNewFile()
     octoprint.PrintIsFinished()
     jira.askedForStatus()
 
 
 def main():
-    set_sql_debug(False)  # Shows the SQL queries pony is running in the console.
+    set_sql_debug(True)  # Shows the SQL queries pony is running in the console.
     db.bind(provider='sqlite', filename='octofarmJira_database.sqlite', create_db=True)  # Establish DB connection.
     # db.generate_mapping(create_tables=True)
     drop_and_create_db()
+
+    new_jobs = jira.get_new_print_jobs()
+    print_job_handler.process_new_jobs()
 
     with open("config_files/config.yml", "r") as yamlfile:
         config = yaml.load(yamlfile, Loader=yaml.FullLoader)
