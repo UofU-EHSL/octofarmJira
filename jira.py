@@ -66,8 +66,9 @@ def get_issues():
 def parse_permission_code(description):
     start = "*Class Key* \\\\"  # TODO: UPDATE TO PERMISSION CODE ONCE FORM CHANGES
     end = "\n\n*Description of print*"
-    code = description[description.find(start) + len(start):description.rfind(end)]
-    return code if code else None
+    code_string = description[description.find(start) + len(start):description.rfind(end)]
+    code = PermissionCode.get(code=code_string)
+    return code.id if code is not None else None
 
 
 def parse_gcode_url(issue):
@@ -95,10 +96,10 @@ def get_new_print_jobs():
         job_name = parsed_issue['key']
         user_id = parsed_issue['fields']['reporter']['name']
         user = User.Get_Or_Create(user_id)
-        permission_code = parse_permission_code(parsed_issue['fields']['description'])
+        permission_code_id = parse_permission_code(parsed_issue['fields']['description'])
         gcode_url = parse_gcode_url(parsed_issue)
 
-        new_print_jobs.append(PrintJob(job_id=job_id, job_name=job_name, print_status=PrintStatus.NEW.name, user=user.id, permission_code=permission_code, gcode_url=gcode_url))
+        new_print_jobs.append(PrintJob(job_id=job_id, job_name=job_name, print_status=PrintStatus.NEW.name, user=user.id, permission_code=permission_code_id, gcode_url=gcode_url))
     commit()
     return new_print_jobs
 
