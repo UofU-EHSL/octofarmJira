@@ -6,6 +6,7 @@ import yaml
 from classes.printer import *
 from classes.permissionCode import *
 from classes.printJob import *
+from classes.user import *
 import print_job_handler
 
 

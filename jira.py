@@ -7,6 +7,7 @@ from classes.gcodeLine import GcodeLine
 from classes.printer import *
 from classes.permissionCode import *
 from classes.printJob import *
+from classes.user import *
 import os
 import time
 from classes.enumDefinitions import *
@@ -92,11 +93,12 @@ def get_new_print_jobs():
         parsed_issue = json.loads(issue.text)
         job_id = parsed_issue['id']
         job_name = parsed_issue['key']
-        patron_id = parsed_issue['fields']['reporter']['name']
+        user_id = parsed_issue['fields']['reporter']['name']
+        user = User.Get_Or_Create(user_id)
         permission_code = parse_permission_code(parsed_issue['fields']['description'])
         gcode_url = parse_gcode_url(parsed_issue)
 
-        new_print_jobs.append(PrintJob(job_id=job_id, job_name=job_name, print_status=PrintStatus.NEW.name, patron_id=patron_id, permission_code=permission_code, gcode_url=gcode_url))
+        new_print_jobs.append(PrintJob(job_id=job_id, job_name=job_name, print_status=PrintStatus.NEW.name, user=user.id, permission_code=permission_code, gcode_url=gcode_url))
     commit()
     return new_print_jobs
 
