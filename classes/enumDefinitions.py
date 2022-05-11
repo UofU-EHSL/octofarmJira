@@ -68,6 +68,8 @@ class PrintStatus(Enum):
     """Job has not been validated."""
     IN_QUEUE = auto()
     """Job is waiting for printer."""
+    MANUAL_PRINT = auto()
+    """Job needs human intervention."""
     PRINTING = auto()
     """Currently Printing or waiting to be cleared."""
     FINISHED = auto()
