@@ -91,7 +91,7 @@ def parse_gcode_url(issue):
             url = s[:s.rfind('\n\n')]
             return url
 
-    return None
+    return ''
 
 
 @db_session

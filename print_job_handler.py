@@ -24,11 +24,13 @@ with open("config_files/config.yml", "r") as yamlFile:
 def process_new_jobs():
     new_jobs = PrintJob.Get_All_By_Status(PrintStatus.NEW)
     for job in new_jobs:
-        if config["use_naughty_list"] is True and job.user.black_listed:
+        if not job.gcode_url:
+            handle_job_failure(job, MessageNames.NO_FILE_ATTACHED)
+        elif config["use_naughty_list"] is True and job.user.black_listed:
             handle_job_failure(job, MessageNames.BLACK_LIST_FAIL)
-        if config["use_nice_list"] is True and not job.user.white_listed:
+        elif config["use_nice_list"] is True and not job.user.white_listed:
             handle_job_failure(job, MessageNames.WHITE_LIST_FAIL)
-        if job.permission_code:
+        elif job.permission_code:
             code_state = PermissionCode.Validate_Permission_Code(job.permission_code.code)
             if code_state == PermissionCodeStates.INVALID:
                 handle_job_failure(job, MessageNames.PERMISSION_CODE_INVALID)
