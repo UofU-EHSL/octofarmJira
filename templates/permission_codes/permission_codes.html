@@ -29,10 +29,10 @@
                     {% if code.id != 1 %}
                         <td><button id="edit{{code.id }}" type="button" onclick="editPermissionCode({{ code.id }})" class="btn btn-outline-primary">Edit</button></td>
                         <td><button id="delete{{code.id }}" type="button" onclick="deletePermissionCode({{ code.id }})" class="btn btn-outline-danger">Delete</button></td>
-                    {% endif %} }
-                        <td></td>
-                        <td></td>
                     {% else %}
+                        <td></td>
+                        <td></td>
+                    {% endif %}
                 </tr>
             {% endfor %}
         </tbody>
