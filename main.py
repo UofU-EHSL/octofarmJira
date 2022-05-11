@@ -5,6 +5,7 @@ import octoprint
 import yaml
 from classes.printer import *
 from classes.permissionCode import *
+from classes.message import *
 from classes.printJob import *
 from classes.user import *
 import print_job_handler
@@ -29,6 +30,13 @@ def drop_and_create_db():
         pc5 = PermissionCode(name='Test5', code='abcdefgh', description='End Tomorrow', end_date=datetime.date.today() + datetime.timedelta(days=1))
         pc6 = PermissionCode(name='Test6', code='abcdefghi', description='Both dates valid', start_date=datetime.date.today() - datetime.timedelta(days=1), end_date=datetime.date.today() + datetime.timedelta(days=1))
         pc6 = PermissionCode(name='Test7', code='abcdefghij', description='Both dates not valid', start_date=datetime.date.today() - datetime.timedelta(days=2), end_date=datetime.date.today() - datetime.timedelta(days=1))
+
+        m1 = Message(name='black_list_fail', text='You have been blocked from using this service. Contact us for more information.')
+        m2 = Message(name='white_list_fail', text='You are currently not permitted to use this service. Must complete course at: <Insert_Course_URL>')
+        m3 = Message(name='no_file_attached', text='There is not a file attached to this submission!')
+        m4 = Message(name='permission_code_invalid', text='The permission code you used does not exist. Please verify your code and submit again.')
+        m5 = Message(name='permission_code_expired', text='The permission code you used is expired.')
+        m6 = Message(name='permission_code_not_yet_active', text='The permission code you used is not yet active.')
 
 
 def print_loop(clearTerminal):

@@ -4,6 +4,7 @@ import os
 import flask
 from classes.printer import *
 from classes.permissionCode import *
+from classes.message import *
 from classes.printJob import *
 from classes.user import *
 from pony.flask import Pony
@@ -238,6 +239,56 @@ def edit_permission_code_post(code_id):
         form_data = request.form
         code = PermissionCode[code_id]
         PermissionCode.Map_Request(code, form_data)
+        commit()
+        return {'status': 'success'}
+    except:
+        return {'status': 'failed'}
+
+
+@app.route('/messages')
+def messages():
+    all_messages = Message.Get_All()
+    return flask.render_template('messages/messages.html', messages=all_messages, async_mode=socketio.async_mode, ip=flask.request.host)
+
+
+@app.route('/messages/deleteMessage/<message_id>', methods=['POST'])
+def delete_message(message_id):
+    try:
+        Message[message_id].delete()
+        commit()
+        return {'status': 'success'}
+    except:
+        return {'status': 'failed'}
+
+
+@app.route('/messages/createMessage', methods=['GET'])
+def create_message_get():
+    return flask.render_template('messages/create_message.html', async_mode=socketio.async_mode, ip=flask.request.host)
+
+
+@app.route('/messages/createMessage', methods=['POST'])
+def create_message_post():
+    try:
+        form_data = request.form
+        Message.Add_From_Request(form_data)
+        commit()
+        return {'status': 'success'}
+    except:
+        return {'status': 'failed'}
+
+
+@app.route('/messages/editMessage/<message_id>', methods=['GET'])
+def edit_message_get(message_id):
+    message = Message[message_id]
+    return flask.render_template('messages/edit_message.html', message=message, async_mode=socketio.async_mode, ip=flask.request.host)
+
+
+@app.route('/messages/editMessage/<message_id>', methods=['POST'])
+def edit_message_post(message_id):
+    try:
+        form_data = request.form
+        message = Message[message_id]
+        Message.Map_Request(message, form_data)
         commit()
         return {'status': 'success'}
     except:
