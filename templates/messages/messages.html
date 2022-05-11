@@ -26,6 +26,13 @@
             {% endfor %}
         </tbody>
     </table>
+    <hr>
+    <p>Message names expected:</p>
+    <ul>
+        {%  for message_name in message_names %}
+            <li>{{ message_name }}</li>
+        {% endfor %}
+    </ul>
 
     <script>
     const deleteMessage = function(message_id) {

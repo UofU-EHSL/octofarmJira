@@ -2,7 +2,7 @@ from classes.user import *
 
 
 class Message(db.Entity):
-    name = Required(str)
+    name = Required(str, unique=True)
     text = Required(str)
 
 

@@ -31,12 +31,12 @@ def drop_and_create_db():
         pc6 = PermissionCode(name='Test6', code='abcdefghi', description='Both dates valid', start_date=datetime.date.today() - datetime.timedelta(days=1), end_date=datetime.date.today() + datetime.timedelta(days=1))
         pc6 = PermissionCode(name='Test7', code='abcdefghij', description='Both dates not valid', start_date=datetime.date.today() - datetime.timedelta(days=2), end_date=datetime.date.today() - datetime.timedelta(days=1))
 
-        m1 = Message(name='black_list_fail', text='You have been blocked from using this service. Contact us for more information.')
-        m2 = Message(name='white_list_fail', text='You are currently not permitted to use this service. Must complete course at: <Insert_Course_URL>')
-        m3 = Message(name='no_file_attached', text='There is not a file attached to this submission!')
-        m4 = Message(name='permission_code_invalid', text='The permission code you used does not exist. Please verify your code and submit again.')
-        m5 = Message(name='permission_code_expired', text='The permission code you used is expired.')
-        m6 = Message(name='permission_code_not_yet_active', text='The permission code you used is not yet active.')
+        m1 = Message(name='BLACK_LIST_FAIL', text='You have been blocked from using this service. Contact us for more information.')
+        m2 = Message(name='WHITE_LIST_FAIL', text='You are currently not permitted to use this service. Must complete course at: <Insert_Course_URL>')
+        m3 = Message(name='NO_FILE_ATTACHED', text='There is not a file attached to this submission!')
+        m4 = Message(name='PERMISSION_CODE_INVALID', text='The permission code you used does not exist. Please verify your code and submit again.')
+        m5 = Message(name='PERMISSION_CODE_EXPIRED', text='The permission code you used is expired.')
+        m6 = Message(name='PERMISSION_CODE_NOT_YET_ACTIVE', text='The permission code you used is not yet active.')
 
 
 def print_loop(clearTerminal):

@@ -248,7 +248,8 @@ def edit_permission_code_post(code_id):
 @app.route('/messages')
 def messages():
     all_messages = Message.Get_All()
-    return flask.render_template('messages/messages.html', messages=all_messages, async_mode=socketio.async_mode, ip=flask.request.host)
+    message_names = get_dict(MessageNames)
+    return flask.render_template('messages/messages.html', messages=all_messages, message_names=message_names, async_mode=socketio.async_mode, ip=flask.request.host)
 
 
 @app.route('/messages/deleteMessage/<message_id>', methods=['POST'])

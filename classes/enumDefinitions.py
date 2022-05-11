@@ -90,6 +90,14 @@ class PaymentStatus(Enum):
     PAID = auto()
 
 
+class MessageNames(Enum):
+    WHITE_LIST_FAIL = auto()
+    BLACK_LIST_FAIL = auto()
+    PERMISSION_CODE_INVALID = auto()
+    PERMISSION_CODE_EXPIRED = auto()
+    PERMISSION_CODE_NOT_YET_ACTIVE = auto()
+
+
 def get_dict(enum_type):
     result = {}
     for x in enum_type:
