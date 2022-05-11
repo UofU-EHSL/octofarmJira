@@ -24,20 +24,29 @@ with open("config_files/config.yml", "r") as yamlFile:
 def process_new_jobs():
     new_jobs = PrintJob.Get_All_By_Status(PrintStatus.NEW)
     for job in new_jobs:
-        if not job.gcode_url:
+        if not job.gcode_url:  # If there is no gcode_url, no files were attached.
             handle_job_failure(job, MessageNames.NO_FILE_ATTACHED)
+            continue
+
         elif config["use_naughty_list"] is True and job.user.black_listed:
             handle_job_failure(job, MessageNames.BLACK_LIST_FAIL)
+            continue
+
         elif config["use_nice_list"] is True and not job.user.white_listed:
             handle_job_failure(job, MessageNames.WHITE_LIST_FAIL)
-        elif job.permission_code:
+            continue
+
+        elif job.permission_code:  # If there is a permission code, validate it.
             code_state = PermissionCode.Validate_Permission_Code(job.permission_code.code)
             if code_state == PermissionCodeStates.INVALID:
                 handle_job_failure(job, MessageNames.PERMISSION_CODE_INVALID)
+                continue
             elif code_state == PermissionCodeStates.EXPIRED:
                 handle_job_failure(job, MessageNames.PERMISSION_CODE_EXPIRED)
+                continue
             elif code_state == PermissionCodeStates.NOT_YET_ACTIVE:
                 handle_job_failure(job, MessageNames.PERMISSION_CODE_NOT_YET_ACTIVE)
+                continue
 
     # TODO: Download gcode and parse
 
@@ -52,7 +61,6 @@ def handle_job_failure(job, message_name):
         print("Suggest adding it in the admin panel.")
     job.print_status = PrintStatus.CANCELLED.name
     commit()
-
 
 
 def parse_gcode(gcode):
