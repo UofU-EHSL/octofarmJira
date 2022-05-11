@@ -204,7 +204,7 @@ def permissionCodes():
 @app.route('/permissionCodes/deletePermissionCode/<code_id>', methods=['POST'])
 def delete_permission_code(code_id):
     try:
-        if code_id == 1:
+        if code_id == 1:  # ID 1 is always invalid code.
             return {'status': 'failed'}
         PermissionCode[code_id].delete()
         commit()
@@ -238,6 +238,8 @@ def edit_permission_code_get(code_id):
 @app.route('/permissionCodes/editPermissionCode/<code_id>', methods=['POST'])
 def edit_permission_code_post(code_id):
     try:
+        if code_id == 1:  # ID 1 is always invalid code.
+            return {'status': 'failed'}
         form_data = request.form
         code = PermissionCode[code_id]
         PermissionCode.Map_Request(code, form_data)
