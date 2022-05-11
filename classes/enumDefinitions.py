@@ -96,6 +96,7 @@ class MessageNames(Enum):
     PERMISSION_CODE_INVALID = auto()
     PERMISSION_CODE_EXPIRED = auto()
     PERMISSION_CODE_NOT_YET_ACTIVE = auto()
+    NO_FILE_ATTACHED = auto()
 
 
 def get_dict(enum_type):

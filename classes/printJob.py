@@ -23,6 +23,8 @@ class PrintJob(db.Entity):
     """PrintStatus Enum"""
     payment_status = Optional(str)
     """PaymentStatus Enum"""
+    failure_message = Optional('Message')
+    """MessageNames Enum"""
 
     @staticmethod
     @db_session

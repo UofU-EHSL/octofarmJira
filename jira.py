@@ -347,18 +347,13 @@ def printIsNoGo(singleIssue, singleID):
         changeStatus(singleID, JiraTransitionCodes.STOP_PROGRESS)
 
 
-def send_fail_message(job_id, message_name):
+def send_fail_message(job_id, message_text):
     """
     Comments on a ticket with the provided message and stops the progress on the ticket.
     """
-    message = Message.get(name=message_name)
-    if message:
-        commentStatus(job_id, message.text)
-        changeStatus(job_id, JiraTransitionCodes.START_PROGRESS)
-        changeStatus(job_id, JiraTransitionCodes.STOP_PROGRESS)
-    else:
-        print("No message found for:", message_name)
-        print("Suggest adding it in the admin panel.")
+    commentStatus(job_id, message_text)
+    changeStatus(job_id, JiraTransitionCodes.START_PROGRESS)
+    changeStatus(job_id, JiraTransitionCodes.STOP_PROGRESS)
 
 
 def printIsGoodToGo(singleIssue, singleID):

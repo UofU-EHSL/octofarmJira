@@ -8,6 +8,7 @@ import jira
 from classes.gcodeLine import GcodeLine
 from classes.printer import *
 from classes.permissionCode import *
+from classes.message import *
 from classes.printJob import *
 import os
 import time
@@ -24,19 +25,32 @@ def process_new_jobs():
     new_jobs = PrintJob.Get_All_By_Status(PrintStatus.NEW)
     for job in new_jobs:
         if config["use_naughty_list"] is True and job.user.black_listed:
-            jira.send_fail_message(job.job_id, MessageNames.BLACK_LIST_FAIL)
+            handle_job_failure(job, MessageNames.BLACK_LIST_FAIL)
         if config["use_nice_list"] is True and not job.user.white_listed:
-            jira.send_fail_message(job.job_id, MessageNames.WHITE_LIST_FAIL)
+            handle_job_failure(job, MessageNames.WHITE_LIST_FAIL)
         if job.permission_code:
             code_state = PermissionCode.Validate_Permission_Code(job.permission_code.code)
             if code_state == PermissionCodeStates.INVALID:
-                jira.send_fail_message(job.job_id, MessageNames.PERMISSION_CODE_INVALID)
+                handle_job_failure(job, MessageNames.PERMISSION_CODE_INVALID)
             elif code_state == PermissionCodeStates.EXPIRED:
-                jira.send_fail_message(job.job_id, MessageNames.PERMISSION_CODE_EXPIRED)
+                handle_job_failure(job, MessageNames.PERMISSION_CODE_EXPIRED)
             elif code_state == PermissionCodeStates.NOT_YET_ACTIVE:
-                jira.send_fail_message(job.job_id, MessageNames.PERMISSION_CODE_NOT_YET_ACTIVE)
+                handle_job_failure(job, MessageNames.PERMISSION_CODE_NOT_YET_ACTIVE)
 
     # TODO: Download gcode and parse
+
+
+def handle_job_failure(job, message_name):
+    message = Message.get(name=message_name.name)
+    if message:
+        job.failure_message = message.id
+        jira.send_fail_message(job.job_id, message_name)
+    else:
+        print("No message found for:", message_name)
+        print("Suggest adding it in the admin panel.")
+    job.print_status = PrintStatus.CANCELLED.name
+    commit()
+
 
 
 def parse_gcode(gcode):
