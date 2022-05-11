@@ -86,6 +86,8 @@ class PermissionCode(db.Entity):
         """
         Checks if a given permission code is valid.
         """
+        if code == 'INVALID':  # ID 1 is always invalid.
+            return PermissionCodeStates.INVALID
         all_codes = PermissionCode.Get_All()
         today = datetime.date.today()
         for c in all_codes:

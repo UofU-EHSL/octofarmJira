@@ -204,6 +204,8 @@ def permissionCodes():
 @app.route('/permissionCodes/deletePermissionCode/<code_id>', methods=['POST'])
 def delete_permission_code(code_id):
     try:
+        if code_id == 1:
+            return {'status': 'failed'}
         PermissionCode[code_id].delete()
         commit()
         return {'status': 'success'}

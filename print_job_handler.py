@@ -44,7 +44,7 @@ def handle_job_failure(job, message_name):
     message = Message.get(name=message_name.name)
     if message:
         job.failure_message = message.id
-        jira.send_fail_message(job.job_id, message_name)
+        jira.send_fail_message(job.job_id, message.text)
     else:
         print("No message found for:", message_name)
         print("Suggest adding it in the admin panel.")

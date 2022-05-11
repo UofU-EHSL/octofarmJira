@@ -3,6 +3,8 @@ from requests.auth import HTTPBasicAuth
 import json
 import yaml
 from google_drive_downloader import GoogleDriveDownloader as gdd
+
+import print_job_handler
 from classes.gcodeLine import GcodeLine
 from classes.printer import *
 from classes.permissionCode import *
@@ -68,8 +70,13 @@ def parse_permission_code(description):
     start = "*Class Key* \\\\"  # TODO: UPDATE TO PERMISSION CODE ONCE FORM CHANGES
     end = "\n\n*Description of print*"
     code_string = description[description.find(start) + len(start):description.rfind(end)]
-    code = PermissionCode.get(code=code_string)  # TODO: Handle invalid codes if they don't exist. Currently just processes the job as if there were no code.
-    return code.id if code is not None else None
+    if code_string:
+        code = PermissionCode.get(code=code_string)
+        if code:
+            return code.id
+        else:
+            return 1  # Permission code ID 1 is an invalid code.
+    return None
 
 
 def parse_gcode_url(issue):
@@ -89,11 +96,20 @@ def parse_gcode_url(issue):
 
 @db_session
 def get_new_print_jobs():
+    # Get the IDs of issues that are new and have not been processed to ensure we don't add duplicates
+    existing_issues = PrintJob.Get_All_By_Status(PrintStatus.NEW)
+    existing_ids = []
+    if existing_issues:
+        for issue in existing_issues:
+            existing_ids.append(issue.job_id)
+
     new_issues = get_issues()
     new_print_jobs = []
     for issue in new_issues:
         parsed_issue = json.loads(issue.text)
         job_id = parsed_issue['id']
+        if int(job_id) in existing_ids:
+            continue
         job_name = parsed_issue['key']
         user_id = parsed_issue['fields']['reporter']['name']
         user_name = parsed_issue['fields']['reporter']['displayName']
@@ -384,25 +400,24 @@ def printIsGoodToGo(singleIssue, singleID):
         changeStatus(singleID, JiraTransitionCodes.STOP_PROGRESS)
 
 
-def changeStatus(singleID, transitionCode):
+def changeStatus(job_id, transitionCode):
     """
     Changes status of issue in Jira.
     See enumDefinitions JiraTransitionCodes for codes.
     """
-    simple_singleID = singleID.rsplit('__', 1)[-1]
-    url = config['base_url'] + "/rest/api/2/issue/" + simple_singleID + "/transitions"
+    url = config['base_url'] + "/rest/api/2/issue/" + str(job_id) + "/transitions"
     headers = {
         "Content-type": "application/json",
         "Accept": "application/json"
     }
     data = {
-        "update": {
-            "comment": [{
-                "add": {
-                    "body": "The ticket is resolved"
-                }
-            }]
-        },
+        # "update": {
+        #     "comment": [{
+        #         "add": {
+        #             "body": "The ticket is resolved"
+        #         }
+        #     }]
+        # },
         "transition": {
             "id": str(transitionCode.value)
         }
@@ -417,7 +432,7 @@ def changeStatus(singleID, transitionCode):
     )
 
 
-def commentStatus(singleID, comment):
+def commentStatus(job_id, comment):
     """
     a simple function call to be used whenever you want to comment on a ticket
     """
@@ -425,8 +440,7 @@ def commentStatus(singleID, comment):
     if not comment:
         return
 
-    simple_singleID = singleID.rsplit('__', 1)[-1]
-    url = config['base_url'] + "/rest/api/2/issue/" + simple_singleID + "/comment"
+    url = config['base_url'] + "/rest/api/2/issue/" + str(job_id) + "/comment"
     headers = {
         "Accept": "application/json",
         "Content-Type": "application/json"
