@@ -6,6 +6,7 @@ from google_drive_downloader import GoogleDriveDownloader as gdd
 from classes.gcodeLine import GcodeLine
 from classes.printer import *
 from classes.permissionCode import *
+from classes.message import *
 from classes.printJob import *
 from classes.user import *
 import os
@@ -344,6 +345,20 @@ def printIsNoGo(singleIssue, singleID):
         )
         changeStatus(singleID, JiraTransitionCodes.START_PROGRESS)
         changeStatus(singleID, JiraTransitionCodes.STOP_PROGRESS)
+
+
+def send_fail_message(job_id, message_name):
+    """
+    Comments on a ticket with the provided message and stops the progress on the ticket.
+    """
+    message = Message.get(name=message_name)
+    if message:
+        commentStatus(job_id, message.text)
+        changeStatus(job_id, JiraTransitionCodes.START_PROGRESS)
+        changeStatus(job_id, JiraTransitionCodes.STOP_PROGRESS)
+    else:
+        print("No message found for:", message_name)
+        print("Suggest adding it in the admin panel.")
 
 
 def printIsGoodToGo(singleIssue, singleID):

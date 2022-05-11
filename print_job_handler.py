@@ -3,6 +3,8 @@ from requests.auth import HTTPBasicAuth
 import json
 import yaml
 from google_drive_downloader import GoogleDriveDownloader as gdd
+
+import jira
 from classes.gcodeLine import GcodeLine
 from classes.printer import *
 from classes.permissionCode import *
@@ -22,13 +24,18 @@ def process_new_jobs():
     new_jobs = PrintJob.Get_All_By_Status(PrintStatus.NEW)
     for job in new_jobs:
         if config["use_naughty_list"] is True and job.user.black_listed:
-            pass  # TODO: Handle black list fail
+            jira.send_fail_message(job.job_id, MessageNames.BLACK_LIST_FAIL)
         if config["use_nice_list"] is True and not job.user.white_listed:
-            pass  # TODO: Handle white list fail
+            jira.send_fail_message(job.job_id, MessageNames.WHITE_LIST_FAIL)
         if job.permission_code:
             code_state = PermissionCode.Validate_Permission_Code(job.permission_code.code)
-            if code_state != PermissionCodeStates.VALID:
-                pass  # TODO: Handle bad code
+            if code_state == PermissionCodeStates.INVALID:
+                jira.send_fail_message(job.job_id, MessageNames.PERMISSION_CODE_INVALID)
+            elif code_state == PermissionCodeStates.EXPIRED:
+                jira.send_fail_message(job.job_id, MessageNames.PERMISSION_CODE_EXPIRED)
+            elif code_state == PermissionCodeStates.NOT_YET_ACTIVE:
+                jira.send_fail_message(job.job_id, MessageNames.PERMISSION_CODE_NOT_YET_ACTIVE)
+
     # TODO: Download gcode and parse
 
 
