@@ -90,6 +90,12 @@ class PaymentStatus(Enum):
     PAID = auto()
 
 
+class UrlTypes(Enum):
+    UNKNOWN = auto()
+    JIRA_ATTACHMENT = auto()
+    GOOGLE_DRIVE = auto()
+
+
 class MessageNames(Enum):
     WHITE_LIST_FAIL = auto()
     BLACK_LIST_FAIL = auto()

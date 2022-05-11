@@ -48,7 +48,27 @@ def process_new_jobs():
                 handle_job_failure(job, MessageNames.PERMISSION_CODE_NOT_YET_ACTIVE)
                 continue
 
-    # TODO: Download gcode and parse
+        gcode = download_gcode(job)
+
+        # How to remove file
+        # if os.path.exists("jiradownloads/" + singleID + ".gcode"):
+        #     os.remove("jiradownloads/" + singleID + ".gcode")
+
+
+def download_gcode(job):
+    if job.url_type == UrlTypes.JIRA_ATTACHMENT.name:
+        jira.download(job)
+    elif job.url_type == UrlTypes.GOOGLE_DRIVE.name:
+        downloadGoogleDrive(job)
+    elif job.url_type == UrlTypes.UNKNOWN.name:
+        return "ERROR"
+
+
+def downloadGoogleDrive(job):
+    """
+    if the jira project has a Google Drive link in the description download it
+    """
+    # gdd.download_file_from_google_drive(file_id=file_ID, dest_path=job.Get_File_Name)
 
 
 def handle_job_failure(job, message_name):

@@ -82,14 +82,17 @@ def parse_permission_code(description):
 def parse_gcode_url(issue):
     attachments = issue['fields']['attachment']
     if attachments:
-        return attachments[0]['self']
+        return attachments[0]['self'], UrlTypes.JIRA_ATTACHMENT
 
     description = issue['fields']['description']
     split = description.split('\\\\')
     for s in split:
         if s.startswith('https'):
             url = s[:s.rfind('\n\n')]
-            return url
+            if "drive.google.com" in url:
+                return url, UrlTypes.GOOGLE_DRIVE
+            else:
+                return url, UrlTypes.UNKNOWN
 
     return ''
 
@@ -115,41 +118,17 @@ def get_new_print_jobs():
         user_name = parsed_issue['fields']['reporter']['displayName']
         user = User.Get_Or_Create(user_id, user_name)
         permission_code_id = parse_permission_code(parsed_issue['fields']['description'])
-        gcode_url = parse_gcode_url(parsed_issue)
+        gcode_url, url_type = parse_gcode_url(parsed_issue)
 
-        new_print_jobs.append(PrintJob(job_id=job_id, job_name=job_name, print_status=PrintStatus.NEW.name, user=user.id, permission_code=permission_code_id, gcode_url=gcode_url))
+        new_print_jobs.append(PrintJob(job_id=job_id, job_name=job_name, print_status=PrintStatus.NEW.name, user=user.id, permission_code=permission_code_id, gcode_url=gcode_url, url_type=url_type.name))
     commit()
     return new_print_jobs
 
 
-def downloadGoogleDrive(file_ID, singleID):
-    """
-    if the jira project has a Google Drive link in the description download it
-    """
-    if config['Make_files_anon'] is True:
-        gdd.download_file_from_google_drive(file_id=file_ID, dest_path="jiradownloads/" + singleID + ".gcode")
-        file = open("jiradownloads/" + singleID + ".gcode", "r")
-    else:
-        gdd.download_file_from_google_drive(file_id=file_ID, dest_path="jiradownloads/" + file_ID + "__" + singleID + ".gcode")
-        file = open("jiradownloads/" + file_ID + "__" + singleID + ".gcode", "r")
-
-    if check_gcode(file) == GcodeStates.INVALID:
-        commentStatus(singleID, config['messages']['wrongConfig'])
-        changeStatus(singleID, JiraTransitionCodes.START_PROGRESS)
-        changeStatus(singleID, JiraTransitionCodes.READY_FOR_REVIEW)
-        changeStatus(singleID, JiraTransitionCodes.REJECT)
-        if os.path.exists("jiradownloads/" + singleID + ".gcode"):
-            os.remove("jiradownloads/" + singleID + ".gcode")
-    else:
-        changeStatus(singleID, JiraTransitionCodes.START_PROGRESS)
-        commentStatus(singleID, config['messages']['downloadedFile'])
-
-
-def download(gcode, singleID, filename):
+def download(job):
     """
     Downloads the files that getGcode wants
     """
-    url = gcode
 
     headers = {
         "Accept": "application/json"
@@ -157,25 +136,13 @@ def download(gcode, singleID, filename):
 
     response = requests.request(
         "GET",
-        url,
+        job.gcode_url,
         headers=headers,
         auth=auth
     )
-    checkResult, validatedGcode = check_gcode(response.text)
-    if checkResult is GcodeStates.INVALID:
-        commentStatus(singleID, config['messages']['wrongConfig'])
-        changeStatus(singleID, JiraTransitionCodes.START_PROGRESS)
-        changeStatus(singleID, JiraTransitionCodes.READY_FOR_REVIEW)
-        changeStatus(singleID, JiraTransitionCodes.REJECT)
-    else:
-        if config['Make_files_anon'] is True:
-            text_file = open("jiradownloads/" + singleID + ".gcode", "w")
-        else:
-            text_file = open("jiradownloads/" + filename + "__" + singleID + ".gcode", "w")
-        n = text_file.write(validatedGcode)
-        text_file.close()
-        changeStatus(singleID, JiraTransitionCodes.START_PROGRESS)
-        commentStatus(singleID, config['messages']['downloadedFile'])
+    text_file = open("jiradownloads/" + job.Get_File_Name() + ".gcode", "w")
+    n = text_file.write(response.text)
+    text_file.close()
 
 
 def printIsNoGo(singleIssue, singleID):

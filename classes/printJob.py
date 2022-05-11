@@ -18,6 +18,8 @@ class PrintJob(db.Entity):
     payment_link = Optional(str)
     weight = Optional(float)
     cost = Optional(float)
+    url_type = Optional(str)
+    """UrlTypes Enum"""
     gcode_url = Optional(str)
     print_status = Required(str)
     """PrintStatus Enum"""
@@ -25,6 +27,16 @@ class PrintJob(db.Entity):
     """PaymentStatus Enum"""
     failure_message = Optional('Message')
     """MessageNames Enum"""
+
+    def Get_File_Name(self):
+        if self.job_name:
+            name = str(self.job_id) + '__' + self.job_name
+        else:
+            name = str(self.job_id)
+        if self.url_type == UrlTypes.JIRA_ATTACHMENT:
+            return "jiradownloads/" + name + ".gcode"
+        elif self.url_type == UrlTypes.GOOGLE_DRIVE:
+            return "drivedownloads/" + name + ".gcode"
 
     @staticmethod
     @db_session
