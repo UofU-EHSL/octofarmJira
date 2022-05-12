@@ -4,6 +4,7 @@ import yaml
 import jira
 from classes.enumDefinitions import JiraTransitionCodes
 from classes.printer import Printer
+from classes.printJob import *
 import os
 import time
 from datetime import datetime
@@ -12,32 +13,88 @@ from datetime import datetime
 with open("config_files/config.yml", "r") as yamlFile:
     config = yaml.load(yamlFile, Loader=yaml.FullLoader)
 
+@db_session
+def start_queued_jobs():
+    queued_jobs = PrintJob.Get_All_By_Status(PrintStatus.IN_QUEUE)
+    if len(queued_jobs) == 0:
+        return
+    printers_by_count = Printer.Get_All_Print_Counts()
+    for printer in printers_by_count:
+        # printer is a tuple: (printer, <print_count>)
+        if len(queued_jobs) == 0:
+            break
+        if check_printer_available(printer[0]):
+            start_print_job(queued_jobs.pop(0), printer[0])
 
-def TryPrintingFile(file):
-    """
-    This will look at the prints we have waiting and see if a printer is open for it
-    """
-    printers = Printer.Get_All_Enabled()
-    for printer in printers:
-        url = "http://" + printer.ip + "/api/job"
 
-        headers = {
-            "Accept": "application/json",
-            "Host": printer.ip,
-            "X-Api-Key": printer.api_key
-        }
-        try:
-            response = requests.request(
-                "GET",
-                url,
-                headers=headers
-            )
-            status = json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
-            if str(status['state']) == "Operational" and str(status['progress']['completion']) != "100.0":
-                uploadFileToPrinter(printer.api_key, printer.ip, file)
-                return
-        except requests.exceptions.RequestException as e:  # This is the correct syntax
-            print("Skipping " + printer.name + " due to network error")
+def check_printer_available(printer):
+    url = "http://" + printer.ip + "/api/job"
+
+    headers = {
+        "Accept": "application/json",
+        "Host": printer.ip,
+        "X-Api-Key": printer.api_key
+    }
+    try:
+        response = requests.request(
+            "GET",
+            url,
+            headers=headers
+        )
+        status = json.loads(response.text)
+        if str(status['state']) == "Operational" and str(status['progress']['completion']) != "100.0":
+            return True
+    except requests.exceptions.RequestException as e:
+        return False
+        print("Skipping " + printer.name + " due to network error")
+    return False
+
+
+def start_print_job(job, printer):
+    upload_result = upload_job_to_printer(job, printer)
+    if upload_result.ok:
+        job.printed_on = printer.id
+        job.print_status = PrintStatus.PRINTING.name
+        job.print_started = datetime.now()
+        receiptPrinter(job.Get_Name(job_name_only=True), printer.name)
+    else:
+        print("Error uploading " + job.Get_Name() + " to " + printer.name + '. Status code: ' + str(upload_result.status_code))
+
+
+def upload_job_to_printer(job, printer):
+    openFile = open(job.Get_File_Name(), 'rb')
+    fle = {'file': openFile, 'filename': job.Get_Name()}
+    url = "http://" + printer.ip + "/api/files/{}".format("local")
+    payload = {'select': 'true', 'print': 'true'}
+    header = {'X-Api-Key': printer.api_key}
+    return requests.post(url, files=fle, data=payload, headers=header)
+
+
+# def TryPrintingFile(file):
+#     """
+#     This will look at the prints we have waiting and see if a printer is open for it
+#     """
+#     printers = Printer.Get_All_Enabled()
+#     for printer in printers:
+#         url = "http://" + printer.ip + "/api/job"
+#
+#         headers = {
+#             "Accept": "application/json",
+#             "Host": printer.ip,
+#             "X-Api-Key": printer.api_key
+#         }
+#         try:
+#             response = requests.request(
+#                 "GET",
+#                 url,
+#                 headers=headers
+#             )
+#             status = json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
+#             if str(status['state']) == "Operational" and str(status['progress']['completion']) != "100.0":
+#                 uploadFileToPrinter(printer.api_key, printer.ip, file)
+#                 return
+#         except requests.exceptions.RequestException as e:  # This is the correct syntax
+#             print("Skipping " + printer.name + " due to network error")
 
 
 def GetStatus(ip, api):
@@ -259,16 +316,3 @@ def PrintIsFinished():
                         jira.changeStatus(file, JiraTransitionCodes.DONE)  # file name referenced
 
         print(printer.name + " : " + status['state'])
-
-
-
-def eachNewFile():
-    """
-    for each file in the list see if a printer is open for it
-    """
-    directory = r'jiradownloads'
-    for filename in sorted(os.listdir(directory)):
-        if filename.endswith(".gcode"):
-            TryPrintingFile(os.path.splitext(filename)[0])
-        else:
-            continue

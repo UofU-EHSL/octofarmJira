@@ -51,6 +51,20 @@ class Printer(db.Entity):
         return printers
 
     @staticmethod
+    @db_session
+    def Get_All_Print_Counts(enabled_only=True):
+        """Counts any print that started on the printer, including failed jobs. Sorted with the smallest number of jobs first."""
+        if enabled_only:
+            query_result = left_join((p, count(pj)) for p in Printer if p.enabled for pj in p.print_jobs)[:]
+        else:
+            query_result = left_join((p, count(pj)) for p in Printer for pj in p.print_jobs)[:]
+        printers = []
+        for p in query_result:
+            printers.append(p)
+        printers.sort(key=lambda x: x[1])  # The second element of the tuple is the number of print jobs associated.
+        return printers
+
+    @staticmethod
     def Map_Request(printer, form_data):
         """
         Maps request data to a printer object.
@@ -67,7 +81,6 @@ class Printer(db.Entity):
         except:
             printer.material_density = None
         printer.enabled = form_data['enabled'] == 'true'
-
 
     @staticmethod
     @db_session
@@ -88,4 +101,4 @@ class Printer(db.Entity):
             material_density = None
         enabled = form_data['enabled'] == 'true'
 
-        Printer(name=name, model=model, ip=ip,api_key=api_key,stream_ip=stream_ip,material_type=material_type,material_color=material_color, material_density=material_density, enabled=enabled)
+        Printer(name=name, model=model, ip=ip, api_key=api_key, stream_ip=stream_ip, material_type=material_type, material_color=material_color, material_density=material_density, enabled=enabled)

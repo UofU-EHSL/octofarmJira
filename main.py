@@ -48,7 +48,7 @@ def print_loop(clearTerminal):
     print("Checking for new submissions...")
     jira.get_new_print_jobs()
     print_job_handler.process_new_jobs()
-    # octoprint.eachNewFile()
+    octoprint.start_queued_jobs()
     # octoprint.PrintIsFinished()
     # jira.askedForStatus()
 

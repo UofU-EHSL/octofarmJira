@@ -64,7 +64,7 @@ def process_new_jobs():
                 text_file = open(job.Get_File_Name(), "w")
                 n = text_file.write(checked_gcode)
                 text_file.close()
-                job.print_status = PrintStatus.IN_QUEUE
+                job.print_status = PrintStatus.IN_QUEUE.name
             elif check_result == GcodeStates.INVALID:
                 handle_job_failure(job, MessageNames.GCODE_CHECK_FAIL)
 
