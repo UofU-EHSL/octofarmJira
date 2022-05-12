@@ -55,12 +55,12 @@ class PrintJob(db.Entity):
         return print_jobs
 
     def Generate_Start_Message(self):
-        startTime = datetime.now().strftime("%I:%M" '%p')
+        startTime = datetime.datetime.now().strftime("%I:%M" '%p')
         if startTime[0] == '0':
             startTime = startTime[1:]
         message = "Print was started at: " + startTime + "\n"
-        message += "Estimated print weight: " + str(self.weight)
-        message += "Estimated print time: " + str(self.print_time)
+        message += "Estimated print weight: " + str(self.weight) + "\n"
+        message += "Estimated print time: " + str(self.print_time) + "\n"
         message += "Estimated print cost: " + str(self.cost)
         return message
 

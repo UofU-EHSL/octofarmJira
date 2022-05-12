@@ -57,7 +57,8 @@ def start_print_job(job, printer):
         job.print_status = PrintStatus.PRINTING.name
         job.print_started = datetime.now()
         commit()
-        receiptPrinter(job.Get_Name(job_name_only=True), printer.name)
+        if config["receipt_printer"]["print_physical_receipt"] is True:
+            receiptPrinter(job.Get_Name(job_name_only=True), printer.name)
         jira.send_print_started(job)
     else:
         print("Error uploading " + job.Get_Name() + " to " + printer.name + '. Status code: ' + str(upload_result.status_code))
@@ -192,7 +193,6 @@ def receiptPrinter(scrapedPRNumber, printer=''):
         p.text("\n\n-                              -\n\n")
     except:
         print("\nThe receipt printer is unplugged or not powered on, please double check physical connections.")
-        raise ValueError
 
 
 def uploadFileToPrinter(apikey, printerIP, file):
