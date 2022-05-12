@@ -18,6 +18,7 @@ class PrintJob(db.Entity):
     payment_link = Optional(str)
     weight = Optional(float)
     cost = Optional(float)
+    print_time = Optional(str)
     url_type = Optional(str)
     """UrlTypes Enum"""
     gcode_url = Optional(str)
@@ -52,3 +53,14 @@ class PrintJob(db.Entity):
         for p in query_result:
             print_jobs.append(p)
         return print_jobs
+
+    def Generate_Start_Message(self):
+        startTime = datetime.now().strftime("%I:%M" '%p')
+        if startTime[0] == '0':
+            startTime = startTime[1:]
+        message = "Print was started at: " + startTime + "\n"
+        message += "Estimated print weight: " + str(self.weight)
+        message += "Estimated print time: " + str(self.print_time)
+        message += "Estimated print cost: " + str(self.cost)
+        return message
+

@@ -191,6 +191,13 @@ def send_fail_message(job_id, message_text):
     changeStatus(job_id, JiraTransitionCodes.STOP_PROGRESS)
 
 
+def send_print_started(job):
+    """
+    Comments on a ticket with the provided message and stops the progress on the ticket.
+    """
+    commentStatus(job.job_id, job.Generate_Start_Message())
+
+
 def printIsGoodToGo(singleIssue, singleID):
     """
     Things to do when a print is good to go

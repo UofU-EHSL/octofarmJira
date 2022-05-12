@@ -56,7 +56,9 @@ def start_print_job(job, printer):
         job.printed_on = printer.id
         job.print_status = PrintStatus.PRINTING.name
         job.print_started = datetime.now()
+        commit()
         receiptPrinter(job.Get_Name(job_name_only=True), printer.name)
+        jira.send_print_started(job)
     else:
         print("Error uploading " + job.Get_Name() + " to " + printer.name + '. Status code: ' + str(upload_result.status_code))
 
