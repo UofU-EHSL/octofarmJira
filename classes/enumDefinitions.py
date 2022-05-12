@@ -103,6 +103,9 @@ class MessageNames(Enum):
     PERMISSION_CODE_EXPIRED = auto()
     PERMISSION_CODE_NOT_YET_ACTIVE = auto()
     NO_FILE_ATTACHED = auto()
+    UNKNOWN_DOWNLOAD_ERROR = auto()
+    GOOGLE_DRIVE_403_ERROR = auto()
+    GCODE_CHECK_FAIL = auto()
 
 
 def get_dict(enum_type):

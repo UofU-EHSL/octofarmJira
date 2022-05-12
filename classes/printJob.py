@@ -28,11 +28,15 @@ class PrintJob(db.Entity):
     failure_message = Optional('Message')
     """MessageNames Enum"""
 
-    def Get_File_Name(self):
+    def Get_Name(self):
         if self.job_name:
             name = str(self.job_id) + '__' + self.job_name
         else:
             name = str(self.job_id)
+        return name
+
+    def Get_File_Name(self):
+        name = self.Get_Name()
         if self.url_type == UrlTypes.JIRA_ATTACHMENT:
             return "jiradownloads/" + name + ".gcode"
         elif self.url_type == UrlTypes.GOOGLE_DRIVE:

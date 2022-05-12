@@ -37,6 +37,9 @@ def drop_and_create_db():
         m4 = Message(name='PERMISSION_CODE_INVALID', text='The permission code you used does not exist. Please verify your code and submit again.')
         m5 = Message(name='PERMISSION_CODE_EXPIRED', text='The permission code you used is expired.')
         m6 = Message(name='PERMISSION_CODE_NOT_YET_ACTIVE', text='The permission code you used is not yet active.')
+        m7 = Message(name='UNKNOWN_DOWNLOAD_ERROR', text='There was an issue downloading your file. Please verify that you submitted correctly and contact us if the problem persists.')
+        m8 = Message(name='GOOGLE_DRIVE_403_ERROR', text='There was an issue downloading your file. Please verify that you have linked to the file and not the folder containing it. Also verify that you set the permissions to "everyone".')
+        m9 = Message(name='GCODE_CHECK_FAIL', text='There is an issue with your submitted .gcode file. Please verify you used our printer profiles correctly.')
 
 
 def print_loop(clearTerminal):

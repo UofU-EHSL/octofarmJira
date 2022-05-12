@@ -19,6 +19,8 @@ import re
 with open("config_files/config.yml", "r") as yamlFile:
     config = yaml.load(yamlFile, Loader=yaml.FullLoader)
 
+drive_api_key = config['google_drive_api_key']
+
 
 @db_session
 def process_new_jobs():
@@ -50,17 +52,32 @@ def process_new_jobs():
 
         gcode = download_gcode(job)
 
-        # How to remove file
-        # if os.path.exists("jiradownloads/" + singleID + ".gcode"):
-        #     os.remove("jiradownloads/" + singleID + ".gcode")
+        if gcode == "ERROR":
+            handle_job_failure(job, MessageNames.UNKNOWN_DOWNLOAD_ERROR)
+            continue
+        elif gcode == "ERROR_403":
+            handle_job_failure(job, MessageNames.GOOGLE_DRIVE_403_ERROR)
+            continue
+        else:
+            checked_gcode, check_result = check_gcode(gcode)
+            if check_result == GcodeStates.VALID:
+                text_file = open(job.Get_File_Name(), "w")
+                n = text_file.write(checked_gcode)
+                text_file.close()
+                job.print_status = PrintStatus.IN_QUEUE
+            elif check_result == GcodeStates.INVALID:
+                handle_job_failure(job, MessageNames.GCODE_CHECK_FAIL)
 
 
 def download_gcode(job):
-    if job.url_type == UrlTypes.JIRA_ATTACHMENT.name:
-        jira.download(job)
-    elif job.url_type == UrlTypes.GOOGLE_DRIVE.name:
-        downloadGoogleDrive(job)
-    elif job.url_type == UrlTypes.UNKNOWN.name:
+    try:
+        if job.url_type == UrlTypes.JIRA_ATTACHMENT.name:
+            return jira.download(job)
+        elif job.url_type == UrlTypes.GOOGLE_DRIVE.name:
+            return downloadGoogleDrive(job)
+        elif job.url_type == UrlTypes.UNKNOWN.name:
+            return "ERROR"
+    except:
         return "ERROR"
 
 
@@ -68,7 +85,30 @@ def downloadGoogleDrive(job):
     """
     if the jira project has a Google Drive link in the description download it
     """
-    # gdd.download_file_from_google_drive(file_id=file_ID, dest_path=job.Get_File_Name)
+    url = 'https://www.googleapis.com/drive/v3/files/' + job.gcode_url + '/?key=' + drive_api_key + '&alt=media'
+
+    headers = {
+        "Accept": "application/json"
+    }
+
+    try:
+        response = requests.request(
+            "GET",
+            url,
+            headers=headers,
+        )
+    except Exception as e:
+        print("Ticket " + job.Get_Name() + " error while downloading gcode from google drive.")
+        print(e)
+        return "ERROR"
+
+    if response.ok:
+        return response.text
+    elif response.status_code == 403:
+        return "ERROR_403"
+    else:
+        print("Ticket " + job.Get_Name() + ": " + str(response.status_code) + " while downloading gcode from google drive.")
+        return "ERROR"
 
 
 def handle_job_failure(job, message_name):
@@ -182,4 +222,4 @@ def check_gcode(file):
                         return None, GcodeStates.INVALID
 
     text_gcode = gcode_to_text(parsedGcode)
-    return GcodeStates.VALID, text_gcode
+    return text_gcode, GcodeStates.VALID

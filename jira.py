@@ -90,7 +90,8 @@ def parse_gcode_url(issue):
         if s.startswith('https'):
             url = s[:s.rfind('\n\n')]
             if "drive.google.com" in url:
-                return url, UrlTypes.GOOGLE_DRIVE
+                split = url.split('/')
+                return split[5], UrlTypes.GOOGLE_DRIVE
             else:
                 return url, UrlTypes.UNKNOWN
 
@@ -134,15 +135,23 @@ def download(job):
         "Accept": "application/json"
     }
 
-    response = requests.request(
-        "GET",
-        job.gcode_url,
-        headers=headers,
-        auth=auth
-    )
-    text_file = open("jiradownloads/" + job.Get_File_Name() + ".gcode", "w")
-    n = text_file.write(response.text)
-    text_file.close()
+    try:
+        response = requests.request(
+            "GET",
+            job.gcode_url,
+            headers=headers,
+            auth=auth
+        )
+    except Exception as e:
+        print("Ticket " + job.Get_Name() + " error while downloading gcode from jira.")
+        print(e)
+        return "ERROR"
+
+    if response.ok:
+        return response.text
+    else:
+        print("Ticket " + job.Get_Name() + ": " + str(response.status_code) + " while downloading gcode from jira.")
+        return "ERROR"
 
 
 def printIsNoGo(singleIssue, singleID):
