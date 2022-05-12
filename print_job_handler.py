@@ -65,6 +65,7 @@ def process_new_jobs():
                 n = text_file.write(checked_gcode)
                 text_file.close()
                 job.print_status = PrintStatus.IN_QUEUE.name
+                jira.send_print_queued(job.job_id)
             elif check_result == GcodeStates.INVALID:
                 handle_job_failure(job, MessageNames.GCODE_CHECK_FAIL)
 

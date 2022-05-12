@@ -198,6 +198,11 @@ def send_print_started(job):
     commentStatus(job.job_id, job.Generate_Start_Message())
 
 
+def send_print_queued(job_id):
+    changeStatus(job_id, JiraTransitionCodes.START_PROGRESS)
+
+
+
 def printIsGoodToGo(singleIssue, singleID):
     """
     Things to do when a print is good to go
