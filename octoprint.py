@@ -28,30 +28,21 @@ def start_queued_jobs():
 
 
 def check_printer_available(printer):
-    url = "http://" + printer.ip + "/api/job"
-
-    headers = {
-        "Accept": "application/json",
-        "Host": printer.ip,
-        "X-Api-Key": printer.api_key
-    }
+    """Returns True if printer is available. Returns False if printer is offline or printing."""
     try:
-        response = requests.request(
-            "GET",
-            url,
-            headers=headers
-        )
+        response = printer.Get_Job_Request()
         status = json.loads(response.text)
         if str(status['state']) == "Operational" and str(status['progress']['completion']) != "100.0":
             return True
     except requests.exceptions.RequestException as e:
         return False
-        print("Skipping " + printer.name + " due to network error")
+        print("Skipping " + printer.name + " due to network error")  # TODO: Try to recover from network errors. Reset printer, etc
     return False
 
 
 def start_print_job(job, printer):
-    upload_result = upload_job_to_printer(job, printer)
+    """Starts a print job on a printer and updates jira with print started comment. Also prints physical receipt."""
+    upload_result = printer.Upload_Job(job)
     if upload_result.ok:
         job.printed_on = printer.id
         job.print_status = PrintStatus.PRINTING.name
@@ -62,98 +53,6 @@ def start_print_job(job, printer):
         jira.send_print_started(job)
     else:
         print("Error uploading " + job.Get_Name() + " to " + printer.name + '. Status code: ' + str(upload_result.status_code))
-
-
-def upload_job_to_printer(job, printer):
-    openFile = open(job.Get_File_Name(), 'rb')
-    fle = {'file': openFile, 'filename': job.Get_Name()}
-    url = "http://" + printer.ip + "/api/files/{}".format("local")
-    payload = {'select': 'true', 'print': 'true'}
-    header = {'X-Api-Key': printer.api_key}
-    return requests.post(url, files=fle, data=payload, headers=header)
-
-
-# def TryPrintingFile(file):
-#     """
-#     This will look at the prints we have waiting and see if a printer is open for it
-#     """
-#     printers = Printer.Get_All_Enabled()
-#     for printer in printers:
-#         url = "http://" + printer.ip + "/api/job"
-#
-#         headers = {
-#             "Accept": "application/json",
-#             "Host": printer.ip,
-#             "X-Api-Key": printer.api_key
-#         }
-#         try:
-#             response = requests.request(
-#                 "GET",
-#                 url,
-#                 headers=headers
-#             )
-#             status = json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
-#             if str(status['state']) == "Operational" and str(status['progress']['completion']) != "100.0":
-#                 uploadFileToPrinter(printer.api_key, printer.ip, file)
-#                 return
-#         except requests.exceptions.RequestException as e:  # This is the correct syntax
-#             print("Skipping " + printer.name + " due to network error")
-
-
-def GetStatus(ip, api):
-    """
-    Get the status of the printer you are asking about
-    """
-    apikey = api
-    printerIP = ip
-    url = "http://" + printerIP + "/api/job"
-
-    headers = {
-        "Accept": "application/json",
-        "Host": printerIP,
-        "X-Api-Key": apikey
-    }
-    try:
-        response = requests.request(
-            "GET",
-            url,
-            headers=headers
-        )
-        status = json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
-        return status
-    except requests.exceptions.RequestException as e:  # This is the correct syntax
-        print(printerIP + "'s raspberry pi is offline")
-        status = "offline"
-        return status
-
-
-def GetName(ip, api):
-    """
-    get the name of the printer you are asking about
-    """
-    apikey = api
-    printerIP = ip
-    url = "http://" + printerIP + "/api/printerprofiles"
-    name = ip
-    headers = {
-        "Accept": "application/json",
-        "Host": printerIP,
-        "X-Api-Key": apikey
-    }
-    try:
-        response = requests.request(
-            "GET",
-            url,
-            headers=headers
-        )
-        status = json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
-
-        name = status["profiles"]["_default"]["name"]
-        return name
-    except requests.exceptions.RequestException as e:  # This is the correct syntax
-        print(printerIP + "'s raspberry pi is offline and can't be contacted over the network")
-        status = "offline"
-        return name
 
 
 def receiptPrinter(scrapedPRNumber, printer=''):
@@ -195,58 +94,6 @@ def receiptPrinter(scrapedPRNumber, printer=''):
         print("\nThe receipt printer is unplugged or not powered on, please double check physical connections.")
 
 
-def uploadFileToPrinter(apikey, printerIP, file):
-    """
-    Uploads a file to a printer
-    """
-    openFile = open('jiradownloads/' + file + '.gcode', 'rb')
-    fle = {'file': openFile, 'filename': file}
-    url = "http://" + printerIP + "/api/files/{}".format("local")
-    payload = {'select': 'true', 'print': 'true'}
-    header = {'X-Api-Key': apikey}
-    response = requests.post(url, files=fle, data=payload, headers=header)
-
-    with open('jiradownloads/' + file + '.gcode', 'rb') as gcode:
-        for line in gcode:
-            line = line.decode()
-            if line.startswith('; filament used [g]'):
-                grams = line.split('=')[1].strip()
-            elif line.startswith('; estimated printing time (normal mode)'):
-                printTime = line.split('=')[1].strip()
-
-    startTime = datetime.now().strftime("%I:%M" '%p')
-    if startTime[0] == '0':
-        startTime = startTime[1:]
-    if grams != '' and printTime != '':
-        ticketText = "\nPrint was started at " + str(startTime) + "\nEstimated print weight is " + str(grams) + "g" + "\nEstimated print time is " + printTime
-        ticketText += "\nEstimated print cost is (" + str(grams) + "g * $0.05/g * 1.0775 state tax = $"
-        cost = float(grams) * .05 * 1.0775
-        cost = str(("%.2f" % cost))
-        ticketText += cost
-    else:
-        ticketText = config['messages']['printStarted']
-    openFile.close()
-    if os.path.exists("jiradownloads/" + file + ".gcode"):
-        # print(config['Save_printed_files'])
-        if config['Save_printed_files'] is False:
-            os.remove("jiradownloads/" + file + ".gcode")
-        else:
-            os.replace("jiradownloads/" + file + ".gcode", "archive_files/" + file + ".gcode")
-        if ticketText != config['messages']['printStarted']:
-            # file name referenced
-            jira.commentStatus(file, ticketText)
-        printerName = GetName(printerIP, apikey)
-        print("Now printing: " + file + " on " + printerName + " at " + printerIP)
-
-    if config["receipt_printer"]["print_physical_receipt"] is True:
-        try:
-            printerName = GetName(printerIP, apikey)
-            projectNumber = file.split('__')[0]
-            receiptPrinter(projectNumber, printerName)
-        except:
-            print("There was a problem printing the receipt " + projectNumber)
-
-
 def resetConnection(apikey, printerIP):
     """
     Resets the connection to a printer, done as a safety check and status clear
@@ -266,7 +113,6 @@ def PrintIsFinished():
     """
     printers = Printer.Get_All_Enabled()
     for printer in printers:
-        url = "http://" + printer.ip + "/api/job"
         headers = {
             "Accept": "application/json",
             "Host": printer.ip,
@@ -275,7 +121,7 @@ def PrintIsFinished():
         try:
             response = requests.request(
                 "GET",
-                url,
+                printer.Get_Job_Url(),
                 headers=headers
             )
             if "State" not in response.text:

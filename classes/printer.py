@@ -1,5 +1,6 @@
 from pony.orm import *
 from classes.enumDefinitions import *
+import requests
 import datetime
 
 db = Database()
@@ -22,6 +23,31 @@ class Printer(db.Entity):
     enabled = Required(bool)
     print_jobs = Set('PrintJob')
     """Used to relate print jobs to this printer. Not an actual field, just a Pony ORM thing"""
+
+    def Get_Job_Url(self):
+        return "http://" + self.ip + "/api/job"
+
+    def Get_Upload_Url(self):
+        return "http://" + self.ip + "/api/files/{}".format("local")
+
+    def Get_Job_Request(self):
+        headers = {
+            "Accept": "application/json",
+            "Host": self.ip,
+            "X-Api-Key": self.api_key
+        }
+        return requests.request(
+            "GET",
+            self.Get_Job_Url(),
+            headers=headers
+        )
+
+    def Upload_Job(self, job):
+        openFile = open(job.Get_File_Name(), 'rb')
+        fle = {'file': openFile, 'filename': job.Get_Name()}
+        payload = {'select': 'true', 'print': 'true'}
+        header = {'X-Api-Key': self.api_key}
+        return requests.post(self.Get_Upload_Url(), files=fle, data=payload, headers=header)
 
     @staticmethod
     @db_session
