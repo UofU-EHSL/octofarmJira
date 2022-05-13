@@ -17,8 +17,10 @@ class PrintJob(db.Entity):
     paid_date = Optional(datetime.datetime)
     payment_link = Optional(str)
     weight = Optional(float)
+    """In grams"""
     cost = Optional(float)
-    print_time = Optional(str)
+    print_time = Optional(int)
+    """In seconds"""
     url_type = Optional(str)
     """UrlTypes Enum"""
     gcode_url = Optional(str)
@@ -59,8 +61,8 @@ class PrintJob(db.Entity):
         if startTime[0] == '0':
             startTime = startTime[1:]
         message = "Print was started at: " + startTime + "\n"
-        message += "Estimated print weight: " + str(self.weight) + "\n"
-        message += "Estimated print time: " + str(self.print_time) + "\n"
-        message += "Estimated print cost: " + str(self.cost)
+        message += "Estimated print weight: " + str(self.weight) + "g\n"
+        message += "Estimated print time: " + str(datetime.timedelta(seconds=self.print_time)) + "\n"
+        message += "Estimated print cost: " + "${:,.2f}".format(self.cost)
         return message
 

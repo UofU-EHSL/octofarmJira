@@ -59,12 +59,19 @@ def process_new_jobs():
             handle_job_failure(job, MessageNames.GOOGLE_DRIVE_403_ERROR)
             continue
         else:
-            checked_gcode, check_result = check_gcode(gcode)
+            checked_gcode, check_result, weight, estimated_time = check_gcode(gcode)
             if check_result == GcodeStates.VALID:
                 text_file = open(job.Get_File_Name(), "w")
                 n = text_file.write(checked_gcode)
                 text_file.close()
                 job.print_status = PrintStatus.IN_QUEUE.name
+                job.weight = weight
+                job.print_time = estimated_time
+                if job.permission_code:
+                    job.cost = round(weight * 0.05, 2)
+                else:
+                    job.cost = round(weight * 0.05 * 1.0775, 2)
+                commit()
                 jira.send_print_queued(job.job_id)
             elif check_result == GcodeStates.INVALID:
                 handle_job_failure(job, MessageNames.GCODE_CHECK_FAIL)
@@ -172,11 +179,41 @@ def filter_characters(string):
     return re.sub("\D", "", string)
 
 
+def convert_time_to_seconds(time_string):
+    """Converts a string with format 1d 1h 0m 12s into seconds."""
+    split = time_string.split()  # Get each element.
+    split.reverse()  # Reverse so seconds are the first element.
+    result = 0
+    for i in range(len(split)):  # Iterate over each element and multiply by the amount of seconds in it.
+        if i == 3:  # Days
+            result += int(filter_characters(split[i])) * 86400
+        elif i == 2:  # Hours
+            result += int(filter_characters(split[i])) * 3600
+        elif i == 1:  # Minutes
+            result += int(filter_characters(split[i])) * 60
+        elif i == 0:  # Seconds
+            result += int(filter_characters(split[i]))
+
+    return result
+
+
 def check_gcode(file):
     """
     Check if gcode fits the requirements that we have set in the config
     """
     parsedGcode = parse_gcode(file)
+    weight = 0
+    estimated_time = ''
+
+    index = len(parsedGcode) - 1
+    while (weight == 0 or estimated_time == '') and index > 0:
+        if parsedGcode[index].comment.startswith('estimated printing time (normal mode) ='):
+            split = parsedGcode[index].comment.split('=')
+            estimated_time = convert_time_to_seconds(split[1].strip())
+        elif parsedGcode[index].comment.startswith('total filament used [g] ='):
+            split = parsedGcode[index].comment.split('=')
+            weight = float(split[1].strip())
+        index -= 1
 
     for checkItem in config['gcodeCheckItems']:
         if GcodeCheckActions[checkItem['checkAction']] is GcodeCheckActions.REMOVE_COMMAND_ALL:
@@ -223,4 +260,4 @@ def check_gcode(file):
                         return None, GcodeStates.INVALID
 
     text_gcode = gcode_to_text(parsedGcode)
-    return text_gcode, GcodeStates.VALID
+    return text_gcode, GcodeStates.VALID, weight, estimated_time
