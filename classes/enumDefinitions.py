@@ -106,6 +106,8 @@ class MessageNames(Enum):
     UNKNOWN_DOWNLOAD_ERROR = auto()
     GOOGLE_DRIVE_403_ERROR = auto()
     GCODE_CHECK_FAIL = auto()
+    FINISH_TEXT_TAX_EXEMPT = auto()
+    FINISH_TEXT_WITH_TAX = auto()
 
 
 def get_dict(enum_type):

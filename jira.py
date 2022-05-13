@@ -202,6 +202,11 @@ def send_print_queued(job_id):
     changeStatus(job_id, JiraTransitionCodes.START_PROGRESS)
 
 
+def send_print_finished(job):
+    changeStatus(job.job_id, JiraTransitionCodes.READY_FOR_REVIEW)
+    changeStatus(job.job_id, JiraTransitionCodes.APPROVE)
+    commentStatus(job.job_id, job.Generate_Finish_Message())
+
 
 def printIsGoodToGo(singleIssue, singleID):
     """

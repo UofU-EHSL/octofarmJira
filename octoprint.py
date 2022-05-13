@@ -13,6 +13,7 @@ from datetime import datetime
 with open("config_files/config.yml", "r") as yamlFile:
     config = yaml.load(yamlFile, Loader=yaml.FullLoader)
 
+
 @db_session
 def start_queued_jobs():
     queued_jobs = PrintJob.Get_All_By_Status(PrintStatus.IN_QUEUE)
@@ -31,7 +32,7 @@ def start_queued_jobs():
 def check_for_finished_jobs():
     printers = Printer.Get_All_Enabled()
     for printer in printers:
-        state, actual_print_volume = printer.Get_Printer_State()
+        state, actual_print_volume = printer.Get_Printer_State(get_actual_volume=True)
         if state == 'finished':
             job = printer.Get_Current_Job()
             if job:
@@ -42,8 +43,11 @@ def check_for_finished_jobs():
                 else:
                     job.cost = round(grams * 0.05 * 1.0775, 2)
                 job.print_status = PrintStatus.FINISHED.name
-                job.print_finished = datetime.now()
+                job.print_finished_date = datetime.now()
                 job.payment_status = PaymentStatus.NEEDS_PAYMENT_LINK.name
+                commit()
+                jira.send_print_finished(job)
+                printer.Reset_Connection()
             else:
                 print(printer.name + " has finished job not found in DB.")
 
@@ -55,7 +59,7 @@ def start_print_job(job, printer):
         job.printed_on = printer.id
         job.print_status = PrintStatus.PRINTING.name
         job.payment_status = PaymentStatus.PRINTING.name
-        job.print_started = datetime.now()
+        job.print_started_date = datetime.now()
         commit()
         if config["receipt_printer"]["print_physical_receipt"] is True:
             receiptPrinter(job.Get_Name(job_name_only=True), printer.name)
@@ -101,19 +105,6 @@ def receiptPrinter(scrapedPRNumber, printer=''):
         p.text("\n\n-                              -\n\n")
     except:
         print("\nThe receipt printer is unplugged or not powered on, please double check physical connections.")
-
-
-def resetConnection(apikey, printerIP):
-    """
-    Resets the connection to a printer, done as a safety check and status clear
-    """
-    url = "http://" + printerIP + "/api/connection"
-    disconnect = {'command': 'disconnect'}
-    connect = {'command': 'connect'}
-    header = {'X-Api-Key': apikey}
-    response = requests.post(url, json=disconnect, headers=header)
-    time.sleep(30)
-    response = requests.post(url, json=connect, headers=header)
 
 
 def PrintIsFinished():

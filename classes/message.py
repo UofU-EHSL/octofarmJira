@@ -1,10 +1,10 @@
-from classes.user import *
+from classes.printer import *
 
 
 class Message(db.Entity):
     name = Required(str, unique=True)
     text = Required(str)
-    print_job = Set(PrintJob)
+    print_job = Set('PrintJob')
 
 
 

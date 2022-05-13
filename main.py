@@ -40,6 +40,8 @@ def drop_and_create_db():
         m7 = Message(name='UNKNOWN_DOWNLOAD_ERROR', text='There was an issue downloading your file. Please verify that you submitted correctly and contact us if the problem persists.')
         m8 = Message(name='GOOGLE_DRIVE_403_ERROR', text='There was an issue downloading your file. Please verify that you have linked to the file and not the folder containing it. Also verify that you set the permissions to "everyone".')
         m9 = Message(name='GCODE_CHECK_FAIL', text='There is an issue with your submitted .gcode file. Please verify you used our printer profiles correctly.')
+        m10 = Message(name='FINISH_TEXT_WITH_TAX', text='Your print is ready for pickup by the orange pillars in the ProtoSpace on the 2nd floor of the library whenever the library is open. A payment link will be generated and sent to you within approximately 48 hours. Thank you!')
+        m11 = Message(name='FINISH_TEXT_TAX_EXEMPT', text='Your print is ready for pickup by the orange pillars in the ProtoSpace on the 2nd floor of the library whenever the library is open. Payment will be handled by your department or class. Thank you!')
 
 
 def print_loop(clearTerminal):

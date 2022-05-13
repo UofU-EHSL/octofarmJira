@@ -2,6 +2,7 @@ from pony.orm import *
 from classes.enumDefinitions import *
 import requests
 import json
+import time
 import datetime
 
 db = Database()
@@ -31,6 +32,24 @@ class Printer(db.Entity):
     def Get_Upload_Url(self):
         return "http://" + self.ip + "/api/files/{}".format("local")
 
+    def Get_Connection_Url(self):
+        return "http://" + self.ip + "/api/connection"
+
+    def Connect_Printer(self):
+        connect = {'command': 'connect'}
+        header = {'X-Api-Key': self.api_key}
+        return requests.post(self.Get_Connection_Url(), json=connect, headers=header)
+
+    def Disconnect_Printer(self):
+        disconnect = {'command': 'disconnect'}
+        header = {'X-Api-Key': self.api_key}
+        return requests.post(self.Get_Connection_Url(), json=disconnect, headers=header)
+
+    def Reset_Connection(self):
+        self.Disconnect_Printer()
+        time.sleep(1)
+        self.Connect_Printer()
+
     def Get_Job(self):
         headers = {
             "Accept": "application/json",
@@ -50,18 +69,28 @@ class Printer(db.Entity):
         header = {'X-Api-Key': self.api_key}
         return requests.post(self.Get_Upload_Url(), files=fle, data=payload, headers=header)
 
-    def Get_Printer_State(self):
+    def Get_Printer_State(self, get_actual_volume=False):
+        """Returns a tuple with the state as the first element. The second element is the actual weight used if the"""
         try:
             response = self.Get_Job()
             response = json.loads(response.text)
             state = response['state'].lower()
-            if state == 'paused' and response['progress']['completion'] == 100.0:
-                return 'finished', response['job']['filament']['tool0']['volume']  # Also return actual volume printed if job is finished.
+            if state == 'operational' and response['progress']['completion'] == 100.0:
+                if get_actual_volume:
+                    return 'finished', response['job']['filament']['tool0']['volume']  # Also return actual volume printed if job is finished.
+                else:
+                    return 'finished'
 
-            return state, 0
+            if get_actual_volume:
+                return state, 0
+            else:
+                return state
         except Exception as e:
             print(e)
-            "offline"
+            if get_actual_volume:
+                return 'offline', 0
+            else:
+                return 'offline'
 
     @staticmethod
     @db_session

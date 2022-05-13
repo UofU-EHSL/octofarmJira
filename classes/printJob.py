@@ -1,4 +1,5 @@
 from classes.printer import *
+from classes.message import *
 import datetime
 
 
@@ -28,7 +29,7 @@ class PrintJob(db.Entity):
     """PrintStatus Enum"""
     payment_status = Optional(str)
     """PaymentStatus Enum"""
-    failure_message = Optional('Message')
+    failure_message = Optional(Message)
     """MessageNames Enum"""
 
     def Get_Name(self, job_name_only=False):
@@ -60,9 +61,30 @@ class PrintJob(db.Entity):
         startTime = datetime.datetime.now().strftime("%I:%M" '%p')
         if startTime[0] == '0':
             startTime = startTime[1:]
-        message = "Print was started at: " + startTime + "\n"
-        message += "Estimated print weight: " + str(self.weight) + "g\n"
-        message += "Estimated print time: " + str(datetime.timedelta(seconds=self.print_time)) + "\n"
-        message += "Estimated print cost: " + "${:,.2f}".format(self.cost)
-        return message
+        text = "Print was started at: " + startTime + "\n"
+        text += "Estimated print weight: " + str(self.weight) + "g\n"
+        text += "Estimated print time: " + str(datetime.timedelta(seconds=self.print_time)) + "\n"
+        text += "Estimated print cost: " + "${:,.2f}".format(self.cost)
+        return text
+
+    @db_session
+    def Generate_Finish_Message(self):
+        finishTime = datetime.datetime.now().strftime("%I:%M" '%p')
+        if finishTime[0] == '0':
+            finishTime = finishTime[1:]
+        text = "{color:#00875A}Print completed successfully!{color}\n\n"
+        text += "Print harvested at: " + finishTime + "\n"
+        text += "Actual filament used: " + str(self.weight) + "g\n"
+        text += "Actual print cost: " + "${:,.2f}".format(self.cost) + "\n\n"
+
+        if self.permission_code:
+            message = Message.get(name=MessageNames.FINISH_TEXT_TAX_EXEMPT.name)
+            if message:
+                text += message.text
+        else:
+            message = Message.get(name=MessageNames.FINISH_TEXT_WITH_TAX.name)
+            if message:
+                text += message.text
+
+        return text
 
