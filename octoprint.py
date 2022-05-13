@@ -23,21 +23,29 @@ def start_queued_jobs():
         # printer is a tuple: (printer, <print_count>)
         if len(queued_jobs) == 0:
             break
-        if check_printer_available(printer[0]):
+        if printer[0].Get_Printer_State() == 'operational':
             start_print_job(queued_jobs.pop(0), printer[0])
 
 
-def check_printer_available(printer):
-    """Returns True if printer is available. Returns False if printer is offline or printing."""
-    try:
-        response = printer.Get_Job_Request()
-        status = json.loads(response.text)
-        if str(status['state']) == "Operational" and str(status['progress']['completion']) != "100.0":
-            return True
-    except requests.exceptions.RequestException as e:
-        return False
-        print("Skipping " + printer.name + " due to network error")  # TODO: Try to recover from network errors. Reset printer, etc
-    return False
+@db_session
+def check_for_finished_jobs():
+    printers = Printer.Get_All_Enabled()
+    for printer in printers:
+        state, actual_print_volume = printer.Get_Printer_State()
+        if state == 'finished':
+            job = printer.Get_Current_Job()
+            if job:
+                grams = round(actual_print_volume * printer.material_density, 2)
+                job.weight = round(grams, 2)
+                if job.permission_code:
+                    job.cost = round(grams * 0.05, 2)
+                else:
+                    job.cost = round(grams * 0.05 * 1.0775, 2)
+                job.print_status = PrintStatus.FINISHED.name
+                job.print_finished = datetime.now()
+                job.payment_status = PaymentStatus.NEEDS_PAYMENT_LINK.name
+            else:
+                print(printer.name + " has finished job not found in DB.")
 
 
 def start_print_job(job, printer):
@@ -46,6 +54,7 @@ def start_print_job(job, printer):
     if upload_result.ok:
         job.printed_on = printer.id
         job.print_status = PrintStatus.PRINTING.name
+        job.payment_status = PaymentStatus.PRINTING.name
         job.print_started = datetime.now()
         commit()
         if config["receipt_printer"]["print_physical_receipt"] is True:

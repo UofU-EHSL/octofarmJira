@@ -1,6 +1,7 @@
 from pony.orm import *
 from classes.enumDefinitions import *
 import requests
+import json
 import datetime
 
 db = Database()
@@ -30,7 +31,7 @@ class Printer(db.Entity):
     def Get_Upload_Url(self):
         return "http://" + self.ip + "/api/files/{}".format("local")
 
-    def Get_Job_Request(self):
+    def Get_Job(self):
         headers = {
             "Accept": "application/json",
             "Host": self.ip,
@@ -48,6 +49,19 @@ class Printer(db.Entity):
         payload = {'select': 'true', 'print': 'true'}
         header = {'X-Api-Key': self.api_key}
         return requests.post(self.Get_Upload_Url(), files=fle, data=payload, headers=header)
+
+    def Get_Printer_State(self):
+        try:
+            response = self.Get_Job()
+            response = json.loads(response.text)
+            state = response['state'].lower()
+            if state == 'paused' and response['progress']['completion'] == 100.0:
+                return 'finished', response['job']['filament']['tool0']['volume']  # Also return actual volume printed if job is finished.
+
+            return state, 0
+        except Exception as e:
+            print(e)
+            "offline"
 
     @staticmethod
     @db_session
@@ -89,6 +103,12 @@ class Printer(db.Entity):
             printers.append(p)
         printers.sort(key=lambda x: x[1])  # The second element of the tuple is the number of print jobs associated.
         return printers
+
+    @db_session
+    def Get_Current_Job(self):
+        for pj in self.print_jobs:
+            if pj.print_status == PrintStatus.PRINTING.name:
+                return pj
 
     @staticmethod
     def Map_Request(printer, form_data):
