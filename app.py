@@ -1,23 +1,12 @@
-from importlib import import_module
 import octoprint
 import os
 import flask
-from classes.printer import *
 from classes.permissionCode import *
-from classes.message import *
-from classes.printJob import *
 from classes.user import *
 from pony.flask import Pony
-import threading
-from markupsafe import escape
-from multiprocessing import Process
-import time
 import pythonFunctions
 from classes.enumDefinitions import *
-from flask import request
 import yaml
-import asyncio
-import jsonify
 from threading import Lock
 from flask import Flask, render_template, session, request, copy_current_request_context
 from flask_socketio import SocketIO, emit
@@ -145,16 +134,6 @@ def users():
     return flask.render_template('users/users.html', users=all_users, async_mode=socketio.async_mode, ip=flask.request.host)
 
 
-# @app.route('/printers/deletePrinter/<printer_id>', methods=['POST'])
-# def delete_printer(printer_id):
-#     try:
-#         Printer[printer_id].delete()
-#         commit()
-#         return {'status': 'success'}
-#     except:
-#         return {'status': 'failed'}
-#
-#
 @app.route('/users/toggleWhiteListed/<user_id>', methods=['POST'])
 def toggle_white_listed_status(user_id):
     try:
@@ -307,39 +286,6 @@ def connect():
         if thread is None:
             thread = socketio.start_background_task(background_thread)
     emit('my_response', {'data': 'Connected', 'count': 0})
-
-
-@app.route('/admin', methods=['GET', 'POST'])
-def admin():
-    # config
-    with open(CONFIG) as f:
-        config = f.read()
-    with open(PRINTERS) as f:
-        printers = f.read()
-    with open(KEYS) as f:
-        keys = f.read()
-    with open(LISTS) as f:
-        lists = f.read()
-
-    if request.method == 'POST':
-        if "config_box" in request.form:
-            config = request.form['config_box']
-            with open(CONFIG, 'w') as f:
-                f.write(str(config))
-        if "printers_box" in request.form:
-            printers = request.form['printers_box']
-            with open(PRINTERS, 'w') as f:
-                f.write(str(printers))
-        if "keys_box" in request.form:
-            keys = request.form['keys_box']
-            with open(KEYS, 'w') as f:
-                f.write(str(keys))
-        if "lists_box" in request.form:
-            lists = request.form['lists_box']
-            with open(LISTS, 'w') as f:
-                f.write(str(lists))
-
-    return flask.render_template('admin.html', config=config, printers=printers, keys=keys, lists=lists, ip=flask.request.host)
 
 
 @app.route('/delete/<fileName>', methods=['GET', 'POST'])
