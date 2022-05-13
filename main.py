@@ -3,10 +3,7 @@ import os
 import schedule
 import octoprint
 import yaml
-from classes.printer import *
 from classes.permissionCode import *
-from classes.message import *
-from classes.printJob import *
 from classes.user import *
 import print_job_handler
 
@@ -52,15 +49,14 @@ def print_loop(clearTerminal):
     print_job_handler.process_new_jobs()
     octoprint.start_queued_jobs()
     octoprint.check_for_finished_jobs()
-    # octoprint.PrintIsFinished()
     # jira.askedForStatus()
 
 
 def main():
-    set_sql_debug(True)  # Shows the SQL queries pony is running in the console.
+    set_sql_debug(False)  # Shows the SQL queries pony is running in the console.
     db.bind(provider='sqlite', filename='octofarmJira_database.sqlite', create_db=True)  # Establish DB connection.
-    # db.generate_mapping(create_tables=True)
-    drop_and_create_db()
+    db.generate_mapping(create_tables=True)
+    # drop_and_create_db()
 
     with open("config_files/config.yml", "r") as yamlfile:
         config = yaml.load(yamlfile, Loader=yaml.FullLoader)

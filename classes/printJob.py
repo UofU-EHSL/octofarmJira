@@ -1,4 +1,3 @@
-from classes.printer import *
 from classes.message import *
 import datetime
 

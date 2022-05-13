@@ -1,12 +1,7 @@
-import requests
-import json
 import yaml
 import jira
-from classes.enumDefinitions import JiraTransitionCodes
-from classes.printer import Printer
 from classes.printJob import *
 import os
-import time
 from datetime import datetime
 
 # importing configs
@@ -105,62 +100,3 @@ def receiptPrinter(scrapedPRNumber, printer=''):
         p.text("\n\n-                              -\n\n")
     except:
         print("\nThe receipt printer is unplugged or not powered on, please double check physical connections.")
-
-
-def PrintIsFinished():
-    """
-    If a print is complete update people and mark as ready for new file
-    """
-    printers = Printer.Get_All_Enabled()
-    for printer in printers:
-        headers = {
-            "Accept": "application/json",
-            "Host": printer.ip,
-            "X-Api-Key": printer.api_key
-        }
-        try:
-            response = requests.request(
-                "GET",
-                printer.Get_Job_Url(),
-                headers=headers
-            )
-            if "State" not in response.text:
-                if json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": "))):
-                    status = json.loads(json.dumps(json.loads(response.text), sort_keys=True, indent=4, separators=(",", ": ")))
-                else:
-                    status = {'state': 'Offline'}
-            else:
-                print(printer.name + " is having issues and the pi is un-reachable, if this continues restart the pi")
-                status = {'state': 'Offline'}
-        except requests.exceptions.RequestException as e:  # This is the correct syntax
-            print(printer.name + "'s raspberry pi is offline and can't be contacted over the network")
-            status = {'state': 'Offline'}
-
-        """
-        I might want to change some of this code when I am in front of the printers to make it so each printers status gets printed out
-        """
-        if status != "offline":
-            if status['state'] == "Operational":
-                if str(status['progress']['completion']) == "100.0":
-                    volume = status['job']['filament']['tool0']['volume']
-                    grams = round(volume * printer.material_density, 2)
-                    print(printer.name + " is finishing up")
-                    file = os.path.splitext(status['job']['file']['display'])[0]
-                    resetConnection(printer.api_key, printer.ip)
-                    try:
-                        finishTime = datetime.now().strftime("%I:%M" '%p')
-                        response = "{color:#00875A}Print completed successfully!{color}\n\nPrint was harvested at " + finishTime
-                        response += "\nFilament Usage ... " + str(grams) + "g"
-                        response += "\nActual Cost ... (" + str(grams) + "g * $" + str(config["payment"]["costPerGram"]) + "/g) = $"
-                        cost = grams * config["payment"]["costPerGram"]
-                        cost = str(("%.2f" % cost))
-                        response += cost + " " + config["messages"]["finalMessage"]
-                        jira.commentStatus(file, response)
-                    except FileNotFoundError:
-                        print("This print was not started by this script, I am ignoring it: " + file)
-                    jira.changeStatus(file, JiraTransitionCodes.READY_FOR_REVIEW)  # file name referenced
-                    jira.changeStatus(file, JiraTransitionCodes.APPROVE)  # file name referenced
-                    if config['payment']['prepay'] is True:
-                        jira.changeStatus(file, JiraTransitionCodes.DONE)  # file name referenced
-
-        print(printer.name + " : " + status['state'])

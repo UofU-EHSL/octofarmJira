@@ -1,17 +1,8 @@
-import requests
-from requests.auth import HTTPBasicAuth
-import json
 import yaml
-from google_drive_downloader import GoogleDriveDownloader as gdd
-
 import jira
 from classes.gcodeLine import GcodeLine
-from classes.printer import *
 from classes.permissionCode import *
-from classes.message import *
 from classes.printJob import *
-import os
-import time
 from classes.enumDefinitions import *
 import re
 

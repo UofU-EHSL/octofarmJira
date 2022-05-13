@@ -1,28 +1,14 @@
-import requests
 from requests.auth import HTTPBasicAuth
-import json
 import yaml
-from google_drive_downloader import GoogleDriveDownloader as gdd
-
-import print_job_handler
-from classes.gcodeLine import GcodeLine
-from classes.printer import *
 from classes.permissionCode import *
-from classes.message import *
-from classes.printJob import *
 from classes.user import *
 import os
 import time
 from classes.enumDefinitions import *
-import re
 
 # load all of our config files
 with open("config_files/config.yml", "r") as yamlFile:
     config = yaml.load(yamlFile, Loader=yaml.FullLoader)
-with open("config_files/lists.yml", "r") as yamlFile:
-    userList = yaml.load(yamlFile, Loader=yaml.FullLoader)
-with open("config_files/keys.yml", "r") as yamlFile:
-    keys = yaml.load(yamlFile, Loader=yaml.FullLoader)
 
 # jira authentication information that gets pulled in from the config ###
 auth = HTTPBasicAuth(config['jira_user'], config['jira_password'])
@@ -154,34 +140,6 @@ def download(job):
         return "ERROR"
 
 
-def printIsNoGo(singleIssue, singleID):
-    """
-    If the print is a no-go and shouldn't continue
-    """
-    attachments = str(singleIssue).split(',')
-    if any(config['base_url'] + "/secure/attachment" in s for s in attachments):
-        print("Downloading " + singleID)
-        matching = [s for s in attachments if config['base_url'] + "/secure/attachment" in s]
-        attachment = str(matching[0]).split("'")
-        filename = attachment[3].split('/' + config['jiraTicketPrefix'] + '-', 1)[-1].split('_')[0]
-        filename = config['jiraTicketPrefix'] + '-' + filename
-        download(attachment[3], singleID, filename)
-    elif any("https://drive.google.com/file/d/" in s for s in attachments):
-        print("Downloading " + singleID + " from google drive")
-        matching = [s for s in attachments if "https://drive.google.com/file/d/" in s]
-        attachment = str(str(matching[0]).split("'"))
-        start = "https://drive.google.com/file/d/"
-        end = "/view?usp="
-        downloadGoogleDrive(attachment[attachment.find(start) + len(start):attachment.rfind(end)], singleID)
-    else:
-        commentStatus(
-            singleID,
-            config['messages']['noFile']
-        )
-        changeStatus(singleID, JiraTransitionCodes.START_PROGRESS)
-        changeStatus(singleID, JiraTransitionCodes.STOP_PROGRESS)
-
-
 def send_fail_message(job_id, message_text):
     """
     Comments on a ticket with the provided message and stops the progress on the ticket.
@@ -206,34 +164,6 @@ def send_print_finished(job):
     changeStatus(job.job_id, JiraTransitionCodes.READY_FOR_REVIEW)
     changeStatus(job.job_id, JiraTransitionCodes.APPROVE)
     commentStatus(job.job_id, job.Generate_Finish_Message())
-
-
-def printIsGoodToGo(singleIssue, singleID):
-    """
-    Things to do when a print is good to go
-    """
-    attachments = str(singleIssue).split(',')
-    if any(config['base_url'] + "/secure/attachment" in s for s in attachments):
-        print("Downloading " + singleID)
-        matching = [s for s in attachments if config['base_url'] + "/secure/attachment" in s]
-        attachment = str(matching[0]).split("'")
-        filename = attachment[3].split('/' + config['jiraTicketPrefix'] + '-', 1)[-1].split('_')[0]
-        filename = config['jiraTicketPrefix'] + '-' + filename
-        download(attachment[3], singleID, filename)
-    elif any("https://drive.google.com/file/d/" in s for s in attachments):
-        print("Downloading " + singleID + " from google drive")
-        matching = [s for s in attachments if "https://drive.google.com/file/d/" in s]
-        attachment = str(str(matching[0]).split("'"))
-        start = "https://drive.google.com/file/d/"
-        end = "/view?usp="
-        downloadGoogleDrive(attachment[attachment.find(start) + len(start):attachment.rfind(end)], singleID)
-    else:
-        commentStatus(
-            singleID,
-            config['messages']['noFile']
-        )
-        changeStatus(singleID, JiraTransitionCodes.START_PROGRESS)
-        changeStatus(singleID, JiraTransitionCodes.STOP_PROGRESS)
 
 
 def changeStatus(job_id, transitionCode):

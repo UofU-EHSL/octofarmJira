@@ -3,7 +3,6 @@ from classes.enumDefinitions import *
 import requests
 import json
 import time
-import datetime
 
 db = Database()
 
