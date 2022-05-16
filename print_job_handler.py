@@ -226,21 +226,21 @@ def check_gcode(file):
                         commandFound = True
                         break
             if not commandFound:
-                return None, GcodeStates.INVALID
+                return None, GcodeStates.INVALID, 0, 0
 
         elif GcodeCheckActions[checkItem['checkAction']] is GcodeCheckActions.COMMAND_PARAM_MIN:
             for line in parsedGcode:
                 if line.command == checkItem['command']:
                     value = int(filter_characters(line.params[0]))  # Get int value of first param.
                     if value < int(checkItem['actionValue'][0]):
-                        return None, GcodeStates.INVALID
+                        return None, GcodeStates.INVALID, 0, 0
 
         elif GcodeCheckActions[checkItem['checkAction']] is GcodeCheckActions.COMMAND_PARAM_MAX:
             for line in parsedGcode:
                 if line.command == checkItem['command']:
                     value = int(filter_characters(line.params[0]))  # Get int value of first param.
                     if value > int(checkItem['actionValue'][0]):
-                        return None, GcodeStates.INVALID
+                        return None, GcodeStates.INVALID, 0, 0
 
         elif GcodeCheckActions[checkItem['checkAction']] is GcodeCheckActions.COMMAND_PARAM_RANGE:
             for line in parsedGcode:
@@ -248,7 +248,7 @@ def check_gcode(file):
                     value1 = int(filter_characters(line.params[0]))  # Get int value of first param.
                     value2 = int(filter_characters(line.params[1]))  # Get int value of second param.
                     if not value1 > int(checkItem['actionValue'][0]) > value2:
-                        return None, GcodeStates.INVALID
+                        return None, GcodeStates.INVALID, 0, 0
 
     text_gcode = gcode_to_text(parsedGcode)
     return text_gcode, GcodeStates.VALID, weight, estimated_time
