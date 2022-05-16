@@ -68,7 +68,7 @@ def parse_permission_code(description):
 def parse_gcode_url(issue):
     attachments = issue['fields']['attachment']
     if attachments:
-        return attachments[0]['self'], UrlTypes.JIRA_ATTACHMENT
+        return attachments[0]['content'], UrlTypes.JIRA_ATTACHMENT
 
     description = issue['fields']['description']
     split = description.split('\\\\')
