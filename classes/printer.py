@@ -44,11 +44,6 @@ class Printer(db.Entity):
         header = {'X-Api-Key': self.api_key}
         return requests.post(self.Get_Connection_Url(), json=disconnect, headers=header)
 
-    def Reset_Connection(self):
-        self.Disconnect_Printer()
-        time.sleep(1)
-        self.Connect_Printer()
-
     def Get_Job(self):
         headers = {
             "Accept": "application/json",
