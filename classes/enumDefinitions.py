@@ -40,6 +40,7 @@ class JiraTransitionCodes(Enum):
 
 
 class PrinterModel(Enum):
+    UNKNOWN = auto()
     PRUSA_MK3 = auto()
     GIGABOT = auto()
     TAZ6 = auto()

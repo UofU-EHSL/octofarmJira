@@ -50,7 +50,7 @@ def process_new_jobs():
             handle_job_failure(job, MessageNames.GOOGLE_DRIVE_403_ERROR)
             continue
         else:
-            checked_gcode, check_result, weight, estimated_time = check_gcode(gcode)
+            checked_gcode, check_result, weight, estimated_time, printer_model = check_gcode(gcode)
             if check_result == GcodeStates.VALID:
                 text_file = open(job.Get_File_Name(), "w")
                 n = text_file.write(checked_gcode)
@@ -58,6 +58,7 @@ def process_new_jobs():
                 job.print_status = PrintStatus.IN_QUEUE.name
                 job.weight = weight
                 job.print_time = estimated_time
+                job.printer_model = printer_model.name
                 if job.permission_code:
                     job.cost = round(weight * 0.05, 2)
                 else:
@@ -195,15 +196,20 @@ def check_gcode(file):
     parsedGcode = parse_gcode(file)
     weight = 0
     estimated_time = ''
+    printer_model = ''
 
     index = len(parsedGcode) - 1
-    while (weight == 0 or estimated_time == '') and index > 0:
-        if parsedGcode[index].comment.startswith('estimated printing time (normal mode) ='):
-            split = parsedGcode[index].comment.split('=')
+    while (weight == 0 or estimated_time == '' or printer_model == '') and index > 0:
+        comment = parsedGcode[index].comment
+        if comment.startswith('estimated printing time (normal mode) ='):
+            split = comment.split('=')
             estimated_time = convert_time_to_seconds(split[1].strip())
-        elif parsedGcode[index].comment.startswith('total filament used [g] ='):
-            split = parsedGcode[index].comment.split('=')
+        elif comment.startswith('total filament used [g] ='):
+            split = comment.split('=')
             weight = float(split[1].strip())
+        elif comment.startswith('printer_notes') and 'PRINTER_MODEL_MLIBMK3' in comment:
+            printer_model = PrinterModel.PRUSA_MK3  # TODO: Update this to more thorough validation.
+
         index -= 1
 
     for checkItem in config['gcodeCheckItems']:
@@ -226,21 +232,21 @@ def check_gcode(file):
                         commandFound = True
                         break
             if not commandFound:
-                return None, GcodeStates.INVALID, 0, 0
+                return None, GcodeStates.INVALID, 0, 0, printer_model
 
         elif GcodeCheckActions[checkItem['checkAction']] is GcodeCheckActions.COMMAND_PARAM_MIN:
             for line in parsedGcode:
                 if line.command == checkItem['command']:
                     value = int(filter_characters(line.params[0]))  # Get int value of first param.
                     if value < int(checkItem['actionValue'][0]):
-                        return None, GcodeStates.INVALID, 0, 0
+                        return None, GcodeStates.INVALID, 0, 0, printer_model
 
         elif GcodeCheckActions[checkItem['checkAction']] is GcodeCheckActions.COMMAND_PARAM_MAX:
             for line in parsedGcode:
                 if line.command == checkItem['command']:
                     value = int(filter_characters(line.params[0]))  # Get int value of first param.
                     if value > int(checkItem['actionValue'][0]):
-                        return None, GcodeStates.INVALID, 0, 0
+                        return None, GcodeStates.INVALID, 0, 0, printer_model
 
         elif GcodeCheckActions[checkItem['checkAction']] is GcodeCheckActions.COMMAND_PARAM_RANGE:
             for line in parsedGcode:
@@ -248,7 +254,7 @@ def check_gcode(file):
                     value1 = int(filter_characters(line.params[0]))  # Get int value of first param.
                     value2 = int(filter_characters(line.params[1]))  # Get int value of second param.
                     if not value1 > int(checkItem['actionValue'][0]) > value2:
-                        return None, GcodeStates.INVALID, 0, 0
+                        return None, GcodeStates.INVALID, 0, 0, printer_model
 
     text_gcode = gcode_to_text(parsedGcode)
-    return text_gcode, GcodeStates.VALID, weight, estimated_time
+    return text_gcode, GcodeStates.VALID, weight, estimated_time, printer_model
