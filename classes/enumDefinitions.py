@@ -39,14 +39,6 @@ class JiraTransitionCodes(Enum):
     """Restart progress : 141  (From REJECTED to IN PROGRESS) # Renamed from "Start progress" to "Restart progress" when changing these to enums"""
 
 
-class PrinterModel(Enum):
-    UNKNOWN = auto()
-    PRUSA_MK3 = auto()
-    GIGABOT = auto()
-    TAZ6 = auto()
-    PRUSA_XL = auto()
-
-
 class GcodeCheckActions(Enum):
     ADD_COMMAND_AT_END = auto()
     """Add this command at the end of the file if it is not already the last command."""
@@ -62,6 +54,8 @@ class GcodeCheckActions(Enum):
     """First parameter of command must be OVER this value."""
     COMMAND_PARAM_RANGE = auto()
     """First parameter of command must be BETWEEN two values provided as comma separated string: 'x,x' """
+    KEYWORD_CHECK = auto()
+    """Check if the associated keyword exists in the gcode."""
 
 
 class PrintStatus(Enum):

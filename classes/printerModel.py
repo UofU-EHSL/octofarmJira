@@ -1,5 +1,4 @@
 from classes.keyword import *
-import datetime
 
 
 class PrinterModel(db.Entity):
@@ -7,10 +6,10 @@ class PrinterModel(db.Entity):
     Used to group different kinds of printers. Can be used in gcodeCheckItems to target checks against certain printers.
     """
     name = Required(str)
-    description = Required(str)
-    value = Required(str)
+    description = Optional(str)
     keyword = Optional("Keyword")
-    created_date = Required(datetime.datetime)
+    printer = Set(Printer)
+    gcode_check_items = Set('GcodeCheckItem')
 
 
     @staticmethod
@@ -30,5 +29,4 @@ class PrinterModel(db.Entity):
         """
         printer_model.name = form_data['name']
         printer_model.description = form_data['description']
-        printer_model.value = form_data['value']
         printer_model.keyword = form_data['keyword']

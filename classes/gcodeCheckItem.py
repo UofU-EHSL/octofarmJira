@@ -1,14 +1,40 @@
-from enumDefinitions import GcodeCheckActions
+from classes.printerModel import *
 
 
-class GcodeCheckItem:
-    def __init__(self, command: str, checkAction: GcodeCheckActions, actionValue: str):
+class GcodeCheckItem(db.Entity):
+    """
+    Checks gcode according to specific settings.
+    """
+    name = Required(str)
+    description = Optional(str)
+    command = Required(str)
+    check_action = Required(str)
+    action_value = Required(str)
+    hard_fail = Required(bool)
+    message = Optional(Message)
+    printer_model = Optional(PrinterModel)
+
+
+    @staticmethod
+    @db_session
+    def Get_All():
+        query_result = select(gci for gci in GcodeCheckItem)
+        gcode_check_items = []
+        for gci in query_result:
+            gcode_check_items.append(gci)
+        return gcode_check_items
+
+
+    @staticmethod
+    def Map_Request(gcode_check_item, form_data):
         """
-        Check to perform on the gcode file.
-        param commandType: Type of command to perform.
-        param checkAction: Type of action to perform with the commandType. See GcodeCheckActions Enum.
-        param actionValue: Value associated with the command and type if required. For example, the string to check for in a comment.
+        Maps request data to a gcode_check_item object.
         """
-        self.command = command
-        self.checkAction = checkAction
-        self.actionValue = actionValue
+        gcode_check_item.name = form_data['name']
+        gcode_check_item.description = form_data['description']
+        gcode_check_item.command = form_data['command']
+        gcode_check_item.check_action = form_data['check_action']
+        gcode_check_item.action_value = form_data['action_value']
+        gcode_check_item.hard_fail = form_data['hard_fail']
+        gcode_check_item.message = form_data['message']
+        gcode_check_item.printer_model = form_data['printer_model']

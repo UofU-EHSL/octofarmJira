@@ -1,5 +1,4 @@
 from classes.user import *
-import datetime
 
 
 class Keyword(db.Entity):
@@ -7,10 +6,9 @@ class Keyword(db.Entity):
     Used to associate something with a key in the gcode. Ex) Detect printer model or config bundle version. Used with gcodeCheckItems.
     """
     name = Required(str)
-    description = Required(str)
+    description = Optional(str)
     value = Required(str)
-    printer_model = Set(PrinterModel)
-    created_date = Required(datetime.datetime)
+    printer_model = Set('PrinterModel')
 
 
     @staticmethod

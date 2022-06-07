@@ -5,6 +5,7 @@ class Message(db.Entity):
     name = Required(str, unique=True)
     text = Required(str)
     print_job = Set('PrintJob')
+    gcode_check_items = Set('GcodeCheckItem')
 
 
 
