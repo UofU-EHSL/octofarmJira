@@ -1,0 +1,57 @@
+{% extends "layout.html" %}
+{% block title %}Gcode Checks{% endblock %}
+{% block head %}
+  {{ super() }}
+{% endblock %}
+
+{% block content %}
+    <a href="/checkItems/createCheckItem">Add New Gcode Check</a>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Command</th>
+                <th>Check Type</th>
+                <th>Check Value</th>
+                <th>Hard Fail</th>
+                <th>Message</th>
+                <th>Printer Model</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for check_item in check_items %}
+                <tr>
+                    <td>{{ check_item.name }}</td>
+                    <td>{{ check_item.description }}</td>
+                    <td>{{ check_item.command }}</td>
+                    <td>{{ check_item.check_action }}</td>
+                    <td>{{ check_item.action_value }}</td>
+                    <td>{{ check_item.hard_fail }}</td>
+                    <td>{{ check_item.message.name }}</td>
+                    <td>{{ check_item.printer_model.name }}</td>
+                    <td><button id="edit{{check_item.id }}" type="button" onclick="editCheckItem({{ check_item.id }})" class="btn btn-outline-primary">Edit</button></td>
+                    <td><button id="delete{{check_item.id }}" type="button" onclick="deleteCheckItem({{ check_item.id }})" class="btn btn-outline-danger">Delete</button></td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <script>
+    const deleteCheckItem = function(check_item_id) {
+        if (confirm("Are you sure you want to delete this gcode check? Do not do this unless you know what you're doing.")) {
+            $.post("/checkItems/deleteCheckItem/" + check_item_id, (data) => {
+                if (data.status == "success") {
+                    el = document.getElementById("delete" + check_item_id)
+                    el.parentElement.parentElement.remove()
+                } else if (data.status == "failed") {
+                    alert("Deleting check item failed!")
+                }
+            });
+        }
+    }
+    const editCheckItem = function(check_item_id) {
+        window.location.href = "/checkItems/editCheckItem/" + check_item_id
+    }
+    </script>
+{% endblock %}

@@ -1,0 +1,91 @@
+{% extends "layout.html" %}
+{% block title %}Edit Gcode Check: {{ check_item.name }}{% endblock %}
+{% block head %}
+  {{ super() }}
+{% endblock %}
+
+{% block content %}
+
+    <div class="form-container">
+        <form>
+            <div class="mb-3">
+                <label class="form-label" for="name">Name</label>
+                <input class="form-control" type="text" id="name" value="{{ check_item.name }}">
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="description">Description</label>
+                <input class="form-control" type="text" id="description" value="{{ check_item.description }}">
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="command">Command</label>
+                <input class="form-control" type="text" id="command" value="{{ check_item.command }}">
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="check_action">Check Action</label>
+                <select name="check_action" id="check_action">
+                {% for check_action in check_actions.items() %}
+                    <option {{"selected" if check_item.check_action.id == check_action[1]}} value="{{ check_action[1] }}">{{ check_action[0] }}</option>
+                {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="action_value">Action Value</label>
+                <input class="form-control" type="text" id="action_value" value="{{ check_item.action_value }}">
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="printer_model">Printer Model</label>
+                <select name="printer_model" id="printer_model">
+                {% for printer_model in printer_models %}
+                    <option {{"selected" if check_item.printer_model.id == printer_model.id}} value="{{ printer_model.id }}">{{ printer_model.name }}</option>
+                {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="message">Message</label>
+                <select name="message" id="message">
+                    <option value="">None</option>
+                {% for message in messages %}
+                    <option {{"selected" if check_item.message.id == message.id}} value="{{ message.id }}">{{ message.name }}</option>
+                {% endfor %}
+                </select>
+            </div>
+            <div class="mb-3">
+                <label class="form-check-label" for="hard_fail">Hard Fail</label>
+                <input class="form-check-input" type="checkbox" id="hard_fail" {{"checked" if check_item.hard_fail}}>
+            </div>
+
+            <button type="button" onclick="submitEdit({{ check_item.id }})">Submit</button>
+        </form>
+    </div>
+    <script>
+        const submitEdit = function(check_item_id) {
+            let formData = {}
+            formData.name = $("#name").val()
+            formData.description = $("#description").val()
+            formData.command = $("#command").val()
+            formData.check_action = $("#check_action").val()
+            formData.action_value = $("#action_value").val()
+            formData.hard_fail = $("#hard_fail").prop('checked')
+            formData.message = $("#message").val()
+            formData.printer_model = $("#printer_model").val()
+
+            if (!formData.name){
+                alert("Name is required!")
+                return
+            }
+            if (!formData.command){
+                alert("Command is required!")
+                return
+            }
+
+            $.post("/checkItems/editCheckItem/" + check_item_id, formData, (data) => {
+                if (data.status == "success") {
+                    window.location.href = "/checkItems"
+                } else if (data.status == "failed") {
+                    alert("Updating gcode check failed!")
+                }
+            });
+        }
+
+    </script>
+{% endblock %}

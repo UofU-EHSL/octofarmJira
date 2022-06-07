@@ -383,6 +383,62 @@ def edit_printer_model_post(printer_model_id):
         return {'status': 'failed'}
 
 
+@app.route('/checkItems')
+def check_items():
+    all_check_items = GcodeCheckItem.Get_All()
+    return flask.render_template('checkItems/check_items.html', check_items=all_check_items, async_mode=socketio.async_mode, ip=flask.request.host)
+
+
+@app.route('/checkItems/deleteCheckItem/<check_item_id>', methods=['POST'])
+def delete_check_item(check_item_id):
+    try:
+        GcodeCheckItem[check_item_id].delete()
+        commit()
+        return {'status': 'success'}
+    except:
+        return {'status': 'failed'}
+
+
+@app.route('/checkItems/createCheckItem', methods=['GET'])
+def create_check_item_get():
+    printer_models = PrinterModel.Get_All()
+    messages = Message.Get_All()
+    check_actions = get_dict(GcodeCheckActions)
+    return flask.render_template('checkItems/create_check_item.html', printer_models=printer_models, messages=messages, check_actions=check_actions, async_mode=socketio.async_mode, ip=flask.request.host)
+
+
+@app.route('/checkItems/createCheckItem', methods=['POST'])
+def create_check_item_post():
+    try:
+        form_data = request.form
+        GcodeCheckItem.Add_From_Request(form_data)
+        commit()
+        return {'status': 'success'}
+    except:
+        return {'status': 'failed'}
+
+
+@app.route('/checkItems/editCheckItem/<check_item_id>', methods=['GET'])
+def edit_check_item_get(check_item_id):
+    printer_models = PrinterModel.Get_All()
+    messages = Message.Get_All()
+    check_actions = get_dict(GcodeCheckActions)
+    check_item = GcodeCheckItem[check_item_id]
+    return flask.render_template('checkItems/edit_check_item.html', check_item=check_item, printer_models=printer_models, messages=messages, check_actions=check_actions, async_mode=socketio.async_mode, ip=flask.request.host)
+
+
+@app.route('/checkItems/editCheckItem/<check_item_id>', methods=['POST'])
+def edit_check_item_post(check_item_id):
+    try:
+        form_data = request.form
+        check_item = GcodeCheckItem[check_item_id]
+        GcodeCheckItem.Map_Request(check_item, form_data)
+        commit()
+        return {'status': 'success'}
+    except:
+        return {'status': 'failed'}
+
+
 @socketio.event
 def connect():
     global thread
