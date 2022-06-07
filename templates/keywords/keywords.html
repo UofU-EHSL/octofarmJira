@@ -1,0 +1,49 @@
+{% extends "layout.html" %}
+{% block title %}Keywords{% endblock %}
+{% block head %}
+  {{ super() }}
+{% endblock %}
+
+{% block content %}
+    <a href="/keywords/createKeyword">Add New Keyword</a>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Value</th>
+                <th></th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for keyword in keywords %}
+                <tr>
+                    <td>{{ keyword.name }}</td>
+                    <td>{{ keyword.description }}</td>
+                    <td>{{ keyword.value }}</td>
+                    <td><button id="edit{{keyword.id }}" type="button" onclick="editKeyword({{ keyword.id }})" class="btn btn-outline-primary">Edit</button></td>
+                    <td><button id="delete{{keyword.id }}" type="button" onclick="deleteKeyword({{ keyword.id }})" class="btn btn-outline-danger">Delete</button></td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <script>
+    const deleteKeyword = function(keyword_id) {
+        if (confirm("Are you sure you want to delete this keyword? Do not do this unless you know what you're doing.")) {
+            $.post("/keywords/deleteKeyword/" + keyword_id, (data) => {
+                if (data.status == "success") {
+                    el = document.getElementById("delete" + keyword_id)
+                    el.parentElement.parentElement.remove()
+                } else if (data.status == "failed") {
+                    alert("Deleting keyword failed!")
+                }
+            });
+        }
+    }
+    const editKeyword = function(keyword_id) {
+        window.location.href = "/keywords/editKeyword/" + keyword_id
+    }
+    </script>
+{% endblock %}

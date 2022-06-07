@@ -1,6 +1,7 @@
 import octoprint
 import os
 import flask
+from classes.permissionCode import *
 from classes.gcodeCheckItem import *
 from pony.flask import Pony
 import pythonFunctions
@@ -274,6 +275,56 @@ def edit_message_post(message_id):
         form_data = request.form
         message = Message[message_id]
         Message.Map_Request(message, form_data)
+        commit()
+        return {'status': 'success'}
+    except:
+        return {'status': 'failed'}
+
+
+@app.route('/keywords')
+def keywords():
+    all_keywords = Keyword.Get_All()
+    return flask.render_template('keywords/keywords.html', keywords=all_keywords, async_mode=socketio.async_mode, ip=flask.request.host)
+
+
+@app.route('/keywords/deleteKeyword/<keyword_id>', methods=['POST'])
+def delete_keyword(keyword_id):
+    try:
+        Keyword[keyword_id].delete()
+        commit()
+        return {'status': 'success'}
+    except:
+        return {'status': 'failed'}
+
+
+@app.route('/keywords/createKeyword', methods=['GET'])
+def create_keyword_get():
+    return flask.render_template('keywords/create_keyword.html', async_mode=socketio.async_mode, ip=flask.request.host)
+
+
+@app.route('/keywords/createKeyword', methods=['POST'])
+def create_keyword_post():
+    try:
+        form_data = request.form
+        Keyword.Add_From_Request(form_data)
+        commit()
+        return {'status': 'success'}
+    except:
+        return {'status': 'failed'}
+
+
+@app.route('/keywords/editKeyword/<keyword_id>', methods=['GET'])
+def edit_keyword_get(keyword_id):
+    keyword = Keyword[keyword_id]
+    return flask.render_template('keywords/edit_keyword.html', keyword=keyword, async_mode=socketio.async_mode, ip=flask.request.host)
+
+
+@app.route('/keywords/editKeyword/<keyword_id>', methods=['POST'])
+def edit_keyword_post(keyword_id):
+    try:
+        form_data = request.form
+        keyword = Keyword[keyword_id]
+        Keyword.Map_Request(keyword, form_data)
         commit()
         return {'status': 'success'}
     except:

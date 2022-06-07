@@ -29,3 +29,16 @@ class Keyword(db.Entity):
         keyword.name = form_data['name']
         keyword.description = form_data['description']
         keyword.value = form_data['value']
+
+
+    @staticmethod
+    @db_session
+    def Add_From_Request(form_data):
+        """
+        Maps request data to a message object.
+        """
+        name = form_data['name']
+        description = form_data['description']
+        value = form_data['value']
+
+        Keyword(name=name, description=description, value=value)

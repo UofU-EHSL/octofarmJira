@@ -1,0 +1,52 @@
+{% extends "layout.html" %}
+{% block title %}Edit Keyword: {{ keyword.name }}{% endblock %}
+{% block head %}
+  {{ super() }}
+{% endblock %}
+
+{% block content %}
+
+    <div class="form-container">
+        <form>
+            <div class="mb-3">
+                <label class="form-label" for="name">Name</label>
+                <input class="form-control" type="text" id="name" value="{{ keyword.name }}">
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="description">Description</label>
+                <input class="form-control" type="text" id="description" value="{{ keyword.description }}">
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="value">Value</label>
+                <input class="form-control" type="text" id="value" value="{{ keyword.value }}">
+            </div>
+            <button type="button" onclick="submitEdit({{ keyword.id }})">Submit</button>
+        </form>
+    </div>
+    <script>
+        const submitEdit = function(keyword_id) {
+            let formData = {}
+            formData.name = $("#name").val()
+            formData.description = $("#description").val()
+            formData.value = $("#value").val()
+
+            if (!formData.name){
+                alert("Name is required!")
+                return
+            }
+            if (!formData.value){
+                alert("Value is required!")
+                return
+            }
+
+            $.post("/keywords/editKeyword/" + keyword_id, formData, (data) => {
+                if (data.status == "success") {
+                    window.location.href = "/keywords"
+                } else if (data.status == "failed") {
+                    alert("Updating Keyword failed!")
+                }
+            });
+        }
+
+    </script>
+{% endblock %}
