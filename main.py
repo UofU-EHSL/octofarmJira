@@ -4,7 +4,7 @@ import schedule
 import octoprint
 import yaml
 from classes.permissionCode import *
-from classes.user import *
+from classes.gcodeCheckItem import *
 import print_job_handler
 
 
@@ -14,11 +14,20 @@ def drop_and_create_db():
     db.create_tables()
 
     with db_session:
-        p1 = Printer(name='Prusa01', model=PrinterModel.PRUSA_MK3.name, ip='localhost:81', api_key='53148701F56E47368C7737DF546B1532', enabled=True, material_density=1.25)
-        p2 = Printer(name='Prusa02', model=PrinterModel.PRUSA_MK3.name, ip='localhost:82', api_key='2ECDDF5FCFF44C56A4E864AFC1ABABD9', enabled=True, material_density=1.25)
-        p3 = Printer(name='Prusa03', model=PrinterModel.PRUSA_MK3.name, ip='localhost:83', api_key='A004159B89CB4226BED7E66A442A76F6', enabled=True, material_density=1.25)
-        p4 = Printer(name='Prusa04', model=PrinterModel.PRUSA_MK3.name, ip='localhost:84', api_key='0E00C61D6C964722A0D39B3D2CD98DBA', enabled=True, material_density=1.25)
-        p5 = Printer(name='Prusa05', model=PrinterModel.PRUSA_MK3.name, ip='localhost:85', api_key='44D69C98F8B54EEA827988AFE667BA0A', enabled=True, material_density=1.25)
+        kw1 = Keyword(name='PrusaMK3S', description='Key to check for prusa model printers.', value='PRUSAMK3S')
+        kw2 = Keyword(name='Config Version 1', description='Version 1 created on: DATE', value='MLIB_BUNDLE_V1')
+
+        commit()
+
+        pm1 = PrinterModel(name="PrusaMK3S", description="Best printer out there.", keyword=1)
+
+        commit()
+
+        p1 = Printer(name='Prusa01', printer_model=1, ip='localhost:81', api_key='53148701F56E47368C7737DF546B1532', enabled=True, material_density=1.25)
+        p2 = Printer(name='Prusa02', printer_model=1, ip='localhost:82', api_key='2ECDDF5FCFF44C56A4E864AFC1ABABD9', enabled=True, material_density=1.25)
+        p3 = Printer(name='Prusa03', printer_model=1, ip='localhost:83', api_key='A004159B89CB4226BED7E66A442A76F6', enabled=True, material_density=1.25)
+        p4 = Printer(name='Prusa04', printer_model=1, ip='localhost:84', api_key='0E00C61D6C964722A0D39B3D2CD98DBA', enabled=True, material_density=1.25)
+        p5 = Printer(name='Prusa05', printer_model=1, ip='localhost:85', api_key='44D69C98F8B54EEA827988AFE667BA0A', enabled=True, material_density=1.25)
 
         pc1 = PermissionCode(name='INVALID', code='INVALID', description='This code is invalid.')
         pc2 = PermissionCode(name='Test2', code='abcde', description='Start Today', start_date=datetime.date.today())
@@ -39,6 +48,20 @@ def drop_and_create_db():
         m9 = Message(name='GCODE_CHECK_FAIL', text='There is an issue with your submitted .gcode file. Please verify you used our printer profiles correctly.')
         m10 = Message(name='FINISH_TEXT_WITH_TAX', text='Your print is ready for pickup by the orange pillars in the ProtoSpace on the 2nd floor of the library whenever the library is open. A payment link will be generated and sent to you within approximately 48 hours. Thank you!')
         m11 = Message(name='FINISH_TEXT_TAX_EXEMPT', text='Your print is ready for pickup by the orange pillars in the ProtoSpace on the 2nd floor of the library whenever the library is open. Payment will be handled by your department or class. Thank you!')
+        m12 = Message(name='PROFILE_OUT_OF_DATE', text='Please update your print profiles.')
+
+        commit()
+
+        gci1 = GcodeCheckItem(name="Profile", command=";", check_action=GcodeCheckActions.KEYWORD_CHECK.name, action_value='2', hard_fail=False, message=12, printer_model=1)
+        gci2 = GcodeCheckItem(name="Remove M0", command="M0", check_action=GcodeCheckActions.REMOVE_COMMAND_ALL.name, action_value='', hard_fail=False)
+        gci3 = GcodeCheckItem(name="Add M0", command="M0", check_action=GcodeCheckActions.ADD_COMMAND_AT_END.name, action_value='', hard_fail=False)
+        gci4 = GcodeCheckItem(name="Remove beep", command="M300", check_action=GcodeCheckActions.REMOVE_COMMAND_ALL.name, action_value='', hard_fail=False)
+        gci5 = GcodeCheckItem(name="Ensure home", command='G28', check_action=GcodeCheckActions.COMMAND_MUST_EXIST.name, action_value='', hard_fail=True)
+        gci6 = GcodeCheckItem(name="Max nozzle temp", command='M104', check_action=GcodeCheckActions.COMMAND_PARAM_MAX.name, action_value='205', hard_fail=True)
+        gci7 = GcodeCheckItem(name="Max nozzle temp", command='M109', check_action=GcodeCheckActions.COMMAND_PARAM_MAX.name, action_value='205', hard_fail=True)
+        gci8 = GcodeCheckItem(name="Max bed temp", command='M140', check_action=GcodeCheckActions.COMMAND_PARAM_MAX.name, action_value='60', hard_fail=True)
+        gci9 = GcodeCheckItem(name="Max bed temp", command='M190', check_action=GcodeCheckActions.COMMAND_PARAM_MAX.name, action_value='60', hard_fail=True)
+
 
 
 def print_loop(clearTerminal):
