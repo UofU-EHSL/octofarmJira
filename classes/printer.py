@@ -139,7 +139,7 @@ class Printer(db.Entity):
         Maps request data to a printer object.
         """
         printer.name = form_data['name']
-        printer.printer_model = int(form_data['model'])
+        printer.printer_model = int(form_data['printer_model'])
         printer.ip = form_data['ip']
         printer.api_key = form_data['api_key']
         printer.stream_ip = form_data['stream_ip']
@@ -158,7 +158,7 @@ class Printer(db.Entity):
         Maps request data to a printer object.
         """
         name = form_data['name']
-        model = int(form_data['model'])
+        printer_model = int(form_data['printer_model'])
         ip = form_data['ip']
         api_key = form_data['api_key']
         stream_ip = form_data['stream_ip']
@@ -170,4 +170,4 @@ class Printer(db.Entity):
             material_density = None
         enabled = form_data['enabled'] == 'true'
 
-        Printer(name=name, model=model, ip=ip, api_key=api_key, stream_ip=stream_ip, material_type=material_type, material_color=material_color, material_density=material_density, enabled=enabled)
+        Printer(name=name, printer_model=printer_model, ip=ip, api_key=api_key, stream_ip=stream_ip, material_type=material_type, material_color=material_color, material_density=material_density, enabled=enabled)

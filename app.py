@@ -1,8 +1,7 @@
 import octoprint
 import os
 import flask
-from classes.permissionCode import *
-from classes.user import *
+from classes.gcodeCheckItem import *
 from pony.flask import Pony
 import pythonFunctions
 from classes.enumDefinitions import *
@@ -96,7 +95,8 @@ def toggle_printer_status(printer_id):
 
 @app.route('/printers/createPrinter', methods=['GET'])
 def create_printer_get():
-    return flask.render_template('printers/create_printer.html', models=get_dict(PrinterModel), async_mode=socketio.async_mode, ip=flask.request.host)
+    printer_models = PrinterModel.Get_All()
+    return flask.render_template('printers/create_printer.html', models=printer_models, async_mode=socketio.async_mode, ip=flask.request.host)
 
 
 @app.route('/printers/createPrinter', methods=['POST'])
@@ -113,7 +113,8 @@ def create_printer_post():
 @app.route('/printers/editPrinter/<printer_id>', methods=['GET'])
 def edit_printer_get(printer_id):
     printer = Printer[printer_id]
-    return flask.render_template('printers/edit_printer.html', printer=printer, models=get_dict(PrinterModel), async_mode=socketio.async_mode, ip=flask.request.host)
+    printer_models = PrinterModel.Get_All()
+    return flask.render_template('printers/edit_printer.html', printer=printer, models=printer_models, async_mode=socketio.async_mode, ip=flask.request.host)
 
 
 @app.route('/printers/editPrinter/<printer_id>', methods=['POST'])

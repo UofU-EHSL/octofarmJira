@@ -10,7 +10,7 @@
         <thead>
             <tr>
                 <th>Name</th>
-                <th>Type</th>
+                <th>Model</th>
                 <th>IP</th>
                 <th>API Key</th>
                 <th>Stream IP</th>
@@ -26,7 +26,7 @@
             {% for printer in printers %}
                 <tr class="{{"" if printer.enabled else "table-warning" }}">
                     <td>{{ printer.name }}</td>
-                    <td>{{ printer.model }}</td>
+                    <td>{{ printer.printer_model.name }}</td>
                     <td>{{ printer.ip }}</td>
                     <td>{{ printer.api_key }}</td>
                     <td>{{ printer.stream_ip }}</td>
