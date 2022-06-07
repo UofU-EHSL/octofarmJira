@@ -1,0 +1,56 @@
+{% extends "layout.html" %}
+{% block title %}Edit Printer Model: {{ printer_model.name }}{% endblock %}
+{% block head %}
+  {{ super() }}
+{% endblock %}
+
+{% block content %}
+
+    <div class="form-container">
+        <form>
+            <div class="mb-3">
+                <label class="form-label" for="name">Name</label>
+                <input class="form-control" type="text" id="name" value="{{ printer_model.name }}">
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="description">Description</label>
+                <input class="form-control" type="text" id="description" value="{{ printer_model.description }}">
+            </div>
+            <div class="mb-3">
+                <label class="form-label" for="keyword">Keyword</label>
+                <select name="keyword" id="keyword">
+                {% for keyword in all_keywords %}
+                    <option {{"selected" if printer_model.keyword == keyword.id}} value="{{ keyword.id }}">{{ keyword.name }}</option>
+                {% endfor %}
+                </select>
+            </div>
+            <button type="button" onclick="submitEdit({{ printer_model.id }})">Submit</button>
+        </form>
+    </div>
+    <script>
+        const submitEdit = function(printer_model_id) {
+            let formData = {}
+            formData.name = $("#name").val()
+            formData.description = $("#description").val()
+            formData.keyword = $("#keyword").val()
+
+            if (!formData.name){
+                alert("Name is required!")
+                return
+            }
+            if (!formData.keyword){
+                alert("Keyword is required!")
+                return
+            }
+
+            $.post("/printerModels/editPrinterModel/" + printer_model_id, formData, (data) => {
+                if (data.status == "success") {
+                    window.location.href = "/printerModels"
+                } else if (data.status == "failed") {
+                    alert("Updating printer model failed!")
+                }
+            });
+        }
+
+    </script>
+{% endblock %}

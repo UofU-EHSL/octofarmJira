@@ -331,6 +331,58 @@ def edit_keyword_post(keyword_id):
         return {'status': 'failed'}
 
 
+@app.route('/printerModels')
+def printer_models():
+    all_models = PrinterModel.Get_All()
+    return flask.render_template('printerModels/printer_models.html', printer_models=all_models, async_mode=socketio.async_mode, ip=flask.request.host)
+
+
+@app.route('/printerModels/deletePrinterModel/<printer_model_id>', methods=['POST'])
+def delete_printer_model(printer_model_id):
+    try:
+        PrinterModel[printer_model_id].delete()
+        commit()
+        return {'status': 'success'}
+    except:
+        return {'status': 'failed'}
+
+
+@app.route('/printerModels/createPrinterModel', methods=['GET'])
+def create_printer_model_get():
+    all_keywords = Keyword.Get_All()
+    return flask.render_template('printerModels/create_printer_model.html', all_keywords=all_keywords, async_mode=socketio.async_mode, ip=flask.request.host)
+
+
+@app.route('/printerModels/createPrinterModel', methods=['POST'])
+def create_printer_model_post():
+    try:
+        form_data = request.form
+        PrinterModel.Add_From_Request(form_data)
+        commit()
+        return {'status': 'success'}
+    except:
+        return {'status': 'failed'}
+
+
+@app.route('/printerModels/editPrinterModel/<printer_model_id>', methods=['GET'])
+def edit_printer_model_get(printer_model_id):
+    all_keywords = Keyword.Get_All()
+    printer_model = PrinterModel[printer_model_id]
+    return flask.render_template('printerModels/edit_printer_model.html', printer_model=printer_model, all_keywords=all_keywords, async_mode=socketio.async_mode, ip=flask.request.host)
+
+
+@app.route('/printerModels/editPrinterModel/<printer_model_id>', methods=['POST'])
+def edit_printer_model_post(printer_model_id):
+    try:
+        form_data = request.form
+        printer_model = PrinterModel[printer_model_id]
+        PrinterModel.Map_Request(printer_model, form_data)
+        commit()
+        return {'status': 'success'}
+    except:
+        return {'status': 'failed'}
+
+
 @socketio.event
 def connect():
     global thread

@@ -13,7 +13,7 @@
                 <input class="form-control" type="text" id="name" value="{{ printer.name }}">
             </div>
             <div class="mb-3">
-                <label class="form-label" for="name">Model</label>
+                <label class="form-label" for="model">Model</label>
                 <select name="model" id="model">
                 {% for model in models %}
                     <option {{"selected" if printer.printer_model == model.id}} value="{{ model.id }}">{{ model.name }}</option>

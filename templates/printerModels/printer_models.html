@@ -1,0 +1,49 @@
+{% extends "layout.html" %}
+{% block title %}Printer Models{% endblock %}
+{% block head %}
+  {{ super() }}
+{% endblock %}
+
+{% block content %}
+    <a href="/printerModels/createPrinterModel">Add New Printer Model</a>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Keyword</th>
+                <th></th>
+                <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for printer_model in printer_models %}
+                <tr>
+                    <td>{{ printer_model.name }}</td>
+                    <td>{{ printer_model.description }}</td>
+                    <td>{{ printer_model.keyword.name }}</td>
+                    <td><button id="edit{{printer_model.id }}" type="button" onclick="editPrinterModel({{ printer_model.id }})" class="btn btn-outline-primary">Edit</button></td>
+                    <td><button id="delete{{printer_model.id }}" type="button" onclick="deletePrinterModel({{ printer_model.id }})" class="btn btn-outline-danger">Delete</button></td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <script>
+    const deletePrinterModel = function(printer_model_id) {
+        if (confirm("Are you sure you want to delete this printer model? Do not do this unless you know what you're doing.")) {
+            $.post("/printerModels/deletePrinterModel/" + printer_model_id, (data) => {
+                if (data.status == "success") {
+                    el = document.getElementById("delete" + printer_model_id)
+                    el.parentElement.parentElement.remove()
+                } else if (data.status == "failed") {
+                    alert("Deleting printer model failed!")
+                }
+            });
+        }
+    }
+    const editPrinterModel = function(printer_model_id) {
+        window.location.href = "/printerModels/editPrinterModel/" + printer_model_id
+    }
+    </script>
+{% endblock %}

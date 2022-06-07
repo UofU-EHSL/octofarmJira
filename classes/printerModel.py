@@ -30,3 +30,16 @@ class PrinterModel(db.Entity):
         printer_model.name = form_data['name']
         printer_model.description = form_data['description']
         printer_model.keyword = form_data['keyword']
+
+
+    @staticmethod
+    @db_session
+    def Add_From_Request(form_data):
+        """
+        Maps request data to a message object.
+        """
+        name = form_data['name']
+        description = form_data['description']
+        keyword = int(form_data['keyword'])
+
+        PrinterModel(name=name, description=description, keyword=keyword)
