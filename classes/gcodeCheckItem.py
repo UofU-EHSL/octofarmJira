@@ -9,7 +9,7 @@ class GcodeCheckItem(db.Entity):
     description = Optional(str)
     command = Required(str)
     check_action = Required(str)
-    action_value = Required(str)
+    action_value = Optional(str)
     hard_fail = Required(bool)
     message = Optional(Message)
     printer_model = Optional(PrinterModel)

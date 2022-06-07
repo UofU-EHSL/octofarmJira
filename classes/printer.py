@@ -10,7 +10,7 @@ db = Database()
 class Printer(db.Entity):
     name = Required(str, unique=True)
     """Human friendly name for printer. Example: 'Prusa01' """
-    model = Required('PrinterModel')
+    printer_model = Required('PrinterModel')
     """Model of the printer."""
     ip = Required(str, unique=True)
     """IP address to send print files to and query print status from."""
@@ -107,7 +107,7 @@ class Printer(db.Entity):
     @staticmethod
     @db_session
     def Get_All_By_Type(printer_model):
-        query_result = select(p for p in Printer if p.model == printer_model.id)
+        query_result = select(p for p in Printer if p.printer_model == printer_model.id)
         printers = []
         for p in query_result:
             printers.append(p)
@@ -139,7 +139,7 @@ class Printer(db.Entity):
         Maps request data to a printer object.
         """
         printer.name = form_data['name']
-        printer.model = PrinterModel(int(form_data['model'])).name
+        printer.printer_model = int(form_data['model'])
         printer.ip = form_data['ip']
         printer.api_key = form_data['api_key']
         printer.stream_ip = form_data['stream_ip']
@@ -158,7 +158,7 @@ class Printer(db.Entity):
         Maps request data to a printer object.
         """
         name = form_data['name']
-        model = PrinterModel(int(form_data['model'])).name
+        model = int(form_data['model'])
         ip = form_data['ip']
         api_key = form_data['api_key']
         stream_ip = form_data['stream_ip']
