@@ -9,6 +9,7 @@ class Keyword(db.Entity):
     name = Required(str)
     description = Required(str)
     value = Required(str)
+    printer_model = Set(PrinterModel)
     created_date = Required(datetime.datetime)
 
 
@@ -28,5 +29,5 @@ class Keyword(db.Entity):
         Maps request data to a keyword object.
         """
         keyword.name = form_data['name']
-        keyword.name = form_data['description']
-        keyword.name = form_data['value']
+        keyword.description = form_data['description']
+        keyword.value = form_data['value']
