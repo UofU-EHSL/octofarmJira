@@ -33,6 +33,8 @@ def start_queued_jobs():
 def check_for_finished_jobs():
     printers = Printer.Get_All_Enabled()
     for printer in printers:
+        if not printer.printer_model.auto_start_prints:
+            continue
         state, actual_print_volume = printer.Get_Printer_State(get_actual_volume=True)
         if state == 'finished':
             job = printer.Get_Current_Job()
@@ -49,6 +51,8 @@ def check_for_finished_jobs():
                 commit()
                 jira.send_print_finished(job)
                 printer.Reconnect_Printer()
+                if os.path.exists(job.Get_File_Name()):
+                    os.remove(job.Get_File_Name())
             else:
                 print(printer.name + " has finished job not found in DB.")
 
