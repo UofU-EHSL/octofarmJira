@@ -42,7 +42,7 @@ def check_for_finished_jobs():
                 job.payment_status = PaymentStatus.NEEDS_PAYMENT_LINK.name
                 commit()
                 jira.send_print_finished(job)
-                printer.Connect_Printer()
+                printer.Reconnect_Printer()
             else:
                 print(printer.name + " has finished job not found in DB.")
 
