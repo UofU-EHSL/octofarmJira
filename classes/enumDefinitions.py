@@ -52,8 +52,6 @@ class GcodeCheckActions(Enum):
     Only sees digits. For example, M104 S205 is set nozzle temp. The S will be ignored and only the 205 checked."""
     COMMAND_PARAM_MIN = auto()
     """First parameter of command must be OVER this value."""
-    COMMAND_PARAM_RANGE = auto()
-    """First parameter of command must be BETWEEN two values provided as comma separated string: 'x,x' """
     KEYWORD_CHECK = auto()
     """Check if the associated keyword exists in the gcode. action_value of the gcode check item should be the id of the keyword you want to check for."""
 

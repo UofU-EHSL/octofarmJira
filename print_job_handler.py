@@ -2,7 +2,7 @@ import yaml
 import jira
 from classes.gcodeLine import GcodeLine
 from classes.permissionCode import *
-from classes.printJob import *
+from classes.gcodeCheckItem import *
 from classes.enumDefinitions import *
 import re
 
@@ -216,51 +216,44 @@ def check_gcode(file):
                     printer_model = m.id
                     continue
 
-
         index -= 1
 
-    for checkItem in config['gcodeCheckItems']:
-        if GcodeCheckActions[checkItem['checkAction']] is GcodeCheckActions.REMOVE_COMMAND_ALL:
+    check_items = GcodeCheckItem.Get_All()
+
+    for check_item in check_items:
+        if GcodeCheckActions[check_item.check_action] is GcodeCheckActions.REMOVE_COMMAND_ALL:
             for i in range(len(parsedGcode)):
-                if parsedGcode[i].command == checkItem['command']:
+                if parsedGcode[i].command == check_item.command:
                     parsedGcode.pop(i)
 
-        elif GcodeCheckActions[checkItem['checkAction']] is GcodeCheckActions.ADD_COMMAND_AT_END:
-            parsedGcode.append(GcodeLine(checkItem['command'], checkItem['actionValue'], ''))
+        elif GcodeCheckActions[check_item.check_action] is GcodeCheckActions.ADD_COMMAND_AT_END:
+            parsedGcode.append(GcodeLine(check_item.command, check_item.action_value, ''))
 
-        elif GcodeCheckActions[checkItem['checkAction']] is GcodeCheckActions.COMMAND_MUST_EXIST:
+        elif GcodeCheckActions[check_item.check_action] is GcodeCheckActions.COMMAND_MUST_EXIST:
             commandFound = False
             for line in parsedGcode:
-                if line.command == checkItem['command'] and line.command != ';':  # If it is not a comment, only check that the command is there.
+                if line.command == check_item.command and line.command != ';':  # If it is not a comment, only check that the command is there.
                     commandFound = True
                     break
-                elif line.command == checkItem['command'] and line.command == ';':  # If it is a comment, ensure the string matches.
-                    if checkItem['actionValue'][0].lower().strip() in line.comment.lower().strip():
+                elif line.command == check_item.command and line.command == ';':  # If it is a comment, ensure the string matches.
+                    if check_item.action_value.lower().strip() in line.comment.lower().strip():
                         commandFound = True
                         break
             if not commandFound:
                 return None, GcodeStates.INVALID, 0, 0, printer_model
 
-        elif GcodeCheckActions[checkItem['checkAction']] is GcodeCheckActions.COMMAND_PARAM_MIN:
+        elif GcodeCheckActions[check_item.check_action] is GcodeCheckActions.COMMAND_PARAM_MIN:
             for line in parsedGcode:
-                if line.command == checkItem['command']:
+                if line.command == check_item.command:
                     value = int(filter_characters(line.params[0]))  # Get int value of first param.
-                    if value < int(checkItem['actionValue'][0]):
+                    if value < int(check_item.action_value):
                         return None, GcodeStates.INVALID, 0, 0, printer_model
 
-        elif GcodeCheckActions[checkItem['checkAction']] is GcodeCheckActions.COMMAND_PARAM_MAX:
+        elif GcodeCheckActions[check_item.check_action] is GcodeCheckActions.COMMAND_PARAM_MAX:
             for line in parsedGcode:
-                if line.command == checkItem['command']:
+                if line.command == check_item.command:
                     value = int(filter_characters(line.params[0]))  # Get int value of first param.
-                    if value > int(checkItem['actionValue'][0]):
-                        return None, GcodeStates.INVALID, 0, 0, printer_model
-
-        elif GcodeCheckActions[checkItem['checkAction']] is GcodeCheckActions.COMMAND_PARAM_RANGE:
-            for line in parsedGcode:
-                if line.command == checkItem['command']:
-                    value1 = int(filter_characters(line.params[0]))  # Get int value of first param.
-                    value2 = int(filter_characters(line.params[1]))  # Get int value of second param.
-                    if not value1 > int(checkItem['actionValue'][0]) > value2:
+                    if value > int(check_item.action_value):
                         return None, GcodeStates.INVALID, 0, 0, printer_model
 
     text_gcode = gcode_to_text(parsedGcode)

@@ -9,6 +9,7 @@ class PrinterModel(db.Entity):
     description = Optional(str)
     keyword = Optional("Keyword")
     printer = Set(Printer)
+    print_jobs = Set(PrintJob)
     gcode_check_items = Set('GcodeCheckItem')
 
 
