@@ -119,7 +119,7 @@ class Printer(db.Entity):
 
     @staticmethod
     @db_session
-    def Get_All_Print_Counts(enabled_only=True):
+    def Get_All_Printers_By_Count(enabled_only=True):
         """Counts any print that started on the printer, including failed jobs. Sorted with the smallest number of jobs first."""
         if enabled_only:
             query_result = left_join((p, count(pj)) for p in Printer if p.enabled for pj in p.print_jobs)[:]

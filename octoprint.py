@@ -1,6 +1,6 @@
 import yaml
 import jira
-from classes.printJob import *
+from classes.printerModel import *
 import os
 from datetime import datetime
 
@@ -14,13 +14,19 @@ def start_queued_jobs():
     queued_jobs = PrintJob.Get_All_By_Status(PrintStatus.IN_QUEUE)
     if len(queued_jobs) == 0:
         return
-    printers_by_count = Printer.Get_All_Print_Counts()
-    for printer in printers_by_count:
-        # printer is a tuple: (printer, <print_count>)
-        if len(queued_jobs) == 0:
-            break
-        if printer[0].Get_Printer_State() == 'operational':
-            start_print_job(queued_jobs.pop(0), printer[0])
+
+    printer_models = PrinterModel.Get_All()
+    printers_by_count = Printer.Get_All_Printers_By_Count(True)
+    for pm in printer_models:
+        if pm.auto_start_prints:
+            printers = list(filter(lambda p: p[0].printer_model.id == pm.id, printers_by_count))  # Get printers for this printer model
+            jobs = list(filter(lambda j: j.printer_model.id == pm.id, queued_jobs))  # Get jobs for this printer model
+            for printer in printers:
+                # printer is a tuple: (printer, <print_count>)
+                if len(jobs) == 0:
+                    break
+                if printer[0].Get_Printer_State() == 'operational':
+                    start_print_job(jobs.pop(0), printer[0])
 
 
 @db_session
