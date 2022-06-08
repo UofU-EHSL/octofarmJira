@@ -7,6 +7,8 @@ from classes.enumDefinitions import *
 import re
 
 # load all of our config files
+from classes.printerModel import PrinterModel
+
 with open("config_files/config.yml", "r") as yamlFile:
     config = yaml.load(yamlFile, Loader=yaml.FullLoader)
 
@@ -58,7 +60,7 @@ def process_new_jobs():
                 job.print_status = PrintStatus.IN_QUEUE.name
                 job.weight = weight
                 job.print_time = estimated_time
-                job.printer_model = printer_model.name
+                job.printer_model = printer_model
                 if job.permission_code:
                     job.cost = round(weight * 0.05, 2)
                 else:
@@ -207,8 +209,13 @@ def check_gcode(file):
         elif comment.startswith('total filament used [g] ='):
             split = comment.split('=')
             weight = float(split[1].strip())
-        elif comment.startswith('printer_notes') and 'PRINTER_MODEL_MLIBMK3' in comment:
-            printer_model = PrinterModel.PRUSA_MK3  # TODO: Update this to more thorough validation.
+        elif comment.startswith('printer_notes'):
+            models = PrinterModel.Get_All()
+            for m in models:
+                if m.keyword.value in comment:
+                    printer_model = m.id
+                    continue
+
 
         index -= 1
 

@@ -14,12 +14,14 @@ def drop_and_create_db():
     db.create_tables()
 
     with db_session:
-        kw1 = Keyword(name='PrusaMK3S', description='Key to check for prusa model printers.', value='PRUSAMK3S')
+        kw1 = Keyword(name='PrusaMK3S', description='Key to check for prusa model printers.', value='MLIB_PRUSAMK3S')
         kw2 = Keyword(name='Config Version 1', description='Version 1 created on: DATE', value='MLIB_BUNDLE_V1')
+        kw3 = Keyword(name='Gigabot', description='Key to check for prusa model printers.', value='MLIB_GIGABOT')
 
         commit()
 
         pm1 = PrinterModel(name="PrusaMK3S", description="Best printer out there.", keyword=1)
+        pm2 = PrinterModel(name="Gigabot", description="Big boi", keyword=3)
 
         commit()
 
@@ -28,6 +30,7 @@ def drop_and_create_db():
         p3 = Printer(name='Prusa03', printer_model=1, ip='localhost:83', api_key='A004159B89CB4226BED7E66A442A76F6', enabled=True, material_density=1.25)
         p4 = Printer(name='Prusa04', printer_model=1, ip='localhost:84', api_key='0E00C61D6C964722A0D39B3D2CD98DBA', enabled=True, material_density=1.25)
         p5 = Printer(name='Prusa05', printer_model=1, ip='localhost:85', api_key='44D69C98F8B54EEA827988AFE667BA0A', enabled=True, material_density=1.25)
+        p6 = Printer(name='Gigaboi', printer_model=2, ip='localhost:86', api_key='test', enabled=True, material_density=1.25)
 
         pc1 = PermissionCode(name='INVALID', code='INVALID', description='This code is invalid.')
         pc2 = PermissionCode(name='Test2', code='abcde', description='Start Today', start_date=datetime.date.today())

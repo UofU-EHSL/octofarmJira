@@ -55,7 +55,7 @@ class GcodeCheckActions(Enum):
     COMMAND_PARAM_RANGE = auto()
     """First parameter of command must be BETWEEN two values provided as comma separated string: 'x,x' """
     KEYWORD_CHECK = auto()
-    """Check if the associated keyword exists in the gcode."""
+    """Check if the associated keyword exists in the gcode. action_value of the gcode check item should be the id of the keyword you want to check for."""
 
 
 class PrintStatus(Enum):

@@ -3,7 +3,7 @@ import datetime
 
 
 class PrintJob(db.Entity):
-    printer_model = Required(str)
+    printer_model = Optional(str)
     """PrinterModel Enum. Type of printer the associated gcode has been generated for."""
     printed_on = Optional(Printer)
     """Printer this job was processed on."""
