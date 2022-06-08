@@ -11,6 +11,7 @@
             <tr>
                 <th>Name</th>
                 <th>Description</th>
+                <th>Autostart Prints</th>
                 <th>Keyword</th>
                 <th></th>
                 <th></th>
@@ -21,6 +22,7 @@
                 <tr>
                     <td>{{ printer_model.name }}</td>
                     <td>{{ printer_model.description }}</td>
+                    <td>{{ printer_model.auto_start_prints }}</td>
                     <td>{{ printer_model.keyword.name }}</td>
                     <td><button id="edit{{printer_model.id }}" type="button" onclick="editPrinterModel({{ printer_model.id }})" class="btn btn-outline-primary">Edit</button></td>
                     <td><button id="delete{{printer_model.id }}" type="button" onclick="deletePrinterModel({{ printer_model.id }})" class="btn btn-outline-danger">Delete</button></td>

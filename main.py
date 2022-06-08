@@ -20,8 +20,8 @@ def drop_and_create_db():
 
         commit()
 
-        pm1 = PrinterModel(name="PrusaMK3S", description="Best printer out there.", keyword=1)
-        pm2 = PrinterModel(name="Gigabot", description="Big boi", keyword=3)
+        pm1 = PrinterModel(name="PrusaMK3S", description="Best printer out there.", keyword=1, auto_start_prints=True)
+        pm2 = PrinterModel(name="Gigabot", description="Big boi", keyword=3, auto_start_prints=False)
 
         commit()
 
@@ -64,7 +64,6 @@ def drop_and_create_db():
         gci7 = GcodeCheckItem(name="Max nozzle temp", command='M109', check_action=GcodeCheckActions.COMMAND_PARAM_MAX.name, action_value='205', hard_fail=True)
         gci8 = GcodeCheckItem(name="Max bed temp", command='M140', check_action=GcodeCheckActions.COMMAND_PARAM_MAX.name, action_value='60', hard_fail=True)
         gci9 = GcodeCheckItem(name="Max bed temp", command='M190', check_action=GcodeCheckActions.COMMAND_PARAM_MAX.name, action_value='60', hard_fail=True)
-
 
 
 def print_loop(clearTerminal):

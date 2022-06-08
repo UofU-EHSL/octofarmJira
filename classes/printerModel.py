@@ -7,6 +7,7 @@ class PrinterModel(db.Entity):
     """
     name = Required(str)
     description = Optional(str)
+    auto_start_prints = Required(bool)
     keyword = Optional("Keyword")
     printer = Set(Printer)
     print_jobs = Set(PrintJob)
