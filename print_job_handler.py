@@ -61,6 +61,7 @@ def process_new_jobs():
                 job.weight = weight
                 job.print_time = estimated_time
                 job.printer_model = printer_model
+                # TODO: If printer_model is not a manual start one, send a notification to discord or something
                 if job.permission_code:
                     job.cost = round(weight * 0.05, 2)
                 else:
