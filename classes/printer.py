@@ -84,7 +84,7 @@ class Printer(db.Entity):
             else:
                 return state
         except Exception as e:
-            print(e)
+            print(self.name + " did not respond. Check connection and disable printer if needed.")
             if get_actual_volume:
                 return 'offline', 0
             else:

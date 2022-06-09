@@ -11,7 +11,9 @@ with open("config_files/config.yml", "r") as yamlFile:
 
 @db_session
 def start_queued_jobs():
+    print("Checking for queued jobs...")
     queued_jobs = PrintJob.Get_All_By_Status(PrintStatus.IN_QUEUE)
+    print(str(len(queued_jobs)) + " queued jobs found.")
     if len(queued_jobs) == 0:
         return
 
@@ -23,14 +25,18 @@ def start_queued_jobs():
             jobs = list(filter(lambda j: j.printer_model.id == pm.id, queued_jobs))  # Get jobs for this printer model
             for printer in printers:
                 # printer is a tuple: (printer, <print_count>)
-                if len(jobs) == 0:
+                if len(jobs) == 0:  # We are out of jobs
                     break
                 if printer[0].Get_Printer_State() == 'operational':
-                    start_print_job(jobs.pop(0), printer[0])
+                    start_print_job(jobs.pop(0), printer[0])  # Removes the job from the list
+    print(str(len(queued_jobs)) + " jobs still in queue.")
+
 
 
 @db_session
 def check_for_finished_jobs():
+    print("Checking for finished jobs...")
+    finished_count = 0
     printers = Printer.Get_All_Enabled()
     for printer in printers:
         if not printer.printer_model.auto_start_prints:
@@ -50,11 +56,15 @@ def check_for_finished_jobs():
                 job.payment_status = PaymentStatus.NEEDS_PAYMENT_LINK.name
                 commit()
                 jira.send_print_finished(job)
+                print(job.Get_Name() + " finished on " + printer.name + ".")
+                finished_count += 1
                 printer.Reconnect_Printer()
                 if os.path.exists(job.Get_File_Name()):
                     os.remove(job.Get_File_Name())
             else:
                 print(printer.name + " has finished job not found in DB.")
+    print(str(finished_count) + " finished jobs found.")
+
 
 
 def start_print_job(job, printer):
@@ -69,6 +79,7 @@ def start_print_job(job, printer):
         if config["receipt_printer"]["print_physical_receipt"] is True:
             receiptPrinter(job.Get_Name(job_name_only=True), printer.name)
         jira.send_print_started(job)
+        print(job.Get_Name() + " started on " + printer.name + ".")
     else:
         print("Error uploading " + job.Get_Name() + " to " + printer.name + '. Status code: ' + str(upload_result.status_code))
 

@@ -69,11 +69,12 @@ def drop_and_create_db():
 def print_loop(clearTerminal):
     if clearTerminal:
         os.system('cls' if os.name == 'nt' else 'clear')
-    print("Checking for new submissions...")
+    print("Starting print loop.")
     jira.get_new_print_jobs()
     print_job_handler.process_new_jobs()
     octoprint.start_queued_jobs()
     octoprint.check_for_finished_jobs()
+    print("Finished print loop.\n\n")
     # jira.askedForStatus()
 
 
@@ -87,7 +88,6 @@ def main():
         config = yaml.load(yamlfile, Loader=yaml.FullLoader)
 
     print_loop(config['clearTerminal'])
-    print("PRINT MONITORING SYSTEM LOOP STARTED")
     schedule.every(config['updateRate']).minutes.do(print_loop, config['clearTerminal'])
 
     while 1:

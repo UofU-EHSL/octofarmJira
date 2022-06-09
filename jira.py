@@ -87,6 +87,7 @@ def parse_gcode_url(issue):
 @db_session
 def get_new_print_jobs():
     # Get the IDs of issues that are new and have not been processed to ensure we don't add duplicates
+    print("Checking Jira for new issues...")
     existing_issues = PrintJob.Get_All_By_Status(PrintStatus.NEW)
     existing_ids = []
     if existing_issues:
@@ -94,6 +95,8 @@ def get_new_print_jobs():
             existing_ids.append(issue.job_id)
 
     new_issues = get_issues()
+    print(str(len(new_issues)) + " new issues found.")
+
     new_print_jobs = []
     for issue in new_issues:
         parsed_issue = json.loads(issue.text)

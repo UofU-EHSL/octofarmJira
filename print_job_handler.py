@@ -17,7 +17,10 @@ drive_api_key = config['google_drive_api_key']
 
 @db_session
 def process_new_jobs():
+    print("Checking DB for new jobs...")
     new_jobs = PrintJob.Get_All_By_Status(PrintStatus.NEW)
+    print(str(len(new_jobs)) + " new jobs found.")
+
     for job in new_jobs:
         if not job.gcode_url:  # If there is no gcode_url, no files were attached.
             handle_job_failure(job, MessageNames.NO_FILE_ATTACHED)
