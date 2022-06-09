@@ -70,7 +70,7 @@ def process_new_jobs():
                 else:
                     job.cost = round(weight * 0.05 * 1.0775, 2)
                 commit()
-                jira.send_print_queued(job.job_id)
+                jira.send_print_queued(job)
             elif check_result == GcodeStates.INVALID:
                 handle_job_failure(job, MessageNames.GCODE_CHECK_FAIL)
 
@@ -121,7 +121,7 @@ def handle_job_failure(job, message_name):
     message = Message.get(name=message_name.name)
     if message:
         job.failure_message = message.id
-        jira.send_fail_message(job.job_id, message.text)
+        jira.send_fail_message(job, message.text)
     else:
         print("No message found for:", message_name)
         print("Suggest adding it in the admin panel.")

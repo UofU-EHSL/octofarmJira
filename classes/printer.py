@@ -78,6 +78,11 @@ class Printer(db.Entity):
                     return 'finished', response['job']['filament']['tool0']['volume']  # Also return actual volume printed if job is finished.
                 else:
                     return 'finished'
+            elif state == 'paused' and response['progress']['completion'] == 100.0:
+                if get_actual_volume:
+                    return 'needs_clearing', response['job']['filament']['tool0']['volume']
+                else:
+                    return 'needs_clearing'
 
             if get_actual_volume:
                 return state, 0

@@ -36,7 +36,7 @@ class PrintJob(db.Entity):
         if self.job_name and job_name_only:
             name = self.job_name
         elif self.job_name:
-            name = self.job_name + '__' + str(self.job_id)
+            name = self.job_name + '_' + str(self.job_id)
         else:
             name = str(self.job_id)
         return name

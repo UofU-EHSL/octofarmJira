@@ -74,7 +74,7 @@ def print_loop(clearTerminal):
     print_job_handler.process_new_jobs()
     octoprint.start_queued_jobs()
     octoprint.check_for_finished_jobs()
-    print("Finished print loop.\n\n")
+    print("Finished print loop.\n")
     # jira.askedForStatus()
 
 

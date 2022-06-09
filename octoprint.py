@@ -17,6 +17,8 @@ def start_queued_jobs():
     if len(queued_jobs) == 0:
         return
 
+    jobs_started = 0  # Just used to track the number of jobs for logging.
+    manual_jobs = 0
     printer_models = PrinterModel.Get_All()
     printers_by_count = Printer.Get_All_Printers_By_Count(True)
     for pm in printer_models:
@@ -25,11 +27,17 @@ def start_queued_jobs():
             jobs = list(filter(lambda j: j.printer_model.id == pm.id, queued_jobs))  # Get jobs for this printer model
             for printer in printers:
                 # printer is a tuple: (printer, <print_count>)
-                if len(jobs) == 0:  # We are out of jobs
+                if len(jobs) == 0:  # We are out of jobs for this printer model
                     break
                 if printer[0].Get_Printer_State() == 'operational':
-                    start_print_job(jobs.pop(0), printer[0])  # Removes the job from the list
-    print(str(len(queued_jobs)) + " jobs still in queue.")
+                    start_print_job(jobs.pop(0), printer[0])  # Removes the job from the list for this printer model
+                    jobs_started += 1
+        else:
+            jobs = list(filter(lambda j: j.printer_model.id == pm.id, queued_jobs))  # Get jobs for this printer model
+            manual_jobs += len(jobs)
+
+    print(str(len(queued_jobs) - jobs_started - manual_jobs) + " auto start jobs still in queue.")
+    print(str(manual_jobs) + " manual start jobs still in queue.")
 
 
 
@@ -63,6 +71,8 @@ def check_for_finished_jobs():
                     os.remove(job.Get_File_Name())
             else:
                 print(printer.name + " has finished job not found in DB.")
+        elif state == 'needs_clearing':
+            print(printer.name + " needs to be cleared.")
     print(str(finished_count) + " finished jobs found.")
 
 

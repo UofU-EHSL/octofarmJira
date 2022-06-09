@@ -143,38 +143,38 @@ def download(job):
         return "ERROR"
 
 
-def send_fail_message(job_id, message_text):
+def send_fail_message(job, message_text):
     """
     Comments on a ticket with the provided message and stops the progress on the ticket.
     """
-    commentStatus(job_id, message_text)
-    changeStatus(job_id, JiraTransitionCodes.START_PROGRESS)
-    changeStatus(job_id, JiraTransitionCodes.STOP_PROGRESS)
+    commentStatus(job, message_text)
+    changeStatus(job, JiraTransitionCodes.START_PROGRESS)
+    changeStatus(job, JiraTransitionCodes.STOP_PROGRESS)
 
 
 def send_print_started(job):
     """
     Comments on a ticket with the provided message and stops the progress on the ticket.
     """
-    commentStatus(job.job_id, job.Generate_Start_Message())
+    commentStatus(job, job.Generate_Start_Message())
 
 
-def send_print_queued(job_id):
-    changeStatus(job_id, JiraTransitionCodes.START_PROGRESS)
+def send_print_queued(job):
+    changeStatus(job, JiraTransitionCodes.START_PROGRESS)
 
 
 def send_print_finished(job):
-    changeStatus(job.job_id, JiraTransitionCodes.READY_FOR_REVIEW)
-    changeStatus(job.job_id, JiraTransitionCodes.APPROVE)
-    commentStatus(job.job_id, job.Generate_Finish_Message())
+    changeStatus(job, JiraTransitionCodes.READY_FOR_REVIEW)
+    changeStatus(job, JiraTransitionCodes.APPROVE)
+    commentStatus(job, job.Generate_Finish_Message())
 
 
-def changeStatus(job_id, transitionCode):
+def changeStatus(job, transitionCode):
     """
     Changes status of issue in Jira.
     See enumDefinitions JiraTransitionCodes for codes.
     """
-    url = config['base_url'] + "/rest/api/2/issue/" + str(job_id) + "/transitions"
+    url = config['base_url'] + "/rest/api/2/issue/" + str(job.job_id) + "/transitions"
     headers = {
         "Content-type": "application/json",
         "Accept": "application/json"
@@ -199,9 +199,13 @@ def changeStatus(job_id, transitionCode):
         json=data,
         auth=auth
     )
+    if not response.ok:
+        print("Error updating status for job: " + job.Get_Name())
+
+    return response.ok
 
 
-def commentStatus(job_id, comment):
+def commentStatus(job, comment):
     """
     a simple function call to be used whenever you want to comment on a ticket
     """
@@ -209,7 +213,7 @@ def commentStatus(job_id, comment):
     if not comment:
         return
 
-    url = config['base_url'] + "/rest/api/2/issue/" + str(job_id) + "/comment"
+    url = config['base_url'] + "/rest/api/2/issue/" + str(job.job_id) + "/comment"
     headers = {
         "Accept": "application/json",
         "Content-Type": "application/json"
@@ -226,6 +230,9 @@ def commentStatus(job_id, comment):
         headers=headers,
         auth=auth
     )
+    if not response.ok:
+        print("Error commenting on job: " + job.Get_Name())
+    return response.ok
 
 
 def askedForStatus():
