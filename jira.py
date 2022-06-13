@@ -110,7 +110,7 @@ def get_new_print_jobs():
         permission_code_id = parse_permission_code(parsed_issue['fields']['description'])
         gcode_url, url_type = parse_gcode_url(parsed_issue)
 
-        new_print_jobs.append(PrintJob(job_id=job_id, job_name=job_name, print_status=PrintStatus.NEW.name, user=user.id, permission_code=permission_code_id, gcode_url=gcode_url, url_type=url_type.name))
+        new_print_jobs.append(PrintJob(job_created_date=datetime.now(), job_id=job_id, job_name=job_name, print_status=PrintStatus.NEW.name, user=user.id, permission_code=permission_code_id, gcode_url=gcode_url, url_type=url_type.name))
     commit()
     return new_print_jobs
 
@@ -298,7 +298,8 @@ def askedForStatus():
                         if str(status['job']['file']['name']).find(ticketID) != -1:
                             base = config['messages']['statusUpdate'] + "\n"
                             completion = "Completion: " + str(round(status['progress']['completion'], 2)) + "%" + "\n"
-                            eta = "Print time left: " + str(time.strftime('%H:%M:%S', time.gmtime(status['progress']['printTimeLeft']))) + "\n"
+                            eta = "Print time left: " + str(time.strftime('%H:%M:%S', time.gmtime(
+                                status['progress']['printTimeLeft']))) + "\n"
                             material = "Cost: $" + str(round(
                                 status['job']['filament']['tool0']['volume'] * printer.material_density *
                                 config['payment']['costPerGram'], 2)) + "\n"

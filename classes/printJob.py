@@ -12,6 +12,7 @@ class PrintJob(db.Entity):
     job_name = Optional(str, unique=True)
     """Optional custom job name from the submission system. We use PR-#### formatted names."""
     user = Required('User')
+    job_created_date = Optional(datetime.datetime)
     print_started_date = Optional(datetime.datetime)
     print_finished_date = Optional(datetime.datetime)
     payment_link_generated_date = Optional(datetime.datetime)
@@ -50,12 +51,21 @@ class PrintJob(db.Entity):
 
     @staticmethod
     @db_session
-    def Get_All_By_Status(print_status: PrintStatus):
+    def Get_All_By_Status(print_status: PrintStatus, serialize=False):
         query_result = select(pj for pj in PrintJob if pj.print_status == print_status.name)
         print_jobs = []
         for p in query_result:
             print_jobs.append(p)
+        if serialize:
+            return PrintJob.Serialize_Jobs(print_jobs)
         return print_jobs
+
+    @staticmethod
+    def Serialize_Jobs(jobs):
+        result = []
+        for j in jobs:
+            result.append(j.To_Dict())
+        return json.dumps(result)
 
     def Generate_Start_Message(self):
         startTime = datetime.datetime.now().strftime("%I:%M" '%p')
@@ -88,3 +98,6 @@ class PrintJob(db.Entity):
 
         return text
 
+    def To_Dict(self):
+        result = {'job_id': self.job_id, 'job_name': self.job_name, 'job_created_date': self.job_created_date, 'printer_model': self.printer_model.name, 'auto_start': self.printer_model.auto_start_prints, 'print_time': self.print_time}
+        return result

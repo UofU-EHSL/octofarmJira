@@ -8,7 +8,7 @@ import pythonFunctions
 from classes.enumDefinitions import *
 import yaml
 from threading import Lock
-from flask import Flask, render_template, session, request, copy_current_request_context
+from flask import Flask, render_template, session, request, copy_current_request_context, jsonify
 from flask_socketio import SocketIO, emit
 
 with open("config_files/config.yml", "r") as yamlfile:
@@ -65,6 +65,17 @@ def background_thread():
 @app.route('/')
 def index():
     return flask.render_template('layout.html', async_mode=socketio.async_mode, ip=flask.request.host)
+
+
+@app.route('/printQueue')
+def print_queue():
+    return flask.render_template('queue/queue.html', async_mode=socketio.async_mode, ip=flask.request.host)
+
+
+@app.route('/printQueue/getQueue', methods=['GET'])
+def get_queue():
+    jobs = PrintJob.Get_All_By_Status(PrintStatus.IN_QUEUE, True)
+    return jobs
 
 
 @app.route('/printers')
@@ -459,12 +470,6 @@ def remove(fileName=None):
 @app.route('/download/<path:filename>', methods=['GET', 'POST'])
 def download(filename):
     return flask.send_from_directory(DOWNLOAD_FOLDER, filename, as_attachment=True)
-
-
-@app.route('/queue/', methods=['GET', 'POST'])
-def dir_listing():
-    files = os.listdir(DOWNLOAD_FOLDER)
-    return flask.render_template('queue.html', files=files, ip=flask.request.host)
 
 
 if __name__ == '__main__':
