@@ -52,6 +52,7 @@ def drop_and_create_db():
         m10 = Message(name='FINISH_TEXT_WITH_TAX', text='Your print is ready for pickup by the orange pillars in the ProtoSpace on the 2nd floor of the library whenever the library is open. A payment link will be generated and sent to you within approximately 48 hours. Thank you!')
         m11 = Message(name='FINISH_TEXT_TAX_EXEMPT', text='Your print is ready for pickup by the orange pillars in the ProtoSpace on the 2nd floor of the library whenever the library is open. Payment will be handled by your department or class. Thank you!')
         m12 = Message(name='PROFILE_OUT_OF_DATE', text='Please update your print profiles.')
+        m13 = Message(name='NO_PRINTER_MODEL', text='We could not determine what printer this gcode was for! It is likely that your print profiles are out of date or you do not have them installed correctly.')
 
         commit()
 

@@ -73,6 +73,8 @@ def process_new_jobs():
                 jira.send_print_queued(job)
             elif check_result == GcodeStates.INVALID:
                 handle_job_failure(job, MessageNames.GCODE_CHECK_FAIL)
+            elif check_result == GcodeStates.NO_PRINTER_MODEL:
+                handle_job_failure(job, MessageNames.NO_PRINTER_MODEL)
 
 
 def download_gcode(job):
@@ -219,7 +221,6 @@ def check_gcode(file):
                 if m.keyword.value in comment:
                     printer_model = m.id
                     continue
-
         index -= 1
 
     check_items = GcodeCheckItem.Get_All()
@@ -259,6 +260,9 @@ def check_gcode(file):
                     value = int(filter_characters(line.params[0]))  # Get int value of first param.
                     if value > int(check_item.action_value):
                         return None, GcodeStates.INVALID, 0, 0, printer_model
+
+    if printer_model == '':  # Putting this down here so that other checks will be hit first.
+        return None, GcodeStates.NO_PRINTER_MODEL, 0, 0, printer_model
 
     text_gcode = gcode_to_text(parsedGcode)
     return text_gcode, GcodeStates.VALID, weight, estimated_time, printer_model

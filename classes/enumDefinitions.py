@@ -5,6 +5,7 @@ from pony.orm.dbapiprovider import StrConverter
 class GcodeStates(Enum):
     VALID = 1
     INVALID = 2
+    NO_PRINTER_MODEL = 3
 
 
 class PermissionCodeStates(Enum):
@@ -101,6 +102,7 @@ class MessageNames(Enum):
     GCODE_CHECK_FAIL = auto()
     FINISH_TEXT_TAX_EXEMPT = auto()
     FINISH_TEXT_WITH_TAX = auto()
+    NO_PRINTER_MODEL = auto()
 
 
 def get_dict(enum_type):

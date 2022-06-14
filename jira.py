@@ -81,7 +81,7 @@ def parse_gcode_url(issue):
             else:
                 return url, UrlTypes.UNKNOWN
 
-    return ''
+    return '', UrlTypes.UNKNOWN
 
 
 @db_session
@@ -110,7 +110,7 @@ def get_new_print_jobs():
         permission_code_id = parse_permission_code(parsed_issue['fields']['description'])
         gcode_url, url_type = parse_gcode_url(parsed_issue)
 
-        new_print_jobs.append(PrintJob(job_created_date=datetime.now(), job_id=job_id, job_name=job_name, print_status=PrintStatus.NEW.name, user=user.id, permission_code=permission_code_id, gcode_url=gcode_url, url_type=url_type.name))
+        new_print_jobs.append(PrintJob(job_created_date=datetime.datetime.now(), job_id=job_id, job_name=job_name, print_status=PrintStatus.NEW.name, user=user.id, permission_code=permission_code_id, gcode_url=gcode_url, url_type=url_type.name))
     commit()
     return new_print_jobs
 
