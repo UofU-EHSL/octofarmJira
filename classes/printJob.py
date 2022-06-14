@@ -13,6 +13,9 @@ class PrintJob(db.Entity):
     """Optional custom job name from the submission system. We use PR-#### formatted names."""
     user = Required('User')
     job_created_date = Optional(datetime.datetime)
+    """Time job was added to DB"""
+    job_submitted_date = Optional(datetime.datetime)
+    """Time job was submitted in jira"""
     print_started_date = Optional(datetime.datetime)
     print_finished_date = Optional(datetime.datetime)
     payment_link_generated_date = Optional(datetime.datetime)
@@ -99,5 +102,5 @@ class PrintJob(db.Entity):
         return text
 
     def To_Dict(self):
-        result = {'job_id': self.job_id, 'job_name': self.job_name, 'job_created_date': self.job_created_date, 'printer_model': self.printer_model.name, 'auto_start': self.printer_model.auto_start_prints, 'print_time': self.print_time}
+        result = {'job_id': self.job_id, 'job_name': self.job_name, 'job_submitted_date': self.job_submitted_date.strftime("%m/%d/%Y, %H:%M:%S"), 'printer_model': self.printer_model.name, 'auto_start': self.printer_model.auto_start_prints, 'print_time': self.print_time}
         return result
