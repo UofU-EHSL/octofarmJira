@@ -102,5 +102,5 @@ class PrintJob(db.Entity):
         return text
 
     def To_Dict(self):
-        result = {'job_id': self.job_id, 'job_name': self.job_name, 'job_submitted_date': self.job_submitted_date.strftime("%m/%d/%Y, %H:%M:%S"), 'printer_model': self.printer_model.name, 'auto_start': self.printer_model.auto_start_prints, 'print_time': self.print_time}
+        result = {'job_id': self.job_id, 'job_name': self.job_name, 'job_submitted_date': self.job_submitted_date.strftime("%m/%d/%Y, %H:%M:%S"), 'printer_model': self.printer_model.name, 'printer_model_id':self.printer_model.id, 'auto_start': self.printer_model.auto_start_prints, 'print_time': self.print_time}
         return result

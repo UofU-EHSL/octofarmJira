@@ -7,21 +7,45 @@
 {% endblock %}
 
 {% block content %}
+    <div class="container-fluid d-inline-flex">
+        <div class="mb-3">
+            <label for="printer_model_select">Printer Models (CTRL click to select multiple)</label>
+            <select onchange="modelSelectChange()" name="printer_model_select" id="printer_model_select" class="form-select" multiple>
+                {% for model in printer_models %}
+                    <option selected value="{{ model.id }}">{{ model.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
     <div id="queue_table"></div>
 
     <script>
+    var all_queue_data = []
     var secondsFormatter = function(value, data, type, params, component){
-    //value - original value of the cell
-    //data - the data for the row
-    //type - the type of mutation occurring  (data|edit)
-    //params - the mutatorParams object from the column definition
-    //component - when the "type" argument is "edit", this contains the cell component for the edited cell, otherwise it is the column component for the column
-    return new Date(value * 1000).toISOString().substr(11, 8);
+        if (typeof value == 'int')
+            return new Date(value * 1000).toISOString().substr(11, 8);
+        else
+            return value
+    }
+
+    var modelSelectChange = function (a, b, c) {
+        select_el = $("#printer_model_select")
+        selected_models = select_el.val()
+        result = all_queue_data.filter((x) => {
+            return selected_models.includes(x.printer_model_id.toString())
+        })
+        table.setData(result)
+    }
+
+    var loadQueue = function() {
+        $.get("/printQueue/getQueue", (data) => {
+            all_queue_data = JSON.parse(data)
+            table.setData(data)
+        })
     }
 
     var table = new Tabulator("#queue_table", {
-        ajaxURL:"/printQueue/getQueue",
-        layout:"fitData",
+        data: all_queue_data,
         columns:[
             {title:"PR", field:"job_name"},
             {title:"Printer Model", field:"printer_model"},
@@ -30,5 +54,7 @@
             {title:"Created", field:"job_submitted_date"},
         ],
     });
+
+    loadQueue()
     </script>
 {% endblock %}

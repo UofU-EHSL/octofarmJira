@@ -69,7 +69,8 @@ def index():
 
 @app.route('/printQueue')
 def print_queue():
-    return flask.render_template('queue/queue.html', async_mode=socketio.async_mode, ip=flask.request.host)
+    printer_models = PrinterModel.Get_All()
+    return flask.render_template('queue/queue.html', printer_models=printer_models, async_mode=socketio.async_mode, ip=flask.request.host)
 
 
 @app.route('/printQueue/getQueue', methods=['GET'])
