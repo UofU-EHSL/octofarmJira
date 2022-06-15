@@ -22,7 +22,7 @@
     <script>
     var all_queue_data = []
     var secondsFormatter = function(value, data, type, params, component){
-        if (typeof value == 'int')
+        if (typeof value == 'number')
             return new Date(value * 1000).toISOString().substr(11, 8);
         else
             return value
