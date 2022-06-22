@@ -36,6 +36,19 @@
                             alert("Print has been started and commented!")
                         else if (res.status == 'failed')
                             alert('Action failed! Reason: ' + res.reason)
+                        loadQueue()
+                    })
+                }
+            },
+            {
+                label:"Cancel Print",
+                action:function(e, row){
+                    $.post("/printQueue/cancelPrint/" + row._row.data.job_id, (res) => {
+                        if (res.status == 'success')
+                            alert("Print has been cancelled.")
+                        else if (res.status == 'failed')
+                            alert('Action failed! Reason: ' + res.reason)
+                        loadQueue()
                     })
                 }
             },

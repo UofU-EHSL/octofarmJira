@@ -75,7 +75,7 @@ def print_queue():
 
 
 @app.route('/printQueue/startPrint/<comment>/<job_id>', methods=['POST'])
-def mark_print_started(comment=None, job_id=None):
+def start_print(comment=None, job_id=None):
     """
     comment = string true or false
     job_id = string of job_id for job
@@ -102,6 +102,24 @@ def mark_print_started(comment=None, job_id=None):
             result = jira.send_print_started(job)
             if not result:
                 return {'status': 'failed', 'reason': 'comment_failed'}
+        return {'status': 'success'}
+    except Exception as e:
+        return {'status': 'failed', 'reason': repr(e)}
+
+
+@app.route('/printQueue/cancelPrint/<job_id>', methods=['POST'])
+def cancel_print(job_id=None):
+    """ job_id = string of job_id for job """
+    try:
+        job = PrintJob.get(job_id=int(job_id))
+        if not job:
+            return {'status': 'failed', 'reason': 'job_not_found'}
+        if job.print_status != PrintStatus.IN_QUEUE.name:
+            return {'status': 'failed', 'reason': 'job_not_in_queue'}
+
+        job.print_status = PrintStatus.CANCELLED.name
+        commit()
+
         return {'status': 'success'}
     except Exception as e:
         return {'status': 'failed', 'reason': repr(e)}
