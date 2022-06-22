@@ -136,6 +136,21 @@ class Printer(db.Entity):
         printers.sort(key=lambda x: x[1])  # The second element of the tuple is the number of print jobs associated.
         return printers
 
+
+    @staticmethod
+    @db_session
+    def Get_All_Printers_By_Count_And_Model(model, enabled_only=True):
+        """Counts any print that started on the printer, including failed jobs. Sorted with the smallest number of jobs first."""
+        if enabled_only:
+            query_result = left_join((p, count(pj)) for p in Printer if p.enabled and p.printer_model.name == model.name for pj in p.print_jobs)[:]
+        else:
+            query_result = left_join((p, count(pj)) for p in Printer if p.printer_model.name == model.name for pj in p.print_jobs)[:]
+        printers = []
+        for p in query_result:
+            printers.append(p)
+        printers.sort(key=lambda x: x[1])  # The second element of the tuple is the number of print jobs associated.
+        return printers
+
     @db_session
     def Get_Current_Job(self):
         for pj in self.print_jobs:

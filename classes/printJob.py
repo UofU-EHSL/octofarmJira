@@ -64,6 +64,15 @@ class PrintJob(db.Entity):
         return print_jobs
 
     @staticmethod
+    @db_session
+    def Get_All():
+        query_result = select(pj for pj in PrintJob)
+        print_jobs = []
+        for p in query_result:
+            print_jobs.append(p)
+        return print_jobs
+
+    @staticmethod
     def Serialize_Jobs(jobs):
         result = []
         for j in jobs:

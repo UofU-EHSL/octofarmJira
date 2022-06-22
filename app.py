@@ -1,6 +1,7 @@
 import octoprint
 import os
 import flask
+import jira
 from classes.permissionCode import *
 from classes.gcodeCheckItem import *
 from pony.flask import Pony
@@ -71,6 +72,39 @@ def index():
 def print_queue():
     printer_models = PrinterModel.Get_All()
     return flask.render_template('queue/queue.html', printer_models=printer_models, async_mode=socketio.async_mode, ip=flask.request.host)
+
+
+@app.route('/printQueue/startPrint/<comment>/<job_id>', methods=['POST'])
+def mark_print_started(comment=None, job_id=None):
+    """
+    comment = string true or false
+    job_id = string of job_id for job
+    """
+    try:
+        job = PrintJob.get(job_id=int(job_id))
+        if not job:
+            return {'status': 'failed', 'reason': 'job_not_found'}
+        if job.print_status != PrintStatus.IN_QUEUE.name:
+            return {'status': 'failed', 'reason': 'job_not_in_queue'}
+        if not job.printer_model.auto_start_prints:
+            job.print_status = PrintStatus.PRINTING.name
+            job.print_started_date = datetime.datetime.now()
+            commit()
+        elif job.printer_model.auto_start_prints:
+            printer = octoprint.find_open_printer(job.printer_model)
+            if not printer:
+                return {'status': 'failed', 'reason': 'no_available_printer'}
+            print_result = octoprint.start_print_job(job, printer, False)
+            if not print_result:
+                return {'status': 'failed', 'reason': 'failed_to_start_print'}
+
+        if comment == 'true':
+            result = jira.send_print_started(job)
+            if not result:
+                return {'status': 'failed', 'reason': 'comment_failed'}
+        return {'status': 'success'}
+    except Exception as e:
+        return {'status': 'failed', 'reason': repr(e)}
 
 
 @app.route('/printQueue/getQueue', methods=['GET'])

@@ -7,16 +7,6 @@
 {% endblock %}
 
 {% block content %}
-    <div class="container-fluid d-inline-flex">
-        <div class="mb-3">
-            <label for="printer_model_select">Printer Models (CTRL click to select multiple)</label>
-            <select onchange="modelSelectChange()" name="printer_model_select" id="printer_model_select" class="form-select" multiple>
-                {% for model in printer_models %}
-                    <option selected value="{{ model.id }}">{{ model.name }}</option>
-                {% endfor %}
-            </select>
-        </div>
-    </div>
     <div id="queue_table"></div>
 
     <script>
@@ -28,15 +18,6 @@
             return value
     }
 
-    var modelSelectChange = function (a, b, c) {
-        select_el = $("#printer_model_select")
-        selected_models = select_el.val()
-        result = all_queue_data.filter((x) => {
-            return selected_models.includes(x.printer_model_id.toString())
-        })
-        table.setData(result)
-    }
-
     var loadQueue = function() {
         $.get("/printQueue/getQueue", (data) => {
             all_queue_data = JSON.parse(data)
@@ -46,10 +27,23 @@
 
     var table = new Tabulator("#queue_table", {
         data: all_queue_data,
+        rowClickMenu:[
+            {
+                label:"Start Print",
+                action:function(e, row){
+                    $.post("/printQueue/startPrint/true/" + row._row.data.job_id, (res) => {
+                        if (res.status == 'success')
+                            alert("Print has been started and commented!")
+                        else if (res.status == 'failed')
+                            alert('Action failed! Reason: ' + res.reason)
+                    })
+                }
+            },
+        ],
         columns:[
             {title:"PR", field:"job_name"},
-            {title:"Printer Model", field:"printer_model"},
-            {title:"Auto Start", field:"auto_start", formatter:'tickCross', hozAlign:"center"},
+            {title:"Printer Model", field:"printer_model", headerFilter:'select', headerFilterParams: {valuesLookup:true}},
+            {title:"Auto Start", field:"auto_start", formatter:'tickCross', hozAlign:"center", headerFilter:'select', headerFilterParams: {valuesLookup:true}},
             {title:"Print Time", field:"print_time", mutator:secondsFormatter},
             {title:"Created", field:"job_submitted_date"},
         ],

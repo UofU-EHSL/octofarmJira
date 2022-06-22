@@ -40,6 +40,15 @@ def start_queued_jobs():
     print(str(manual_jobs) + " manual start jobs still in queue.")
 
 
+@db_session
+def find_open_printer(model):
+    """Will return an available printer with the fewest total print jobs or None if one is not available."""
+    printers = Printer.Get_All_Printers_By_Count_And_Model(model, True)
+    for p in printers:
+        if p[0].Get_Printer_State() == 'operational':
+            return p[0]
+    return None
+
 
 @db_session
 def check_for_finished_jobs():
@@ -76,9 +85,11 @@ def check_for_finished_jobs():
     print(str(finished_count) + " finished jobs found.")
 
 
-
-def start_print_job(job, printer):
-    """Starts a print job on a printer and updates jira with print started comment. Also prints physical receipt."""
+def start_print_job(job, printer, comment_on_ticket=True):
+    """
+    Starts a print job on a printer and updates jira with print started comment. Also prints physical receipt.
+    Returns True if successful, False if not.
+    """
     upload_result = printer.Upload_Job(job)
     if upload_result.ok:
         job.printed_on = printer.id
@@ -88,10 +99,13 @@ def start_print_job(job, printer):
         commit()
         if config["receipt_printer"]["print_physical_receipt"] is True:
             receiptPrinter(job.Get_Name(job_name_only=True), printer.name)
-        jira.send_print_started(job)
+        if comment_on_ticket:
+            jira.send_print_started(job)
         print(job.Get_Name() + " started on " + printer.name + ".")
+        return True
     else:
         print("Error uploading " + job.Get_Name() + " to " + printer.name + '. Status code: ' + str(upload_result.status_code))
+        return False
 
 
 def receiptPrinter(scrapedPRNumber, printer=''):

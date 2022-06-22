@@ -90,7 +90,7 @@ def parse_gcode_url(issue):
 def get_new_print_jobs():
     # Get the IDs of issues that are new and have not been processed to ensure we don't add duplicates
     print("Checking Jira for new issues...")
-    existing_issues = PrintJob.Get_All_By_Status(PrintStatus.NEW)
+    existing_issues = PrintJob.Get_All()
     existing_ids = []
     if existing_issues:
         for issue in existing_issues:
@@ -104,6 +104,7 @@ def get_new_print_jobs():
         parsed_issue = json.loads(issue.text)
         job_id = parsed_issue['id']
         if int(job_id) in existing_ids:
+            print('')
             continue
         job_name = parsed_issue['key']
         user_id = parsed_issue['fields']['reporter']['name']
@@ -160,7 +161,7 @@ def send_print_started(job):
     """
     Comments on a ticket with the provided message and stops the progress on the ticket.
     """
-    commentStatus(job, job.Generate_Start_Message())
+    return commentStatus(job, job.Generate_Start_Message())
 
 
 def send_print_queued(job):
