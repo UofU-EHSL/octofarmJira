@@ -41,8 +41,8 @@
                 }
             },
             {
-                label:"Cancel Print",
-                action:function(e, row){
+                label: "Cancel Print",
+                action: function (e, row) {
                     $.post("/printQueue/cancelPrint/" + row._row.data.job_id, (res) => {
                         if (res.status == 'success')
                             alert("Print has been cancelled.")
@@ -50,6 +50,16 @@
                             alert('Action failed! Reason: ' + res.reason)
                         loadQueue()
                     })
+                }
+            },
+            {
+                label:"Download .gcode",
+                action:function(e, row){
+                    const anchor = document.createElement("a");
+                    anchor.href = "/printQueue/downloadGcode/" + row._row.data.job_id
+                    anchor.download = row._row.data.job_name
+                    document.body.appendChild(anchor);
+                    anchor.click();
                 }
             },
         ],

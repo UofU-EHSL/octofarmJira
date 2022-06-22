@@ -2,6 +2,7 @@ import octoprint
 import os
 import flask
 import jira
+import print_job_handler
 from classes.permissionCode import *
 from classes.gcodeCheckItem import *
 from pony.flask import Pony
@@ -88,6 +89,7 @@ def start_print(comment=None, job_id=None):
             return {'status': 'failed', 'reason': 'job_not_in_queue'}
         if not job.printer_model.auto_start_prints:
             job.print_status = PrintStatus.PRINTING.name
+            job.payment_status = PaymentStatus.PRINTING.name
             job.print_started_date = datetime.datetime.now()
             commit()
         elif job.printer_model.auto_start_prints:
@@ -119,8 +121,39 @@ def cancel_print(job_id=None):
 
         job.print_status = PrintStatus.CANCELLED.name
         commit()
+        jira.changeStatus(job, JiraTransitionCodes.STOP_PROGRESS)
+
+        if os.path.exists(job.Get_File_Name()):
+            os.remove(job.Get_File_Name())
 
         return {'status': 'success'}
+    except Exception as e:
+        return {'status': 'failed', 'reason': repr(e)}
+
+
+@app.route('/printQueue/downloadGcode/<job_id>', methods=['GET'])
+def download_gcode(job_id=None):
+    """ job_id = string of job_id for job """
+    try:
+        job = PrintJob.get(job_id=int(job_id))
+        if not job:
+            return {'status': 'failed', 'reason': 'job_not_found'}
+
+        if os.path.exists(job.Get_File_Name()):
+            return flask.send_file(job.Get_File_Name(), as_attachment=True)
+
+        gcode = print_job_handler.download_gcode(job)
+        checked_gcode, check_result, weight, estimated_time, printer_model = print_job_handler.check_gcode(gcode)
+        if check_result == GcodeStates.VALID:
+            generator = (cell for row in gcode
+                         for cell in row)
+            file_name = job.Get_Name() + '.gcode'
+
+            return flask.Response(generator,
+                                  mimetype="text/plain",
+                                  headers={"Content-Disposition": "attachment;filename={" + file_name + "}"})
+        return {'status': 'failed', 'reason': 'gcode_state: ' + check_result.name}
+
     except Exception as e:
         return {'status': 'failed', 'reason': repr(e)}
 
