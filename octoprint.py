@@ -144,4 +144,4 @@ def receiptPrinter(scrapedPRNumber, printer=''):
         # cut point
         p.text("\n\n-                              -\n\n")
     except:
-        print("\nThe receipt printer is unplugged or not powered on, please double check physical connections.")
+        print("The receipt printer is unplugged or not powered on, please double check physical connections.")
