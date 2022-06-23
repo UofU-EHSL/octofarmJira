@@ -276,7 +276,7 @@ def edit_user_post(user_id):
 @app.route('/permissionCodes')
 def permissionCodes():
     all_codes = PermissionCode.Get_All()
-    return flask.render_template('permission_codes/permission_codes.html', permissionCodes=all_codes, async_mode=socketio.async_mode, ip=flask.request.host)
+    return flask.render_template('permissionCodes/permission_codes.html', permissionCodes=all_codes, async_mode=socketio.async_mode, ip=flask.request.host)
 
 
 @app.route('/permissionCodes/deletePermissionCode/<code_id>', methods=['POST'])
@@ -293,7 +293,7 @@ def delete_permission_code(code_id):
 
 @app.route('/permissionCodes/createPermissionCode', methods=['GET'])
 def create_permission_code_get():
-    return flask.render_template('permission_codes/create_permission_code.html', async_mode=socketio.async_mode, ip=flask.request.host)
+    return flask.render_template('permissionCodes/create_permission_code.html', async_mode=socketio.async_mode, ip=flask.request.host)
 
 
 @app.route('/permissionCodes/createPermissionCode', methods=['POST'])
@@ -310,7 +310,7 @@ def create_permission_code_post():
 @app.route('/permissionCodes/editPermissionCode/<code_id>', methods=['GET'])
 def edit_permission_code_get(code_id):
     permissionCode = PermissionCode[code_id]
-    return flask.render_template('permission_codes/edit_permission_code.html', permissionCode=permissionCode, async_mode=socketio.async_mode, ip=flask.request.host)
+    return flask.render_template('permissionCodes/edit_permission_code.html', permissionCode=permissionCode, async_mode=socketio.async_mode, ip=flask.request.host)
 
 
 @app.route('/permissionCodes/editPermissionCode/<code_id>', methods=['POST'])

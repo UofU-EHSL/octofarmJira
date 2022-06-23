@@ -1,0 +1,77 @@
+{% extends "layout.html" %}
+{% block title %}Print Queue{% endblock %}
+{% block head %}
+  {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='tabulator.min.css') }}">
+    <script src="{{ url_for('static', filename='tabulator.min.js') }}"></script>
+{% endblock %}
+
+{% block content %}
+    <div class="custom-tabulator-table" id="queue_table"></div>
+
+    <script>
+    var all_queue_data = []
+    var secondsFormatter = function(value, data, type, params, component){
+        if (typeof value == 'number')
+            return new Date(value * 1000).toISOString().substr(11, 8);
+        else
+            return value
+    }
+
+    var loadQueue = function() {
+        $.get("/printQueue/getQueue", (data) => {
+            all_queue_data = JSON.parse(data)
+            table.setData(data)
+        })
+    }
+
+    var table = new Tabulator("#queue_table", {
+        data: all_queue_data,
+        rowClickMenu:[
+            {
+                label:"Start Print",
+                action:function(e, row){
+                    $.post("/printQueue/startPrint/true/" + row._row.data.job_id, (res) => {
+                        if (res.status == 'success')
+                            alert("Print has been started and commented!")
+                        else if (res.status == 'failed')
+                            alert('Action failed! Reason: ' + res.reason)
+                        loadQueue()
+                    })
+                }
+            },
+            {
+                label: "Cancel Print",
+                action: function (e, row) {
+                    $.post("/printQueue/cancelPrint/" + row._row.data.job_id, (res) => {
+                        if (res.status == 'success')
+                            alert("Print has been cancelled.")
+                        else if (res.status == 'failed')
+                            alert('Action failed! Reason: ' + res.reason)
+                        loadQueue()
+                    })
+                }
+            },
+            {
+                label:"Download .gcode",
+                action:function(e, row){
+                    const anchor = document.createElement("a");
+                    anchor.href = "/printQueue/downloadGcode/" + row._row.data.job_id
+                    anchor.download = row._row.data.job_name
+                    document.body.appendChild(anchor);
+                    anchor.click();
+                }
+            },
+        ],
+        columns:[
+            {title:"PR", field:"job_name"},
+            {title:"Printer Model", field:"printer_model", headerFilter:'select', headerFilterParams: {valuesLookup:true}},
+            {title:"Auto Start", field:"auto_start", formatter:'tickCross', hozAlign:"center", headerFilter:'select', headerFilterParams: {valuesLookup:true}},
+            {title:"Print Time", field:"print_time", mutator:secondsFormatter},
+            {title:"Created", field:"job_submitted_date"},
+        ],
+    });
+
+    loadQueue()
+    </script>
+{% endblock %}
