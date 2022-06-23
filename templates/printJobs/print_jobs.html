@@ -7,9 +7,39 @@
 {% endblock %}
 
 {% block content %}
-    <div class="custom-tabulator-table" id="queue_table"></div>
+    <div>
+        <div class="custom-tabulator-table" id="queue_table"></div>
+        <div class="custom-tabulator-table" id="column_controls"></div>
+    </div>
 
     <script>
+    var generateColumnControls = function() {
+        var columns = table.getColumns()
+
+        var controls_el = document.getElementById('column_controls')
+        for(let column of columns) {
+            var input = document.createElement('input')
+            input.type = 'checkbox'
+            input.onchange = function () {
+                column.toggle()
+            }
+            input.checked = column._column.visible
+            input.name = column._column.definition.title
+            input.classList.add('form-check-input')
+
+            var label = document.createElement('label')
+            label.for = column._column.definition.title
+            label.innerText = column._column.definition.title
+            input.classList.add('form-check-label')
+
+            var container = document.createElement('div')
+            container.classList.add('form-check')
+            container.appendChild(label)
+            container.appendChild(input)
+            controls_el.appendChild(container)
+        }
+    }
+
     var secondsFormatter = function(value, data, type, params, component){
         if (typeof value == 'number')
             return new Date(value * 1000).toISOString().substr(11, 8);
@@ -17,8 +47,22 @@
             return value
     }
 
+    var weightFormatter = function(value, data, type, params, component){
+        if (typeof value == 'number')
+            return value + 'g';
+        else
+            return value
+    }
+
+    var costFormatter = function(value, data, type, params, component){
+        if (typeof value == 'number')
+            return '$' + value;
+        else
+            return value
+    }
+
     var loadJobs = function() {
-        $.get("/printJobs/getJobs", (data) => {
+        return $.get("/printJobs/getJobs", (data) => {
             table.setData(data)
         })
     }
@@ -61,14 +105,24 @@
             },
         ],
         columns:[
-            {title:"PR", field:"job_name"},
+            {title:"PR", field:"job_name", headerFilter: 'input'},
+            {title:"Print Status", field:"print_status", headerFilter:'list', headerFilterParams: {valuesLookup:true}},
             {title:"Printer Model", field:"printer_model", headerFilter:'list', headerFilterParams: {valuesLookup:true}},
-            {title:"Auto Start", field:"auto_start", formatter:'tickCross', hozAlign:"center", headerFilter:'list', headerFilterParams: {valuesLookup:true}},
+            {title:"Printed On", field:"printed_on", headerFilter:'list', headerFilterParams: {valuesLookup:true}},
             {title:"Print Time", field:"print_time", mutator:secondsFormatter},
-            {title:"Created", field:"job_submitted_date"},
+            {title:"Weight", field:"weight", mutator:weightFormatter, visible: false},
+            {title:"Cost", field:"cost", mutator:costFormatter, visible: false},
+            {title:"Job Submitted", field:"job_submitted_date"},
+            {title:"Print Started", field:"print_started_date"},
+            {title:"Print Finished", field:"print_finished_date"},
+            {title:"Permission Code", field:"permission_code"},
+            {title:"Payment Status", field:"payment_status", visible: false},
+            {title:"Payment Date", field:"paid_date", visible: false},
+            {title:"Payment Link", field:"payment_link", visible: false},
+            {title:"Payment Link Created", field:"payment_link_generated_date", visible: false},
         ],
     });
 
-    loadJobs()
+    loadJobs().then(generateColumnControls)
     </script>
 {% endblock %}

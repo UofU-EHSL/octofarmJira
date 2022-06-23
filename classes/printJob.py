@@ -60,7 +60,7 @@ class PrintJob(db.Entity):
         for p in query_result:
             print_jobs.append(p)
         if serialize:
-            return PrintJob.Serialize_Jobs(print_jobs)
+            return PrintJob.Serialize_Jobs_For_Queue(print_jobs)
         return print_jobs
 
     @staticmethod
@@ -72,14 +72,21 @@ class PrintJob(db.Entity):
             print_jobs.append(p)
         print_jobs.sort(key=lambda x: x.id)
         if serialize:
-            return PrintJob.Serialize_Jobs(print_jobs)
+            return PrintJob.Serialize_Jobs_For_Job_List(print_jobs)
         return print_jobs
 
     @staticmethod
-    def Serialize_Jobs(jobs):
+    def Serialize_Jobs_For_Queue(jobs):
         result = []
         for j in jobs:
-            result.append(j.To_Dict())
+            result.append(j.To_Dict_For_Queue())
+        return json.dumps(result)
+
+    @staticmethod
+    def Serialize_Jobs_For_Job_List(jobs):
+        result = []
+        for j in jobs:
+            result.append(j.To_Dict_For_Job_List())
         return json.dumps(result)
 
     def Generate_Start_Message(self):
@@ -113,6 +120,38 @@ class PrintJob(db.Entity):
 
         return text
 
-    def To_Dict(self):
-        result = {'job_id': self.job_id, 'job_name': self.job_name, 'job_submitted_date': self.job_submitted_date.strftime("%m/%d/%Y, %H:%M:%S"), 'printer_model': self.printer_model.name, 'printer_model_id':self.printer_model.id, 'auto_start': self.printer_model.auto_start_prints, 'print_time': self.print_time}
+    def To_Dict_For_Queue(self):
+        """Same as To_Dict_For_Job_List except with fewer fields."""
+        result = {
+            'job_id': self.job_id,
+            'job_name': self.job_name,
+            'job_submitted_date': self.job_submitted_date.strftime("%m/%d/%Y, %H:%M:%S"),
+            'printer_model': self.printer_model.name,
+            'printer_model_id': self.printer_model.id,
+            'auto_start': self.printer_model.auto_start_prints,
+            'print_time': self.print_time
+        }
+        return result
+
+    def To_Dict_For_Job_List(self):
+        """Same as To_Dict_For_Queue except with more fields."""
+        result = {
+            'job_id': self.job_id,
+            'job_name': self.job_name,
+            'print_status': self.print_status,
+            'printed_on': self.printed_on.name if self.printed_on else '',
+            'job_submitted_date': self.job_submitted_date.strftime("%m/%d/%Y, %H:%M:%S") if self.job_submitted_date else '',
+            'print_started_date': self.print_started_date.strftime("%m/%d/%Y, %H:%M:%S") if self.print_started_date else '',
+            'print_finished_date': self.print_finished_date.strftime("%m/%d/%Y, %H:%M:%S") if self.print_finished_date else '',
+            'printer_model': self.printer_model.name if self.printer_model else '',
+            'printer_model_id':self.printer_model.id,
+            'permission_code': self.permission_code.name if self.permission_code else '',
+            'weight': self.weight,
+            'cost': self.cost,
+            'print_time': self.print_time,
+            'payment_status': self.payment_status,
+            'payment_link': self.payment_link,
+            'payment_link_generated_date': self.payment_link_generated_date,
+            'paid_date': self.paid_date,
+        }
         return result
