@@ -75,8 +75,6 @@ class PrintStatus(Enum):
 
 
 class PaymentStatus(Enum):
-    PRINTING = auto()
-    """Job has not been completed"""
     NEEDS_PAYMENT_LINK = auto()
     """Job has been finished but payment link has not been generated."""
     WAITING_FOR_PAYMENT = auto()

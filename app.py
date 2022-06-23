@@ -88,7 +88,6 @@ def start_print(comment=None, job_id=None):
             return {'status': 'failed', 'reason': 'job_not_in_queue'}
         if not job.printer_model.auto_start_prints:
             job.print_status = PrintStatus.PRINTING.name
-            job.payment_status = PaymentStatus.PRINTING.name
             job.print_started_date = datetime.datetime.now()
             commit()
         elif job.printer_model.auto_start_prints:
