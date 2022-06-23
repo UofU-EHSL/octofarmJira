@@ -15,3 +15,8 @@ iframe{
 	padding-top: 20px;
 	margin: auto;
 }
+
+.custom-tabulator-table {
+	margin: auto;
+	width: fit-content;
+}
