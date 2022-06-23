@@ -62,8 +62,8 @@
         ],
         columns:[
             {title:"PR", field:"job_name"},
-            {title:"Printer Model", field:"printer_model", headerFilter:'select', headerFilterParams: {valuesLookup:true}},
-            {title:"Auto Start", field:"auto_start", formatter:'tickCross', hozAlign:"center", headerFilter:'select', headerFilterParams: {valuesLookup:true}},
+            {title:"Printer Model", field:"printer_model", headerFilter:'list', headerFilterParams: {valuesLookup:true}},
+            {title:"Auto Start", field:"auto_start", formatter:'tickCross', hozAlign:"center", headerFilter:'list', headerFilterParams: {valuesLookup:true}},
             {title:"Print Time", field:"print_time", mutator:secondsFormatter},
             {title:"Created", field:"job_submitted_date"},
         ],

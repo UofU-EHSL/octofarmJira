@@ -71,8 +71,7 @@ def index():
 
 @app.route('/printQueue')
 def print_queue():
-    printer_models = PrinterModel.Get_All()
-    return flask.render_template('queue/queue.html', printer_models=printer_models, async_mode=socketio.async_mode, ip=flask.request.host)
+    return flask.render_template('queue/queue.html', async_mode=socketio.async_mode, ip=flask.request.host)
 
 
 @app.route('/printQueue/startPrint/<comment>/<job_id>', methods=['POST'])
