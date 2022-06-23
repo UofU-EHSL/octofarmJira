@@ -10,7 +10,6 @@
     <div class="custom-tabulator-table" id="queue_table"></div>
 
     <script>
-    var all_queue_data = []
     var secondsFormatter = function(value, data, type, params, component){
         if (typeof value == 'number')
             return new Date(value * 1000).toISOString().substr(11, 8);
@@ -20,13 +19,11 @@
 
     var loadQueue = function() {
         $.get("/printQueue/getQueue", (data) => {
-            all_queue_data = JSON.parse(data)
             table.setData(data)
         })
     }
 
     var table = new Tabulator("#queue_table", {
-        data: all_queue_data,
         rowClickMenu:[
             {
                 label:"Start Print",
