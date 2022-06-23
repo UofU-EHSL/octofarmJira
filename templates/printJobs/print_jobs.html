@@ -1,5 +1,5 @@
 {% extends "layout.html" %}
-{% block title %}Print Queue{% endblock %}
+{% block title %}Print Jobs{% endblock %}
 {% block head %}
   {{ super() }}
     <link rel="stylesheet" href="{{ url_for('static', filename='tabulator.min.css') }}">
@@ -10,7 +10,6 @@
     <div class="custom-tabulator-table" id="queue_table"></div>
 
     <script>
-    var all_queue_data = []
     var secondsFormatter = function(value, data, type, params, component){
         if (typeof value == 'number')
             return new Date(value * 1000).toISOString().substr(11, 8);
@@ -18,15 +17,13 @@
             return value
     }
 
-    var loadQueue = function() {
-        $.get("/printQueue/getQueue", (data) => {
-            all_queue_data = JSON.parse(data)
+    var loadJobs = function() {
+        $.get("/printJobs/getJobs", (data) => {
             table.setData(data)
         })
     }
 
     var table = new Tabulator("#queue_table", {
-        data: all_queue_data,
         rowClickMenu:[
             {
                 label:"Start Print",
@@ -65,13 +62,13 @@
         ],
         columns:[
             {title:"PR", field:"job_name"},
-            {title:"Printer Model", field:"printer_model", headerFilter:'select', headerFilterParams: {valuesLookup:true}},
-            {title:"Auto Start", field:"auto_start", formatter:'tickCross', hozAlign:"center", headerFilter:'select', headerFilterParams: {valuesLookup:true}},
+            {title:"Printer Model", field:"printer_model", headerFilter:'list', headerFilterParams: {valuesLookup:true}},
+            {title:"Auto Start", field:"auto_start", formatter:'tickCross', hozAlign:"center", headerFilter:'list', headerFilterParams: {valuesLookup:true}},
             {title:"Print Time", field:"print_time", mutator:secondsFormatter},
             {title:"Created", field:"job_submitted_date"},
         ],
     });
 
-    loadQueue()
+    loadJobs()
     </script>
 {% endblock %}

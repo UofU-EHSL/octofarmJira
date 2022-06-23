@@ -163,6 +163,17 @@ def get_queue():
     return jobs
 
 
+@app.route('/printJobs')
+def print_jobs():
+    return flask.render_template('printJobs/print_jobs.html', async_mode=socketio.async_mode, ip=flask.request.host)
+
+
+@app.route('/printJobs/getJobs', methods=['GET'])
+def get_jobs():
+    jobs = PrintJob.Get_All(True)
+    return jobs
+
+
 @app.route('/printers')
 def printers():
     all_printers = Printer.Get_All()
