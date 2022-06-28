@@ -7,6 +7,14 @@
 {% endblock %}
 
 {% block content %}
+    <div class="refresh-controls">
+        <button class="btn btn-primary" onclick="loadQueue()">Refresh</button>
+        <div style="padding-top: 7px">
+            <label class="form-check-label" for="auto_start_prints">Auto Refresh</label>
+            <input onchange="toggleInterval()" checked class="form-check-input" type="checkbox" id="auto_start_prints">
+        </div>
+        <span style="margin-left: 10px; margin-top: 7px;" id="refresh-timer">Last Refresh 0s ago</span>
+    </div>
     <div class="custom-tabulator-table" id="queue_table"></div>
 
     <script>
@@ -20,8 +28,30 @@
     var loadQueue = function() {
         $.get("/printQueue/getQueue", (data) => {
             table.setData(data)
+            last_refresh = 0
         })
     }
+
+    var loadQueueSilent = function() {
+        $.get("/printQueue/getQueue", (data) => {
+            table.replaceData(data)
+            last_refresh = 0
+        })
+    }
+
+    var interval_id = 0
+
+    var toggleInterval = function(){
+        if (interval_id == 0) {
+            loadQueueSilent()
+            interval_id = setInterval(loadQueueSilent, 15000)
+        }
+        else {
+            clearInterval(interval_id)
+            interval_id = 0
+        }
+    }
+
 
     var table = new Tabulator("#queue_table", {
         rowClickMenu:[
@@ -68,7 +98,15 @@
             {title:"Job Submitted", field:"job_submitted_date"},
         ],
     });
+    var last_refresh = 0
+    var updateTimer = function() {
+        el = document.getElementById('refresh-timer')
+        el.innerText = 'Last Refresh ' + last_refresh + 's ago'
+        last_refresh++
+    }
 
+    setInterval(updateTimer, 1000)
     loadQueue()
+    interval_id = setInterval(loadQueueSilent, 15000)
     </script>
 {% endblock %}
