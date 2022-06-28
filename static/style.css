@@ -50,3 +50,13 @@ div.tabulator-row.NEW {
 div.tabulator-row.FINISHED {
 	background-color: lightgreen;
 }
+
+.refresh-controls {
+	display: flex;
+	margin: 10px auto;
+	width: fit-content;
+}
+
+.refresh-controls button {
+	margin-right: 10px;
+}
