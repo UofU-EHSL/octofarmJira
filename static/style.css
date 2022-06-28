@@ -20,3 +20,13 @@ iframe{
 	margin: auto;
 	width: fit-content;
 }
+
+.custom-column-controls {
+	margin: auto;
+	width: fit-content;
+	display: flex;
+}
+
+.custom-column-controls div {
+	margin: 0 5px;
+}

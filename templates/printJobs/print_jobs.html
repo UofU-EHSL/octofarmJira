@@ -9,7 +9,7 @@
 {% block content %}
     <div>
         <div class="custom-tabulator-table" id="queue_table"></div>
-        <div class="custom-tabulator-table" id="column_controls"></div>
+        <div class="custom-column-controls" id="column_controls"></div>
     </div>
 
     <script>
@@ -17,6 +17,8 @@
         var columns = table.getColumns()
 
         var controls_el = document.getElementById('column_controls')
+        var count = 0
+        var sub_container = document.createElement('div')
         for(let column of columns) {
             var input = document.createElement('input')
             input.type = 'checkbox'
@@ -36,7 +38,15 @@
             container.classList.add('form-check')
             container.appendChild(label)
             container.appendChild(input)
-            controls_el.appendChild(container)
+            sub_container.appendChild(container)
+            if (count++ == 4) {
+                controls_el.appendChild(sub_container)
+                sub_container = document.createElement('div')
+                count = 0
+            }
+        }
+        if (count != 0) {
+            controls_el.appendChild(sub_container)
         }
     }
 
