@@ -114,6 +114,10 @@
                 }
             },
         ],
+        rowFormatter:function(row){
+            var data = row.getData();
+            row.getElement().classList.add(data.print_status)
+        },
         columns:[
             {title:"PR", field:"job_name", headerFilter: 'input'},
             {title:"Print Status", field:"print_status", headerFilter:'list', headerFilterParams: {valuesLookup:true}},

@@ -30,3 +30,23 @@ iframe{
 .custom-column-controls div {
 	margin: 0 5px;
 }
+
+div.tabulator-row.CANCELLED {
+	background-color: lightcoral;
+}
+
+div.tabulator-row.IN_QUEUE {
+	background-color: orange;
+}
+
+div.tabulator-row.PRINTING {
+	background-color: yellow;
+}
+
+div.tabulator-row.NEW {
+	background-color: lightblue;
+}
+
+div.tabulator-row.FINISHED {
+	background-color: lightgreen;
+}
