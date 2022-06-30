@@ -117,7 +117,7 @@
                             alert("Print has been started and commented!")
                         else if (res.status == 'failed')
                             alert('Action failed! Reason: ' + res.reason)
-                        loadQueue()
+                        loadJobs()
                     })
                 }
             },
@@ -129,7 +129,7 @@
                             alert("Print has been cancelled.")
                         else if (res.status == 'failed')
                             alert('Action failed! Reason: ' + res.reason)
-                        loadQueue()
+                        loadJobs()
                     })
                 }
             },

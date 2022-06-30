@@ -114,8 +114,6 @@ def cancel_print(job_id=None):
         job = PrintJob.get(job_id=int(job_id))
         if not job:
             return {'status': 'failed', 'reason': 'job_not_found'}
-        if job.print_status != PrintStatus.IN_QUEUE.name:
-            return {'status': 'failed', 'reason': 'job_not_in_queue'}
 
         job.print_status = PrintStatus.CANCELLED.name
         commit()
