@@ -117,7 +117,7 @@ def cancel_print(job_id=None):
 
         job.print_status = PrintStatus.CANCELLED.name
         commit()
-        jira.changeStatus(job, JiraTransitionCodes.STOP_PROGRESS)
+        jira.send_print_cancelled(job)
 
         if os.path.exists(job.Get_File_Name()):
             os.remove(job.Get_File_Name())
@@ -177,6 +177,23 @@ def print_receipt(job_id):
         job = PrintJob.get(job_id=job_id)
         printer_name = job.printed_on if job.printed_on else ''
         octoprint.receiptPrinter(job.Get_Name(job_name_only=True), printer_name)
+        return {'status': 'success'}
+    except:
+        return {'status': 'failed'}
+
+
+@app.route('/printJobs/queuePrint/<job_id>', methods=['POST'])
+def queue_print(job_id):
+    try:
+        job = PrintJob.get(job_id=job_id)
+        if not job:
+            return {'status': 'failed', 'reason': 'job_not_found'}
+        jira.send_reopen_job(job)
+        job.print_status = PrintStatus.NEW.name
+        job.printed_on = None
+        job.print_started_date = None
+        job.print_finished_date = None
+        job.failure_message = None
         return {'status': 'success'}
     except:
         return {'status': 'failed'}

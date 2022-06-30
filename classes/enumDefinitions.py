@@ -62,8 +62,6 @@ class PrintStatus(Enum):
     """Job has not been validated."""
     IN_QUEUE = auto()
     """Job is waiting for printer."""
-    MANUAL_PRINT = auto()  # TODO: Remove?
-    """Job needs human intervention."""
     PRINTING = auto()
     """Currently Printing or waiting to be cleared."""
     FINISHED = auto()
@@ -101,6 +99,8 @@ class MessageNames(Enum):
     FINISH_TEXT_TAX_EXEMPT = auto()
     FINISH_TEXT_WITH_TAX = auto()
     NO_PRINTER_MODEL = auto()
+    PRINT_CANCELLED = auto()
+    PRINT_QUEUED = auto()
 
 
 def get_dict(enum_type):

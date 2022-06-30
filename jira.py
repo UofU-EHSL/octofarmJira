@@ -168,6 +168,30 @@ def send_print_queued(job):
     changeStatus(job, JiraTransitionCodes.START_PROGRESS)
 
 
+def send_print_cancelled(job):
+    if job.print_status == PrintStatus.NEW.name:
+        changeStatus(job, JiraTransitionCodes.START_PROGRESS)
+        changeStatus(job, JiraTransitionCodes.STOP_PROGRESS)
+    if job.print_status == PrintStatus.IN_QUEUE.name or job.print_status == PrintStatus.PRINTING.name:
+        changeStatus(job, JiraTransitionCodes.STOP_PROGRESS)
+
+    message = Message.get(name=MessageNames.PRINT_CANCELLED.name)
+    commentStatus(job, message.text, False)
+
+
+def send_reopen_job(job):
+    """
+    This will not always work. If the job is approved or done, there is currently no way to set it back to open or in progress.
+    There may be jira transition codes that I don't know about, but they're difficult to find. Even if it doesn't work, the job should
+    still be set to new in the DB and processed again, the status just won't match the actual progress of the print.
+    """
+    if job.print_status == PrintStatus.PRINTING:
+        changeStatus(job, JiraTransitionCodes.STOP_PROGRESS)
+    changeStatus(job, JiraTransitionCodes.REOPEN)
+    message = Message.get(name=MessageNames.PRINT_QUEUED.name)
+    commentStatus(job, message.text, False)
+
+
 def send_print_finished(job):
     changeStatus(job, JiraTransitionCodes.READY_FOR_REVIEW)
     changeStatus(job, JiraTransitionCodes.APPROVE)
@@ -210,7 +234,7 @@ def changeStatus(job, transitionCode):
     return response.ok
 
 
-def commentStatus(job, comment):
+def commentStatus(job, comment, notify_user=True):
     """
     a simple function call to be used whenever you want to comment on a ticket
     """
@@ -224,9 +248,19 @@ def commentStatus(job, comment):
         "Content-Type": "application/json"
     }
 
-    payload = {
-        "body": comment
-    }
+    if notify_user:
+        payload = {
+            "body": comment,
+        }
+    else:
+        payload = {
+            "body": comment,
+            "visibility": {
+                "type": "role",
+                "value": "Project Members"
+            },
+
+        }
 
     response = requests.request(
         "POST",
