@@ -173,6 +173,17 @@ def get_jobs():
     return jobs
 
 
+@app.route('/printJobs/printReceipt/<job_id>', methods=['GET'])
+def print_receipt(job_id):
+    try:
+        job = PrintJob.get(job_id=job_id)
+        printer_name = job.printed_on if job.printed_on else ''
+        octoprint.receiptPrinter(job.Get_Name(job_name_only=True), printer_name)
+        return {'status': 'success'}
+    except:
+        return {'status': 'failed'}
+
+
 @app.route('/printers')
 def printers():
     all_printers = Printer.Get_All()

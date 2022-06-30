@@ -134,6 +134,15 @@
                 }
             },
             {
+                label: "Print Receipt",
+                action: function (e, row) {
+                    $.get("/printJobs/printReceipt/" + row._row.data.job_id, (res) => {
+                        if (res.status == 'failed')
+                            alert('Action failed! Reason: ' + res.reason)
+                    })
+                }
+            },
+            {
                 label:"Download .gcode",
                 action:function(e, row){
                     const anchor = document.createElement("a");
